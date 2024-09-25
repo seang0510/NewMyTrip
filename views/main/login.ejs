@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/smoothness/jquery-ui.min.css">
+  <link rel="stylesheet" href="/stylesheets/login.css">
+  <link rel="stylesheet" href="/stylesheets/common.css">
+  <style>
+    @media (max-width: 991px) {
+      img {
+        width: 0%;
+      }
+    }
+  </style>
+  <script src="/jquery.min.js"></script>
+  <script src="/umd/popper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/jquery-ui.min.js"></script>
+  <script src="/jquery.cookie.js"></script>
+  <script src="/javascripts/common.js"></script>
+</head>
+
+<body>
+
+  <!-- LoadingBar Main  -->
+  <%- include('../ejs/loadingbar.ejs') %>
+  <!-- Alert Modal -->
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
+
+  <!-- Login Page -->
+  <main class="container d-flex justify-content-center align-items-center h-100">
+    <div class="row g-lg-5 py-5">
+      <div class="col-lg-7 m-auto">
+        <img class="rounded img-fluid" src="/images/bg_login.jpg" alt="" width="100%" height="100%">
+      </div>
+      <div class="col-md-10 col-lg-5 m-auto">
+        <form class="p-4 p-md-4 border rounded-3 bg-body-tertiary">
+          <h1 class="h3 mb-3 fw-normal">모두의 출장</h1>
+          <div class="form-floating mb-3">
+            <input type="email" name="email" class="form-control" id="emailForLogin" placeholder="name@example.com"
+              required>
+            <label for="emailLogin">이메일</label>
+          </div>
+          <div class="form-floating mb-3">
+            <input type="password" id="passwordForLogin" class="form-control" placeholder="Password"
+              required>
+            <label for="emailPassword">비밀번호</label>
+          </div>
+          <div class="form-check mb-3">
+            <div style="float:left">
+              <input type="checkbox" class="form-check-input" id="emailCheck">
+              <label class="form-check-label" for="emailCheck">
+                이메일 저장
+              </label>
+            </div>
+            <div style="float:right">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#modalFindPassword">비밀번호를 찾으시나요?</a>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100" onclick="login(this, event)">로그인</button>
+          <div class="d-flex gap-2 justify-content-center py-2">
+            <div class="d-inline-flex align-items-center w-50">
+              <a href="#" class="btn btn-secondary w-100" onclick="redirectKakao();">구글 로그인</a>
+            </div>
+            <div class="d-inline-flex align-items-center w-50">
+              <a href="#" class="btn btn-warning w-100" onclick="redirectGoogle();">카카오 로그인</a>
+            </div>
+          </div>
+          <div class="d-flex justify-content-center mt-3">
+            <span>회원이 아니시나요?</span>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modalSignUp">회원가입</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- The Modal of SingUp -->
+  <div class="modal fade" id="modalSignUp" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalSignUp" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of SignUp -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalSignUp">회원가입</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form class="needs-validation" novalidate>
+              <button type="submit" id="btnSignUp" class="visually-hidden" onclick="signUp(this, event)"></button>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="email" id="emailForSignUp" class="form-control" placeholder="name@example.com"
+                    onkeypress="enterKey(event, 'btnSignUp')" required>
+                  <label for="emailForSignUp">이메일</label>
+                </div>
+                <div class="invalid-feedback">
+                  이메일을 입력하세요.
+                </div>                
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordForSignUp" class="form-control" placeholder="e2rQ64ImVdtip65!!"
+                    onkeypress="enterKey(event, 'btnSignUp')" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" required>
+                  <label for="passwordForSignUp">비밀번호</label>
+                </div>
+                <div class="invalid-feedback">
+                  최소 8글자 이상으로 영문, 숫자, 특수문자가 필요합니다.
+                </div>                
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordConfirmForSignUp" class="form-control"
+                    placeholder="e2rQ64ImVdtip65!!" onkeypress="enterKey(event, 'btnSignUp')" onkeyup="passwordEqual('passwordForSignUp', 'passwordConfirmForSignUp')" required>
+                  <label for="passwordConfirmForSignUp">비밀번호 확인</label>
+                </div>
+                <div class="invalid-feedback">
+                  입력한 비밀번호와 동일하지 않습니다.
+                </div>                
+              </div>
+            </form>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary"
+              onclick="document.getElementById('btnSignUp').click();">가입완료</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- The Modal of FindPassword -->
+  <div class="modal fade" id="modalFindPassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalFindPassword" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of FindPassword -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalFindPassword">비밀번호 찾기</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form class="needs-validation" novalidate>
+              <button type="submit" id="btnFindPassword" class="visually-hidden" onclick="findPassword(event)"></button>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="email" id="emailForFindPassword" class="form-control" placeholder="name@example.com"
+                    onkeypress="enterKey(event, 'btnFindPassword')" required>
+                  <label for="emailForFindPassword">이메일</label>
+                </div>
+                <div class="invalid-feedback">
+                  이메일을 입력하세요.
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary"
+              onclick="document.getElementById('btnFindPassword').click();">비밀번호 찾기</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      showMessageByCookie('modalAlert', 'MSG');
+      var email = window.localStorage.getItem('EMAIL');
+      if (!(email == null || email == '' || typeof (email) === undefined)) {
+        $("#emailForLogin").val(email);
+        $('#emailCheck').attr('checked', true);
+      }
+    });
+
+    function passwordEqual(orgPassword, confirmPassword) {
+      if (!isEqualValue(orgPassword, confirmPassword)) {
+        $("#" + orgPassword).closest('form').addClass('was-validated');
+        document.getElementById(confirmPassword).setCustomValidity('invalid');
+      }
+      else {
+        document.getElementById(confirmPassword).setCustomValidity('');
+      }
+    };
+
+    function findPassword(e) {
+      //HTML5 기본 Validation
+      if (!document.getElementById("emailForFindPassword").validity.valid) {
+        return false;
+      }
+
+      e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+
+      var email = $("#emailForFindPassword").val();
+      var data = { 'email': email };
+      $.ajax({
+        url: './login/findPassword',
+        method: 'GET',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true, 'modalFindPassword');
+          $("#modalAlert .modal-title").html("비밀번호 찾기");
+        },
+        success: function (data, status, xhr) {
+          var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+        },
+        complete: function () {
+          setLoadingBar(false, 'modalFindPassword');
+          $("#modalFindPassword").modal('hide');
+          $("#modalAlert").modal('show');
+        }
+      });
+    };
+
+    function signUp(eThis, e) {
+      //HTML5 기본 Validation
+      if (!(document.getElementById("emailForSignUp").validity.valid &&
+        document.getElementById("passwordForSignUp").validity.valid &&
+        document.getElementById("passwordConfirmForSignUp").validity.valid)) {
+        return false;
+      }
+
+      e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+
+      var email = $("#emailForSignUp").val();
+      var password = $("#passwordForSignUp").val();
+      var passwordConfirm = $("#passwordConfirmForSignUp").val();
+
+      var data = {
+        'email': email,
+        'password': password,
+      };
+
+      $.ajax({
+        url: './join',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true, 'modalSignUp');
+          $("#modalAlert .modal-title").html("회원가입");
+        },
+        success: function (data, status, xhr) {
+          var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+        },
+        complete: function () {
+          setLoadingBar(false, 'modalSignUp');
+          $("#modalSignUp").modal('hide');
+          $("#modalAlert").modal('show');
+        }
+      });
+    };
+
+    function login(eThis, e) {
+      e.preventDefault();
+      var email = $('#emailForLogin').val();
+      var password = $('#passwordForLogin').val();      
+      //password = encryptoData(password); //암호화
+
+      var data = {
+        'email': email,
+        'password': password,
+      };
+
+      $.ajax({
+        url: './login',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+        },
+        success: function (data, status, xhr) {
+          if(data.success){
+            //이메일 저장
+            if($("#emailCheck").is(":checked") == true){
+              window.localStorage.setItem('EMAIL', email);
+            }
+            else{
+              window.localStorage.removeItem('EMAIL');
+            }
+            location.replace('/');
+          }
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-title").html("로그인 오류");
+            $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
+          }
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-title").html("로그인 오류");
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);  
+        }
+      });
+    };
+
+    function redirectKakao() {
+      $("#modalAlert .modal-title").html("카카오 로그인");
+      $("#modalAlert .modal-body").html("개발중입니다.");
+      $("#modalAlert").modal('show');
+    };
+
+    function redirectGoogle() {
+      $("#modalAlert .modal-title").html("구글 로그인");
+      $("#modalAlert .modal-body").html("개발중입니다.");
+      $("#modalAlert").modal('show');
+    };
+
+  </script>
+</body>
+
+</html>

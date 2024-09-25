@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메인 화면</title>
+  
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link href="/stylesheets/common.css" rel="stylesheet">
+  <link href="/stylesheets/dashboard.css" rel="stylesheet">
+  <%- style %>
+
+  <script src="/jquery.min.js"></script>
+  <script src="/umd/popper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/javascripts/common.js"></script>  
+</head>
+<body>
+  <!-- LoadingBar Main  -->
+  <%- include('../ejs/loadingbar.ejs') %>
+  <!-- Alert/Confirm Modal -->
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>  
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalConfirm' , title: '제목' , body: '내용', isConfirm: 'Y' }) %>  
+
+  <!-- NavBar START -->
+  <nav class="navbar navbar-expand-md navbar-dark bg-light-bule fixed-top px-3">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="/">
+        <img src="/images/logo_white.png" width="30" height="30" class="d-inline-block align-top me-2" alt="">        
+        <span class="menu-collapsed">모두의 출장</span>
+    </a>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+            <li class="nav-item d-sm-block d-md-none active">
+                <a class="nav-link" href="/common/notice">공지사항 <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item d-sm-block d-md-none">
+                <a class="nav-link" href="/business/trip">오늘의 출장</a>
+            </li>
+            <li class="nav-item d-sm-block d-md-none">
+                <a class="nav-link" href="/business/tourLocation">관광 명소</a>
+            </li>
+
+            <%- defineContent('menuNavByAuth') %>
+
+            <li class="nav-item d-sm-block d-md-none">
+                <a class="nav-link" href="#"><%- defineContent('userEmail') %></a>
+            </li>
+            <li class="nav-item d-sm-block d-md-none">
+              <a class="nav-link" href="#" onclick="logout(this, event)">로그아웃</a>
+            </li>
+        </ul>
+    </div>
+    <a class="nav-link text-white me-3 navbar-right-none" href="#">
+      <%- defineContent('userEmail') %>
+    </a>
+    <button class="btn btn-light navbar-right-none" onclick="logout(this, event)">
+      <span class="fa fa-sign-out fa-fw w-100"></span>
+    </button>
+  </nav>
+  <!-- NavBar END -->
+
+  <!-- body-row START -->
+  <div class="row" id="body-row">
+    <!-- SideBar START -->
+    <div id="sidebar-container" class="sidebar-expanded d-none d-md-block col-2">
+        <!-- List Group START -->
+        <ul class="list-group sticky-top sticky-offset">
+            <!-- Separator with title -->
+            <li class="list-group-item sidebar-separator-title d-flex align-items-center menu-collapsed">
+                <small class="text-muted">주요 기능</small>
+            </li>
+            <!-- /END Separator -->
+            <!-- Menu with submenu -->
+            <a href="/common/notice" class="bg-dark list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span class="fa fa-dashboard fa-fw me-3"></span>
+                    <span class="menu-collapsed">공지사항</span>
+                    <span class="submenu-icon ms-auto"></span>
+                </div>
+            </a>
+            <a href="/business/trip" class="bg-dark list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span class="fa fa-car fa-fw me-3"></span>
+                    <span class="menu-collapsed">오늘의 출장</span>
+                    <span class="submenu-icon ms-auto"></span>
+                </div>
+            </a>
+            <a href="/business/tourLocation" class="bg-dark list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span class="fa fa-map fa-fw me-3"></span>
+                    <span class="menu-collapsed">관광 명소</span>
+                </div>
+            </a>
+
+            <%- defineContent('menuBodyByAuth') %>
+
+            <!-- Logo -->
+            <li class="list-group-item logo-separator d-flex justify-content-center align-items-center" style="height: 200px;">
+                <img src="/images/logo_full.png" width="150" height="150">
+            </li>
+            <!-- Separator without title -->
+            <li class="list-group-item sidebar-separator-title d-flex align-items-center menu-collapsed">
+                <small class="text-muted">연락처</small>
+                <small class="text-muted ms-auto">010-1234-5678</small>
+            </li>
+            <!-- /END Separator -->
+        </ul>
+        <!-- List Group END-->
+    </div>
+    <!-- SideBar END -->
+
+    <!-- MAIN -->
+    <div class="col py-3">
+        <%- defineContent('body') %>
+    </div>
+    <!-- Main Col END -->
+
+    <footer>
+    </footer>
+  </div>
+  <!-- body-row END -->  
+
+  <script>
+    $(document).ready(function () {
+
+    });
+
+    function logout(eThis, e) {                  
+      confirmModal(eThis, e, 'modalConfirm', '로그아웃', '로그아웃 하시겠습니까?', function () {
+        $.ajax({
+          url: '/logout',
+          method: 'POST',
+          beforeSend: function (xhr) {
+            setLoadingBar(true);
+          },
+          success: function (data, status, xhr) {
+            e.preventDefault();
+            location.href = '/login';
+          },
+          error: function (data, status, err) {
+            $("#modalAlert .modal-title").html("로그아웃 오류");
+            $("#modalAlert .modal-body").html(err);
+            $("#modalAlert").modal('show');
+          },
+          complete: function () {
+            $("#modalConfirm").modal('hide');
+            setLoadingBar(false);
+          }
+        });       
+      });
+    };
+
+  </script>
+
+  <%- script %>
+</body>
+</html>

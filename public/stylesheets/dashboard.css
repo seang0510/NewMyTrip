@@ -1,0 +1,124 @@
+body {
+  padding-top: 56px;
+}
+
+.sticky-offset {
+  top: 56px;
+}
+
+#body-row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#sidebar-container {
+  min-height: calc(100vh - 56px);
+  background-color: #333;
+  padding: 0;
+}
+
+/* Sidebar sizes when expanded and expanded */
+.sidebar-expanded {
+  width: 230px;
+}
+
+.sidebar-collapsed {
+  width: 60px;
+}
+
+/* Menu item*/
+#sidebar-container .list-group a {
+  height: 50px;
+  color: white;
+}
+
+/* Submenu item*/
+#sidebar-container .list-group .sidebar-submenu a {
+  height: 45px;
+  padding-left: 30px;
+}
+
+.sidebar-submenu {
+  font-size: 0.9rem;
+}
+
+/* Separators */
+.sidebar-separator-title {
+  background-color: #333;
+  height: 35px;
+}
+
+.sidebar-separator {
+  background-color: #333;
+  height: 25px;
+}
+
+.logo-separator {
+  background-color: #333;
+  height: 60px;
+}
+
+/* Closed submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="false"] .submenu-icon::after {
+  content: " \f0d7";
+  font-family: FontAwesome;
+  display: inline;
+  text-align: right;
+  padding-left: 10px;
+}
+
+/* Opened submenu icon */
+#sidebar-container .list-group .list-group-item[aria-expanded="true"] .submenu-icon::after {
+  content: " \f0da";
+  font-family: FontAwesome;
+  display: inline;
+  text-align: right;
+  padding-left: 10px;
+}
+
+.bg-light-bule {
+  background-color: #007BD5;
+}
+
+.navbar-dark .navbar-nav .active>.nav-link,
+.navbar-dark .navbar-nav .nav-link.active,
+.navbar-dark .navbar-nav .nav-link.show,
+.navbar-dark .navbar-nav .show>.nav-link {
+  color: #fff;
+}
+
+.list-group-item {
+  border: 1px solid rgba(0, 0, 0, .125);
+  border-top: 0;
+}
+
+.list-group-item:first-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.bg-dark {
+  background-color: #343a40 !important;
+}
+
+a.bg-dark:focus,
+a.bg-dark:hover,
+button.bg-dark:focus,
+button.bg-dark:hover {
+  background-color: #1d2124 !important;
+}
+
+.btn-logout {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 768px) {
+  .navbar-right-none {
+    display: none;
+  }
+}
