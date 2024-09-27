@@ -1,4 +1,5 @@
 const helper = require('../helper/helper');
+const tourLocationService = require('../service/tourLocation');
 
 //오늘의 출장 화면
 exports.indexTrip = async (req, res, next) => {
@@ -36,6 +37,23 @@ exports.indexTourLocation = async (req, res, next) => {
         var authGroupCode = req.session.authGroupCode;
         return res.render('business/tourLocation/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
       }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+
+//관광명소 화면
+exports.tourLocationSelect = async (req, res, next) => {
+  console.log("## tourLocationSelect ##");
+  let resModel;
+
+  try {
+      //사용자 조회
+      let tourLocation = await tourLocationService.getTourLocationList();
+      resModel = helper.createResponseModel(true, '', tourLocation);
+      return res.status(200).json(resModel);
   }
   catch (err) {
       return res.status(500).json(err);
