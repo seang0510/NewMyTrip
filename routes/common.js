@@ -8,4 +8,8 @@ router.get('/notice', commonController.indexNotice);
 //사진 관리(photo)
 router.get('/photo', commonController.indexPhoto);
   
+
+//공지사항 조회
+router.post('/notice/select', commonController.noticeSelect);
+
 module.exports = router;

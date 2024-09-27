@@ -1,4 +1,5 @@
 const helper = require('../helper/helper');
+const noticeService = require('../service/notice');
 
 //공지사항 화면
 exports.indexNotice = async (req, res, next) => {
@@ -40,4 +41,21 @@ exports.indexPhoto = async (req, res, next) => {
   catch (err) {
       return res.status(500).json(err);
   }
+};
+
+exports.noticeSelect = async (req, res, next) => {
+    console.log("## noticeSelect ##");
+    let resModel;
+    const email = req.body.board_type_code;   //N:공지사항 ,B:게시판
+    console.log("## email ## " + email);
+
+    try {
+        //사용자 조회
+        let notice = await noticeService.getNoticeList(email);
+        resModel = helper.createResponseModel(true, '', notice);
+        return res.status(200).json(resModel);
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
 };
