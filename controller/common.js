@@ -52,6 +52,7 @@ exports.noticeSelect = async (req, res, next) => {
     try {
         //사용자 조회
         let notice = await noticeService.getNoticeList(email);
+        console.log(notice);
         resModel = helper.createResponseModel(true, '', notice);
         return res.status(200).json(resModel);
     }
