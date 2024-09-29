@@ -8,6 +8,7 @@ const dbInfo = {
     database: process.env.DB_DATABASE,
     insecureAuth: true,
     connectionLimit: process.env.DB_CONN_LIMIT,
+    multipleStatements: true,
 };
 
 const pool = mysql.createPool(dbInfo);

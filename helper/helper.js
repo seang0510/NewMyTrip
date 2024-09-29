@@ -31,10 +31,20 @@ function setMessageForCookie(title, text){
         text : text,
     };
     return JSON.stringify(msg);
-}
+};
+
+function changeUndefiendToNull(value){
+    if(value == undefined){
+        return null;
+    }
+    else{
+        return value;
+    }
+};
 
 module.exports = {
     createResponseModel,
     generateUUID,
     setMessageForCookie,
+    changeUndefiendToNull,
 };
