@@ -72,7 +72,6 @@ exports.getUserForLogin = async (email, joinTypeCode, password, joinToken, devic
 
 //사용자 조회(리스트)
 exports.getUserList = async (email, joinTypeCode, deviceTypeCode) => {
-    var sql = 'CALL SYS_USER_MST_SELECT()';
     try {        
         const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [null, email, joinTypeCode, deviceTypeCode, 'N']);
         
@@ -82,6 +81,7 @@ exports.getUserList = async (email, joinTypeCode, deviceTypeCode) => {
         }
         else{
             console.log("조회 실패");
+            return null;
         }        
     } catch (err) {
         console.log(err);
