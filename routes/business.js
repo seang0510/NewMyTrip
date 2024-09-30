@@ -8,7 +8,7 @@ router.get('/trip', businessController.indexTrip);
 
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);
-router.get('/tourLocation/getTourLocationList', businessController.getTourLocationList);
+router.post('/tourLocation/getTourLocationList', businessController.getTourLocationList);
 
 //관광 명소 이미지 get (샘플 : http://192.168.0.13:3030/tour_images/3.1.jpg)
 router.get('/tour_images/:imageName', function(req, res){

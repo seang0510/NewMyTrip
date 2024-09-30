@@ -18,6 +18,27 @@ exports.getLogin = async (req, res, next) => {
     }
 };
 
+//메인화면(GET)
+exports.getIndex = async (req, res, next) => {
+    try {
+        //로그인 되지 않은 경우
+        if(!(req.session.valid == true)){
+            var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+            res.cookie('MSG', msg, { httpOnly: false, secure: false });
+            return res.redirect('/login');
+        }
+        //현재 로그인 되어 있는 경우    
+        else{
+            var email = req.session.email;
+            var authGroupCode = req.session.authGroupCode;
+            return res.render('main/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
+        }        
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
 //로그인(POST)
 exports.setLogin = async (req, res, next) => {
     let resModel;
@@ -57,7 +78,7 @@ exports.setLogin = async (req, res, next) => {
     }
 }; 
 
-//모바일-로그인 및 회원가입(POST)
+//소셜 로그인(POST) 로그인 및 회원가입 한 번에
 exports.setMobileLogin = async (req, res, next) => {
     let resModel;
     const email = req.body.email;
@@ -116,10 +137,10 @@ exports.setMobileLogin = async (req, res, next) => {
     }
 }; 
 
-//이메일로 패스워드 조회
+//이메일로 패스워드 조회(POST)
 exports.getPasswordByEmail = async (req, res, next) => {
     let resModel;
-    const userEmail = req.query.email;
+    const userEmail = req.body.email;
 
     //validateParam(userEmail); //입력받은 값이 빈칸인 경우 체크 Try~Catch로
     //userEmail = XSSFilter(userEmail); //XSS필터 적용        
@@ -171,27 +192,6 @@ exports.setSignUp = async (req, res, next) => {
         }
 
         return res.status(200).json(resModel);
-    }
-    catch (err) {
-        return res.status(500).json(err);
-    }
-};
-
-//메인화면(GET)
-exports.getIndex = async (req, res, next) => {
-    try {
-        //로그인 되지 않은 경우
-        if(!(req.session.valid == true)){
-            var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
-            res.cookie('MSG', msg, { httpOnly: false, secure: false });
-            return res.redirect('/login');
-        }
-        //현재 로그인 되어 있는 경우    
-        else{
-            var email = req.session.email;
-            var authGroupCode = req.session.authGroupCode;
-            return res.render('main/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
-        }        
     }
     catch (err) {
         return res.status(500).json(err);
