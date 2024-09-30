@@ -1,7 +1,7 @@
 const helper = require('../helper/helper');
 const tourLocationService = require('../service/tourLocation');
 
-//오늘의 출장 화면
+//오늘의 출장 화면(GET)
 exports.indexTrip = async (req, res, next) => {
   try {
       //로그인 되지 않은 경우
@@ -22,7 +22,7 @@ exports.indexTrip = async (req, res, next) => {
   }
 };
 
-//관광명소 화면
+//관광명소 화면(GET)
 exports.indexTourLocation = async (req, res, next) => {
   try {
       //로그인 되지 않은 경우
@@ -43,11 +43,11 @@ exports.indexTourLocation = async (req, res, next) => {
   }
 };
 
-//관광명소 조회(리스트)
+//관광명소 조회(POST)
 exports.getTourLocationList = async (req, res, next) => {
   let resModel;
-  const tourLocationGuid = helper.changeUndefiendToNull(req.query.tourLocationGuid);
-  const tourLocationName = helper.changeUndefiendToNull(req.query.tourLocationName);
+  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
+  const tourLocationName = helper.changeUndefiendToNull(req.body.tourLocationName);
 
   try {
       //관광명소 조회
