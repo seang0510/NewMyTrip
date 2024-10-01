@@ -56,7 +56,7 @@ exports.setLogin = async (req, res, next) => {
 
         //로그인 실패한 경우
         if (user == null) {
-            resModel = helper.createResponseModel(false, '올바르지 않은 이메일 및 비밀번호입니다.', null);
+            resModel = helper.createResponseModel(false, '올바르지 않은 이메일 및 비밀번호입니다.', "");
             return res.status(200).json(resModel);
         }
         //로그인 성공한 경우
