@@ -26,6 +26,11 @@ router.get('/joinConditions', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/termsConditions.html'));
 });
 
+
+//TEST(주소 -> 위도,경도 변환)
+router.post('/testAddress', indexController.getAddress);
+
+
 console.log("server start! router");
 
 module.exports = router;

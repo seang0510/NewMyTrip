@@ -1,5 +1,6 @@
 const userService = require('../service/user');
 const helper = require('../helper/helper');
+const axios = require("axios");
 
 //로그인(GET)
 exports.getLogin = async (req, res, next) => {
@@ -41,6 +42,8 @@ exports.getIndex = async (req, res, next) => {
 
 //로그인(POST)
 exports.setLogin = async (req, res, next) => {
+    console.log("setLogin");
+
     let resModel;
     const email = req.body.email;
     const joinTypeCode = req.body.joinTypeCode == undefined ? 'N' : req.body.joinTypeCode;  //"N , K , G"
@@ -210,6 +213,34 @@ exports.setLogout = async (req, res, next) => {
             resModel = helper.createResponseModel(true, '로그아웃에 성공하였습니다.', null);
             return res.status(200).json(resModel);            
         });                
+    }
+    catch (err) {
+        resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);
+        return res.status(500).json(resModel);
+    }
+};
+
+
+//TEST(주소 -> 위도,경도 변환)
+exports.getAddress = async (req, res, next) => {
+    let resModel;
+    const address = req.body.address;
+    try {        
+        console.log(address);
+        const encodedAddress = encodeURIComponent(address); // * //
+        console.log(encodedAddress);
+        
+        const response = await axios({
+            method: "GET",
+            url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+            headers: {
+              Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+            },
+          });
+          
+
+        console.log(response.data.documents); // * //
+        return res.status(200).json("");                      
     }
     catch (err) {
         resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);
