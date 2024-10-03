@@ -10,5 +10,10 @@ router.post('/notice/deleteNotice', commonController.deleteNotice);
 
 //사진 관리(photo)
 router.get('/photo', commonController.indexPhoto);
-  
+
+//광고 관리(AD)
+router.post('/ad/getAdList', commonController.getAdList);
+router.post('/ad/setAd', commonController.setAd);
+router.post('/ad/deleteAd', commonController.deleteAd);
+
 module.exports = router;
