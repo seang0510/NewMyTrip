@@ -166,3 +166,8 @@ node_modules/.bin/nodetouch
 node_modules/.bin/semver
 node_modules/.package-lock.json
 package-lock.json
+node_modules/.package-lock.json
+node_modules/.bin/semver
+node_modules/.bin/nodetouch
+node_modules/.bin/nodemon
+node_modules/.bin/mime
