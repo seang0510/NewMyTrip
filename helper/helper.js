@@ -34,7 +34,7 @@ function setMessageForCookie(title, text){
 };
 
 function changeUndefiendToNull(value){
-    if(value == undefined){
+    if(value == undefined || value == '' || value == null){
         return null;
     }
     else{
@@ -42,9 +42,20 @@ function changeUndefiendToNull(value){
     }
 };
 
+//Session Value가 존재하는 경우, Session Value 설정, 없는 경우는 Request Value 설정
+function getsessionValueOrRequsetValue(sessionValue, requestValue){
+    if (!(sessionValue == undefined || sessionValue == null || sessionValue == '')) {
+        return changeUndefiendToNull(sessionValue);
+    }
+    else {
+        return changeUndefiendToNull(requestValue);
+    }
+}
+
 module.exports = {
     createResponseModel,
     generateUUID,
     setMessageForCookie,
     changeUndefiendToNull,
+    getsessionValueOrRequsetValue,
 };

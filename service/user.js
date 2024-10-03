@@ -142,6 +142,32 @@ exports.createUser= async (userGuid, email, joinTypeCode, authGroupCode, passwor
     }
 };
 
+//비밀번호 변경
+exports.setPassword= async (userGuid, password) => {
+    let conn = await pool.getConnection();    
+    try {
+        await conn.beginTransaction();
+        const res = await conn.query('CALL SYS_USER_MST_UPDATE_PASSWORD(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, password, userGuid]);
+        await conn.commit();
+
+        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+            console.log("비밀번호 변경 성공");
+            return 1; //성공
+        }
+        else{
+            console.log("비밀번호 변경 실패");
+            return -1; //실패
+        }
+
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
 //사용자 삭제
 exports.deleteUser= async (delUserGuid, updtUserGuid) => {
 

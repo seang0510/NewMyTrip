@@ -6,6 +6,7 @@ const path = require('path');
 //로그인
 router.get('/login', indexController.getLogin);
 router.post('/login/findPassword', indexController.getPasswordByEmail);
+router.post('/setPassword', indexController.setPassword);
 router.post('/login', indexController.setLogin);
 router.post('/join', indexController.setSignUp);
 router.post('/logout', indexController.setLogout);

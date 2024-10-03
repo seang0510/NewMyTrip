@@ -67,6 +67,7 @@ exports.setLogin = async (req, res, next) => {
             //세션 스토어가 이루어진 후 redirect를 해야함.
             req.session.save(function(){ 
                 req.session.email = user.EMAIL;
+                req.session.joinTypeCode = user.JOIN_TYP_COD;
                 req.session.authGroupCode = user.AUTH_GRP_COD;
                 req.session.isLogined = true;
                 req.session.valid = true;
@@ -107,6 +108,7 @@ exports.setMobileLogin = async (req, res, next) => {
 
                 req.session.save(function(){ 
                     req.session.email = userTemp.EMAIL;
+                    req.session.joinTypeCode = user.JOIN_TYP_COD;
                     req.session.authGroupCode = userTemp.AUTH_GRP_COD;
                     req.session.isLogined = true;
                     req.session.valid = true;
@@ -126,6 +128,7 @@ exports.setMobileLogin = async (req, res, next) => {
             //세션 스토어가 이루어진 후 redirect를 해야함.
             req.session.save(function(){ 
                 req.session.email = user.EMAIL;
+                req.session.joinTypeCode = user.JOIN_TYP_COD;
                 req.session.authGroupCode = user.AUTH_GRP_COD;
                 req.session.isLogined = true;
                 req.session.valid = true;
@@ -201,6 +204,45 @@ exports.setSignUp = async (req, res, next) => {
     }
 };
 
+//비밀번호 변경(POST)
+exports.setPassword = async (req, res, next) => {
+    let resModel;
+    const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+    const joinTypeCode = helper.getsessionValueOrRequsetValue(req.session.joinTypeCode, req.body.joinTypeCode);
+    const password = helper.changeUndefiendToNull(req.body.password);
+    //password = descryptoPassword(password); //복호화(추후 작업)
+
+    //어떤 사용자인지 모르는 경우
+    if (userGuid == null || joinTypeCode == null) {
+        resModel = helper.createResponseModel(false, '사용자를 입력하셔야 합니다.', "");
+        return res.status(200).json(resModel);
+    }
+    //소셜로그인 접속자인 경우
+    else if (joinTypeCode == 'K' || joinTypeCode == 'G') {
+        resModel = helper.createResponseModel(false, '소셜로그인 사용자는 비밀번호 변경을 하실 수 없습니다.', "");
+        return res.status(200).json(resModel);
+    }
+
+    try {
+        //비밀번호 변경(1:성공, -1:실패)
+        let retVal = await userService.setPassword(userGuid, password);
+
+        //성공
+        if (retVal == 1) {
+            resModel = helper.createResponseModel(true, '비밀번호 변경에 성공하셨습니다.', "");
+        }
+        //실패
+        else{
+            resModel = helper.createResponseModel(false, '비밀번호 변경에 실패하였습니다.', "");
+        }
+
+        return res.status(200).json(resModel);
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
 //로그아웃(POST)
 exports.setLogout = async (req, res, next) => {
     let resModel;
@@ -219,7 +261,6 @@ exports.setLogout = async (req, res, next) => {
         return res.status(500).json(resModel);
     }
 };
-
 
 //TEST(주소 -> 위도,경도 변환)
 exports.getAddress = async (req, res, next) => {
