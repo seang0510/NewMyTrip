@@ -17,4 +17,12 @@ router.get('/tour_images/:imageName', function(req, res){
   res.sendFile('/public/tour_images/'+imgName);    
 });
 
+//배너 이미지 get (샘플 : http://172.30.2.5:3030/banner/녹차.jpg)
+router.get('/banner/:imageName', function(req, res){
+  var imgName = req.params.imageName;
+  console.log('이미지 요청: ' + imgName);
+  res.sendFile('/public/banner/'+imgName);    
+});
+
+
 module.exports = router;
