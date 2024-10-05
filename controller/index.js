@@ -288,3 +288,10 @@ exports.getAddress = async (req, res, next) => {
         return res.status(500).json(resModel);
     }
 };
+
+//TEST(파일 업로드 / mutipart)
+exports.setFileUpload = async (req, res, next) => {
+    console.log(req.file)// 업로드 파일 정보
+    console.log(req.body)// 요청 데이터
+    res.send("ok")
+}
