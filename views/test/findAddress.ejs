@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/smoothness/jquery-ui.min.css">
+  <link rel="stylesheet" href="/stylesheets/login.css">
+  <link rel="stylesheet" href="/stylesheets/common.css">
+  <style>
+  </style>
+  <script src="/jquery.min.js"></script>
+  <script src="/umd/popper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/jquery-ui.min.js"></script>
+  <script src="/jquery.cookie.js"></script>
+  <script src="/javascripts/common.js"></script>
+  <script src="/javascripts/fixWidth.js"></script>
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+  <script>
+    function execDaumPostcode() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                // 팝업을 통한 검색 결과 항목 클릭 시 실행
+                var addr = ''; // 주소_결과값이 없을 경우 공백 
+                var extraAddr = ''; // 참고항목
+
+                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                if (data.userSelectedType === 'R') { // 도로명 주소를 선택
+                    addr = data.roadAddress;
+                } else { // 지번 주소를 선택
+                    addr = data.jibunAddress;
+                }
+
+                if(data.userSelectedType === 'R'){
+                    if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                        extraAddr += data.bname;
+                    }
+                    if(data.buildingName !== '' && data.apartment === 'Y'){
+                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+                    }
+                    if(extraAddr !== ''){
+                        extraAddr = ' (' + extraAddr + ')';
+                    }
+                } else {
+                    document.getElementById("UserAdd1").value = '';
+                }
+
+                // 선택된 우편번호와 주소 정보를 input 박스에 넣는다.
+                console.log(data.zonecode);
+                console.log(addr);
+                console.log(extraAddr);
+                var tempZoneCode = data.zonecode;
+                var tempAddress = addr;
+
+                const encodedAddress = encodeURIComponent(tempAddress); // * //
+                console.log(encodedAddress);
+                
+                $.ajax({
+                    url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+                    method: 'GET',
+                    headers: {
+                    Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+                    },
+                    data: data,
+                    
+                    success: function (data, status, xhr) {
+                      console.log("######### data #########")
+                      
+                      console.log(tempZoneCode);
+                      console.log(tempAddress);
+                      console.log(extraAddr);
+                      console.log("x :: " + data.documents[0].x); 
+                      console.log("y :: " + data.documents[0].y); 
+
+                    },
+                    error: function (data, status, err) {
+                      console.log("error"); 
+
+                    },
+                    complete: function () {
+                      console.log("complete"); 
+
+                    }
+                  });
+                
+                  
+          
+
+                // document.getElementById('zipp_code_id').value = data.zonecode;
+                // document.getElementById("UserAdd1").value = addr;
+                // document.getElementById("UserAdd1").value += extraAddr;
+                // document.getElementById("UserAdd2").focus(); // 우편번호 + 주소 입력이 완료되었음으로 상세주소로 포커스 이동
+            }
+        }).open();
+    }
+</script>
+</head>
+
+<body>
+
+  <!-- LoadingBar Main  -->
+  <%- include('../ejs/loadingbar.ejs') %>
+  <!-- Alert Modal -->
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
+
+  
+
+  <script>
+    $(document).ready(function () {
+      execDaumPostcode();
+    });
+
+
+  </script>
+</body>
+
+</html>

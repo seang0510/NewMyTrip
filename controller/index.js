@@ -295,3 +295,13 @@ exports.setFileUpload = async (req, res, next) => {
     console.log(req.body)// 요청 데이터
     res.send("ok")
 }
+
+//TEST 다음 지도 띄우기
+exports.daumAddress = async (req, res, next) => {
+    try {
+        return res.render('test/findAddress', { title: 'Express', layout: false });      
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};

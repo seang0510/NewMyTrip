@@ -53,6 +53,8 @@ router.post('/testAddress', indexController.getAddress);
 //TEST(파일 업로드 / mutipart)
 router.post('/fileUpload', upload.single("file") , indexController.setFileUpload);
 
+//TEST 다음 지도 띄우기
+router.get('/daumAddress', indexController.daumAddress);
 
 console.log("server start! router");
 
