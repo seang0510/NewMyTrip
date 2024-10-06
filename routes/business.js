@@ -4,7 +4,12 @@ var router = express.Router();
 
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
-
+router.post('/trip/getTripList', businessController.getTripList);
+router.post('/trip/setTrip', businessController.setTrip);
+router.post('/trip/deleteTrip', businessController.deleteTrip);
+router.post('/trip/getTripDetailList', businessController.getTripDetailList);
+router.post('/trip/setTripDetail', businessController.setTripDetail);
+router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
 
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);

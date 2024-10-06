@@ -1,5 +1,6 @@
 const helper = require('../helper/helper');
 const tourLocationService = require('../service/tourLocation');
+const tripService = require('../service/trip');
 
 //오늘의 출장 화면(GET)
 exports.indexTrip = async (req, res, next) => {
@@ -19,6 +20,177 @@ exports.indexTrip = async (req, res, next) => {
   }
   catch (err) {
       return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 조회(POST)
+exports.getTripList = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const title = helper.changeUndefiendToNull(req.body.title);
+
+  try {
+    //오늘의 출장 조회
+    let rows = await tripService.getTripList(tripGuid, title);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장이 존재하지 않습니다.', null);        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 등록/수정(POST)
+exports.setTrip = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const title = helper.changeUndefiendToNull(req.body.title);
+  const expireDate = helper.changeUndefiendToNull(req.body.expireDate);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTrip(tripGuid, title, expireDate, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 등록하였습니다.', null);
+    }
+    //실패
+    else if (retVal == -1) {
+      resModel = helper.createResponseModel(false, '오늘의 출장을 등록,수정에 실패하였습니다.', null);
+    }
+    //수정
+    else {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 수정하였습니다.', null);
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 삭제(POST)
+exports.deleteTrip = async (req, res, next) => {
+let resModel;
+const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tripService.deleteTrip(tripGuid, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', null);
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 삭제에 실패하였습니다.', null);
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 조회(POST)
+exports.getTripDetailList = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
+  const address = helper.changeUndefiendToNull(req.body.address);
+
+  try {
+    //오늘의 출장 조회
+    let rows = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 등록/수정(POST)
+exports.setTripDetail = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
+  const address = helper.changeUndefiendToNull(req.body.address);
+  const latitude = helper.changeUndefiendToNull(req.body.latitude);
+  const longitude = helper.changeUndefiendToNull(req.body.longitude);
+  const order = helper.changeUndefiendToNull(req.body.order);
+  const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTripDetail(tripDetailGuid, tripGuid, facilityName, address, latitude, longitude, order, tripDetailItems, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 등록하였습니다.', null);
+    }
+    //수정
+    else if (retVal == 0) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 수정하였습니다.', null);      
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세내역을 등록,수정에 실패하였습니다.', null);
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 삭제(POST)
+exports.deleteTripDetail = async (req, res, next) => {
+let resModel;
+const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tripService.deleteTripDetail(tripDetailGuid, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 삭제하였습니다.', null);
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세내역 삭제에 실패하였습니다.', null);
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
   }
 };
 
