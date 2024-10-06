@@ -152,16 +152,22 @@ exports.getAdList = async (req, res, next) => {
 
 //광고 등록/수정(POST)
 exports.setAd = async (req, res, next) => {
-let resModel;
-const adGuid = helper.changeUndefiendToNull(req.body.adGuid);
-const adName = helper.changeUndefiendToNull(req.body.adName);
-const imgFileGuid = helper.changeUndefiendToNull(req.body.imgFileGuid);
-const urlLink = helper.changeUndefiendToNull(req.body.urlLink);
-const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  let resModel;
+  const adGuid = helper.changeUndefiendToNull(req.body.adGuid);
+  const adName = helper.changeUndefiendToNull(req.body.adName);
+  const urlLink = helper.changeUndefiendToNull(req.body.urlLink);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const file = req.file;
+
+  //파일타입이 올바르지 않은 경우
+  if (req.fileValidationError != undefined) {
+    resModel = helper.createResponseModel(false, req.fileValidationError, null);
+    return res.status(200).json(resModel);
+  }
 
 try {
   //광고 등록,수정
-  let retVal = await adService.setAd(adGuid, adName, imgFileGuid, urlLink, userGuid);
+  let retVal = await adService.setAd(adGuid, adName, file, urlLink, userGuid);
 
   //등록
   if(retVal == 1){

@@ -291,6 +291,12 @@ exports.getAddress = async (req, res, next) => {
 
 //TEST(파일 업로드 / mutipart)
 exports.setFileUpload = async (req, res, next) => {
+
+    //파일타입이 올바르지 않은 경우
+    if(req.fileValidationError != undefined){
+        console.log(req.fileValidationError);
+    }
+
     console.log(req.file)// 업로드 파일 정보
     console.log(req.body)// 요청 데이터
     res.send("ok")

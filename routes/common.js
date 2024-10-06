@@ -1,6 +1,7 @@
 var commonController = require('../controller/common');
 var express = require('express');
 var router = express.Router();
+const { upload } = require('../helper/upload');
 
 //공지사항 관리(notice)
 router.get('/notice', commonController.indexNotice);
@@ -13,7 +14,7 @@ router.get('/photo', commonController.indexPhoto);
 
 //광고 관리(AD)
 router.post('/ad/getAdList', commonController.getAdList);
-router.post('/ad/setAd', commonController.setAd);
+router.post('/ad/setAd', upload(`common/ad`).single("file"), commonController.setAd);
 router.post('/ad/deleteAd', commonController.deleteAd);
 
 module.exports = router;
