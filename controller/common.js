@@ -1,5 +1,7 @@
 const helper = require('../helper/helper');
 const adService = require('../service/ad');
+const noticeService = require('../service/notice');
+
 
 //공지사항 화면(GET)
 exports.indexNotice = async (req, res, next) => {
@@ -46,9 +48,11 @@ exports.indexPhoto = async (req, res, next) => {
 //공지사항 조회(POST)
 exports.getNoticeList = async (req, res, next) => {
     let resModel;
+    console.log("getNoticeList");
     const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
     const title = helper.changeUndefiendToNull(req.body.title);
     const contents = helper.changeUndefiendToNull(req.body.contents);
+    console.log("boardGuid :: " + boardGuid);
 
     try {
       //공지사항 조회
