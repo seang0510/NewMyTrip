@@ -95,7 +95,7 @@ exports.setMobileLogin = async (req, res, next) => {
     
     try {
         //사용자 조회
-        let user = await userService.getUser(null, email, null, null);
+        let user = await userService.getUser(null, email, null);
         
         //로그인 실패한 경우
         if (user == null) {
@@ -108,7 +108,7 @@ exports.setMobileLogin = async (req, res, next) => {
 
                 req.session.save(function(){ 
                     req.session.email = userTemp.EMAIL;
-                    req.session.joinTypeCode = user.JOIN_TYP_COD;
+                    req.session.joinTypeCode = userTemp.JOIN_TYP_COD;
                     req.session.authGroupCode = userTemp.AUTH_GRP_COD;
                     req.session.isLogined = true;
                     req.session.valid = true;
@@ -208,18 +208,12 @@ exports.setSignUp = async (req, res, next) => {
 exports.setPassword = async (req, res, next) => {
     let resModel;
     const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
-    const joinTypeCode = helper.getsessionValueOrRequsetValue(req.session.joinTypeCode, req.body.joinTypeCode);
     const password = helper.changeUndefiendToNull(req.body.password);
     //password = descryptoPassword(password); //복호화(추후 작업)
 
     //어떤 사용자인지 모르는 경우
-    if (userGuid == null || joinTypeCode == null) {
+    if (userGuid == null) {
         resModel = helper.createResponseModel(false, '사용자를 입력하셔야 합니다.', "");
-        return res.status(200).json(resModel);
-    }
-    //소셜로그인 접속자인 경우
-    else if (joinTypeCode == 'K' || joinTypeCode == 'G') {
-        resModel = helper.createResponseModel(false, '소셜로그인 사용자는 비밀번호 변경을 하실 수 없습니다.', "");
         return res.status(200).json(resModel);
     }
 
