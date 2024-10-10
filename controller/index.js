@@ -105,6 +105,7 @@ exports.setMobileLogin = async (req, res, next) => {
             //성공
             if (retVal == 1) {
                 let userTemp = await userService.getUserForLogin(email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken);
+                userTemp.IS_NEW_USER = true;
 
                 req.session.save(function(){ 
                     req.session.email = userTemp.EMAIL;
@@ -124,7 +125,8 @@ exports.setMobileLogin = async (req, res, next) => {
         }
         //로그인 성공한 경우
         else {
-            
+            user.IS_NEW_USER = false;
+
             //세션 스토어가 이루어진 후 redirect를 해야함.
             req.session.save(function(){ 
                 req.session.email = user.EMAIL;
