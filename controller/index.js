@@ -1,6 +1,18 @@
 const userService = require('../service/user');
 const helper = require('../helper/helper');
 const axios = require("axios");
+const nodemailer = require('nodemailer'); // 모듈 import
+
+
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com', // 사용할 이메일 서비스의 호스트 주소 (gamil)
+    port: 587, // 이메일 서비스의 포트 번호 (일반적으로 25, 587, 465, 2525 중 하나 사용)
+    auth: { // 이메일 서버 인증을 위한 사용자의 이메일 주소와 비밀번호
+        user: 'gobiztrip@gmail.com', // 나의 (작성자) 이메일 주소
+        pass: 'pczk ovhv ayin vjrf' // 이메일의 비밀번호
+    },
+});
 
 //로그인(GET)
 exports.getLogin = async (req, res, next) => {
@@ -82,6 +94,66 @@ exports.setLogin = async (req, res, next) => {
     }
 }; 
 
+exports.getUserCheck = async (req, res, next) => {
+    let resModel;
+    const email = req.body.email;
+    const joinTypeCode = req.body.joinTypeCode == undefined ? 'N' : req.body.joinTypeCode;  //"N , K , G"
+    const password = helper.changeUndefiendToNull(req.body.password);
+    //password = descryptoPassword(password); //복호화(추후 작업)
+    const joinToken = helper.changeUndefiendToNull(req.body.joinToken);                     //KAKAO, GOOGLE TOKEN
+    const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceType);                   //ANDROID, IOS
+    const pushToken = helper.changeUndefiendToNull(req.body.pushToken);
+    
+    try {
+        //사용자 조회
+        let user = await userService.getUser(null, email, null);
+        
+        //로그인 실패한 경우
+        if (user == null) {
+            //회원가입(1:등록, 0:이미 존재, -1:실패)
+            let retVal = await userService.createUser(null, email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);            
+
+            //성공
+            if (retVal == 1) {
+                let userTemp = await userService.getUserForLogin(email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken);
+
+                req.session.save(function(){ 
+                    req.session.email = userTemp.EMAIL;
+                    req.session.joinTypeCode = userTemp.JOIN_TYP_COD;
+                    req.session.authGroupCode = userTemp.AUTH_GRP_COD;
+                    req.session.isLogined = true;
+                    req.session.valid = true;
+    
+                    resModel = helper.createResponseModel(true, '로그인 성공', userTemp);
+                    return res.status(200).json(resModel);
+                });
+            }
+            else{
+                resModel = helper.createResponseModel(false, '로그인 실패', "");
+                return res.status(200).json(resModel);
+            }
+        }
+        //로그인 성공한 경우
+        else {
+            
+            //세션 스토어가 이루어진 후 redirect를 해야함.
+            req.session.save(function(){ 
+                req.session.email = user.EMAIL;
+                req.session.joinTypeCode = user.JOIN_TYP_COD;
+                req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.isLogined = true;
+                req.session.valid = true;
+
+                resModel = helper.createResponseModel(true, '로그인 성공', user);
+                return res.status(200).json(resModel);
+            });
+        }
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+}; 
+
 //소셜 로그인(POST) 로그인 및 회원가입 한 번에
 exports.setMobileLogin = async (req, res, next) => {
     let resModel;
@@ -105,7 +177,6 @@ exports.setMobileLogin = async (req, res, next) => {
             //성공
             if (retVal == 1) {
                 let userTemp = await userService.getUserForLogin(email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken);
-                userTemp.IS_NEW_USER = true;
 
                 req.session.save(function(){ 
                     req.session.email = userTemp.EMAIL;
@@ -125,8 +196,7 @@ exports.setMobileLogin = async (req, res, next) => {
         }
         //로그인 성공한 경우
         else {
-            user.IS_NEW_USER = false;
-
+            
             //세션 스토어가 이루어진 후 redirect를 해야함.
             req.session.save(function(){ 
                 req.session.email = user.EMAIL;
@@ -182,6 +252,7 @@ exports.setSignUp = async (req, res, next) => {
     const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceTypeCode);           //ANDROID, IOS
     const pushToken = helper.changeUndefiendToNull(req.body.pushToken);
     
+    console.log("joinTypeCode :: " + joinTypeCode);
     try {
         //회원가입(1:등록, 0:이미 존재, -1:실패)
         let retVal = await userService.createUser(null, email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
@@ -302,6 +373,32 @@ exports.setFileUpload = async (req, res, next) => {
 exports.daumAddress = async (req, res, next) => {
     try {
         return res.render('test/findAddress', { title: 'Express', layout: false });      
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
+
+//TEST 다음 지도 띄우기
+exports.sendMailSample = async (req, res, next) => {
+    console.log("## sendMailSample");
+    try {
+        const mailOptions = {
+            from: 'gobiztrip@gmail.com', // 작성자
+            to: 'seang0510@gmail.com', // 수신자
+            subject: 'Sending Email using Node.js', // 메일 제목
+            text: 'That was easy!' // 메일 내용
+        };
+        
+        transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+        });
+        return res.status(200).json("");                      
     }
     catch (err) {
         return res.status(500).json(err);

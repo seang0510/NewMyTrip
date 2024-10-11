@@ -17,6 +17,7 @@ router.post('/', indexController.setLogout);
 
 //mobile
 router.post('/mobile/login', indexController.setMobileLogin);
+router.post('/mobile/userCheck', indexController.getUserCheck);
 
 //이용약관
 router.get('/joinPerson', function(req, res){
@@ -32,6 +33,10 @@ router.post('/testAddress', indexController.getAddress);
 
 //TEST 다음 지도 띄우기
 router.get('/daumAddress', indexController.daumAddress);
+
+//TEST 메일 보내기 샘플
+router.post('/sendMailSample', indexController.sendMailSample);
+
 
 console.log("server start! router");
 
