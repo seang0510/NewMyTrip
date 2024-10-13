@@ -376,7 +376,7 @@ exports.setMobileLogin = async (req, res, next) => {
         //로그인 실패한 경우
         if (user == null) {
             //회원가입(1:등록, 0:이미 존재, -1:실패)
-            let retVal = await userService.createUser(null, email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);            
+            let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken, deviceTypeCode, pushToken);            
 
             //성공
             if (retVal == 1) {
