@@ -3,9 +3,9 @@ const helper = require('../helper/helper');
 
 
 //오늘의 출장 조회
-exports.getTripList = async (tripGuid, title) => {
+exports.getTripList = async (tripGuid, title, regUserGuid) => {
     try {        
-        const [rows, fields] = await pool.query('CALL BIZ_TRIP_MST_SELECT(?,?,?)', [tripGuid, title, 'N']);
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_MST_SELECT(?,?,?,?)', [tripGuid, title, regUserGuid, 'N']);
 
         if(rows[0].length > 0){
             console.log("오늘의 출장 조회 성공");
@@ -81,9 +81,9 @@ exports.deleteTrip = async (tripGuid, userGuid) => {
 };
 
 //오늘의 출장 상세 조회
-exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, address) => {
+exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, address, regUserGuid) => {
   try {        
-      const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT(?,?,?,?,?)', [tripDetailGuid, tripGuid, facilityName, address, 'N']);
+      const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT(?,?,?,?,?,?)', [tripDetailGuid, tripGuid, facilityName, address, regUserGuid, 'N']);
 
       if(rows[0].length > 0){
           console.log("오늘의 출장 상세 조회 성공");

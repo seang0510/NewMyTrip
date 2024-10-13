@@ -28,10 +28,11 @@ exports.getTripList = async (req, res, next) => {
   let resModel;
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
 
   try {
     //오늘의 출장 조회
-    let rows = await tripService.getTripList(tripGuid, title);
+    let rows = await tripService.getTripList(tripGuid, title, regUserGuid);
 
     if(rows == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장이 존재하지 않습니다.', null);        
@@ -112,10 +113,11 @@ exports.getTripDetailList = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
   const address = helper.changeUndefiendToNull(req.body.address);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
 
   try {
     //오늘의 출장 조회
-    let rows = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address);
+    let rows = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
 
     if(rows == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
