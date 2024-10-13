@@ -7,9 +7,15 @@ const path = require('path');
 router.get('/login', indexController.getLogin);
 router.post('/login/findPassword', indexController.getPasswordByEmail);
 router.post('/setPassword', indexController.setPassword);
+
 router.post('/login', indexController.setLogin);
+
+router.get('/login/kakao', indexController.getLoginKakao);
+router.get('/oauth/callback/kakao', indexController.getLoginKakaoCallback);
+
 router.post('/join', indexController.setSignUp);
 router.post('/logout', indexController.setLogout);
+
 
 //메인화면
 router.get('/', indexController.getIndex);

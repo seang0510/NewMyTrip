@@ -2,11 +2,11 @@ const pool = require('../db/pool');
 const helper = require('../helper/helper');
 
 //사용자 조회
-exports.getUser = async(userGuid, email, deviceTypeCode) => {
+exports.getUser = async(userGuid, email, joinTypeCode, deviceTypeCode) => {
     let user = null;
 
     try {        
-        const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?)', [userGuid, email, deviceTypeCode, 'N']);
+        const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [userGuid, email, joinTypeCode, deviceTypeCode, 'N']);
         
         if(rows[0].length > 0){
             user = rows[0].length == 0 ? null : rows[0][0];
@@ -22,128 +22,118 @@ exports.getUser = async(userGuid, email, deviceTypeCode) => {
     }
 };
 
-//사용자 조회[로그인]
-exports.getUserForLogin = async (email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken) => {
+//사용자 등록,수정 --> 회원가입과 따로 만들어야한다 (회원가입 할 때는 이미 등록된 경우 비밀번호가 수정되면 안됨)
+
+
+//사용자 로그인[일반]
+exports.getUserForLogin = async (email, password) => {
     let conn = await pool.getConnection();
-    let user = null;
+    let user;
     let res;
-    let userGuid;
+    let isSuccess;
     try {        
-        //입력한 가입종류로 등록된 기록이 있는지 확인
-        res = await pool.query('CALL SYS_USER_JOIN_TYP_SELECT(?,?,?,?)', ['', joinTypeCode, email, 'N']);
-
+        //로그인^
+        res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?)', [email, 'N', password, 'N']);
         if(res[0][0].length > 0){
-            res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?,?,?)', [email, joinTypeCode , password, joinToken, deviceTypeCode, 'N']);
-        }
+            console.log('로그인 성공');            
+            user = res[0][0][0];
+            isSuccess = true;
+        }   
         else{
-            //등록된 기록이 없는 경우
-            const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?)', ['', email, '', 'N']);
-            if(!(rows[0].length == 0 || rows[0][0].USER_GUID == null || rows[0][0].USER_GUID == '')){
-                userGuid = rows[0][0].USER_GUID;
-            }
-            res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, joinTypeCode, joinToken]);
+            console.log('로그인 실패');
+            isSuccess = false;
+        }     
+        
+        if(isSuccess == true){
+            const userGuid = user.USER_GUID;
 
-            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
-                console.log("사용자 가입종류 등록 성공");
-                res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?,?,?)', [email, joinTypeCode , password, joinToken, deviceTypeCode, 'N']);
-            }
-            else{
-                console.log("사용자 가입종류 등록 실패");
-            }
-        }
+            //입력한 가입종류로 등록된 기록이 있는지 확인
+            res = await pool.query('CALL SYS_USER_JOIN_TYP_SELECT(?,?,?,?)', [userGuid, 'N', '', 'N']);
 
-        if(res[0][0].length > 0){
-            console.log("로그인 성공");
-            user = res[0][0].length == 0 ? null : res[0][0][0];
-
-            //만약에 기존 PUSH TOKEN이 없으며, 입력받은 pushToken이 존재하는 경우, 수정
-            if(!(pushToken == null || pushToken == '')){
-                userGuid = user.USER_GUID;
-
-                //PUSH TOKEN 갱신
-                res = await conn.query('CALL SYS_USER_MST_UPDATE_PUSH_TOKEN(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, pushToken, userGuid]);        
-                await conn.commit();
-
+            if(!(res[0][0].length > 0)){
+                res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, 'N', null]);
+    
                 if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
-                    console.log("PUSH TOKEN 갱신 성공");
+                    console.log("사용자 가입종류 등록 성공");
                 }
                 else{
-                    console.log("PUSH TOKEN 갱신 실패");
-                }
+                    console.log("사용자 가입종류 등록 실패");
+                    isSuccess = false;
+                }                       
             }
-            else{
-                console.log("PUSH TOKEN 갱신 없음");
-            }
-        }
-        else {
-            console.log("로그인 실패");
-            await conn.rollback();
         }
 
-        return user;
+        if(isSuccess){
+            await conn.commit();
+            console.log("로그인 최종 성공");
+        }
+        else{
+            await conn.rollback();
+            console.log("로그인 최종 실패");
+            user = null;
+        }
+
     } catch (err) {
         conn.rollback();        
+        user = null;
         console.log(err);
         throw Error(err);
     } finally {
         conn.release();
+        return user;
     }
 };
 
-//비밀번호 조회
-exports.getPasswordByEmail = async (userEmail) => {
-    var sql = 'CALL SYS_USER_MST_SELECT_PASSWORD(?)';
-    try {        
-        const [rows, fields] = await pool.query(sql, userEmail);
-        let password = null;
-
-        if(!(rows[0].length == 0 || rows[0][0].PASSWORD == null || rows[0][0].PASSWORD == '')){
-            password = rows[0][0].PASSWORD;
-        }
-        return password;
-    } catch (err) {
-        console.log(err);
-        throw Error(err);
-    }
-};
-
-//사용자 등록,수정,회원가입
-exports.createUser= async (userGuid, email, joinTypeCode, authGroupCode, password, joinToken, deviceTypeCode, pushToken) => {
-    userGuid = (userGuid == null || userguid == '') ? helper.generateUUID() : userguid;
+//사용자 회원가입[일반]
+exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken, deviceTypeCode, pushToken) => {    
     let conn = await pool.getConnection();    
     let params;
     let res;
+    let userGuid;
     let returnCode = -1;
     let isSuccess = false;
 
     try {
         await conn.beginTransaction();
 
-        //사용자 조회
-        const [results] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?)', [null, email, null, 'N']);
-        if(results[0].length > 0){
-            console.log("등록된 사용자 존재");            
+        //기존 사용자 조회
+        res = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [null, email, null, null, 'N']);
+
+        //존재하는 경우
+        if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'N'){
+            user = res[0][0][0];
             isSuccess = true;
-            returnCode = 0; //이미 존재
+            returnCode = 0;
         }
-        else{            
-            //회원가입
+        //삭제되었거나 등록인 경우
+        else{
+            //삭제된 경우
+            if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'Y'){
+                user = res[0][0][0];
+                userGuid = user.USER_GUID;
+            }
+            //등록인 경우
+            else{
+                userGuid = helper.generateUUID();
+            }
+
             params = [userGuid, email, authGroupCode, password, deviceTypeCode, pushToken, userGuid];
             res = await conn.query('CALL SYS_USER_MST_CREATE(?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
             if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
                 console.log("사용자 등록 성공");
                 isSuccess = true;
-                returnCode = 1; //등록 성공  
+                returnCode = 1; //등록/수정 성공  
             }
             else{
                 console.log("사용자 등록 실패");
                 isSuccess = false;
-                returnCode = -1; //등록 실패
-            }                  
+                returnCode = -1; //등록/수정 실패
+            }   
         }
 
-        if(isSuccess == true){    
+        //사용자 가입종류 등록
+        if(isSuccess == true && returnCode != 0){    
             params = [userGuid, joinTypeCode, joinToken];
             res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', params);   
             
@@ -164,14 +154,123 @@ exports.createUser= async (userGuid, email, joinTypeCode, authGroupCode, passwor
         else {
             await conn.commit();
         }    
-
-        return returnCode;        
     } catch (err) {
         conn.rollback();
+        returnCode = -1;
         console.log(err);
         throw Error(err);
     } finally {
         conn.release();
+        return returnCode;
+    }
+};
+
+//사용자 로그인 및 회원가입 한 번에(소셜 로그인)
+exports.setLoginWithSignUp= async (email, joinTypeCode, joinToken) => {    
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let user;
+    let userGuid;
+    let isSuccess = false;    
+
+    try {
+        await conn.beginTransaction();
+
+        //기존 사용자 조회
+        res = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [null, email, null, null, 'N']);
+
+        //존재하는 경우
+        if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'N'){
+            user = res[0][0][0];
+            userGuid = user.USER_GUID;
+            isSuccess = true;
+            user.IS_SUCCESS = 0;
+        }
+        //삭제되었거나 등록인 경우
+        else{        
+            //삭제된 경우
+            if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'Y'){
+                user = res[0][0][0];
+
+                //복구
+                userGuid = user.USER_GUID;
+                params = [userGuid, 'N', userGuid];
+                res = await conn.query('CALL SYS_USER_MST_UPDATE_YN(?,?,?,@RET_VAL); select @RET_VAL;', params);
+            }
+            //등록인 경우
+            else{
+                userGuid = helper.generateUUID();
+                user = {
+                    USER_GUID : userGuid,
+                    EMAIL : email,
+                    PWD : '',
+                    AUTH_GRP_COD : 'N',
+                    DEVICE_TYP_COD : '',
+                    PUSH_TOKEN: '',
+                    JOIN_TYP_COD : joinTypeCode,
+                };
+                params = [userGuid, email, 'N', null, null, null, userGuid];
+                res = await conn.query('CALL SYS_USER_MST_CREATE(?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+            }
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                console.log("사용자 등록 성공");
+                isSuccess = true;
+                user.IS_SUCCESS = 1; //등록/수정 성공  
+            }
+            else{
+                console.log("사용자 등록 실패");
+                isSuccess = false;
+                user.IS_SUCCESS = -1; //등록/수정 실패
+            }   
+        }
+
+        //가입 종류 등록 또는 수정(=토큰 갱신)
+        if(isSuccess == true){
+            res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, joinTypeCode, joinToken]);
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                console.log("사용자 가입종류 등록 성공");
+            }
+            else{
+                console.log("사용자 가입종류 등록 실패");
+                isSuccess = false;
+            }          
+        }
+
+        if (isSuccess == false) {
+            conn.rollback();
+            user = null;
+        }
+        else {
+            await conn.commit();
+        }    
+                
+    } catch (err) {
+        conn.rollback();
+        user = null;
+        console.log(err);        
+        throw Error(err);
+    } finally {
+        conn.release();
+        return user;
+    }
+};
+
+//비밀번호 조회
+exports.getPasswordByEmail = async (userEmail) => {
+    var sql = 'CALL SYS_USER_MST_SELECT_PASSWORD(?)';
+    try {        
+        const [rows, fields] = await pool.query(sql, userEmail);
+        let password = null;
+
+        if(!(rows[0].length == 0 || rows[0][0].PASSWORD == null || rows[0][0].PASSWORD == '')){
+            password = rows[0][0].PASSWORD;
+        }
+        return password;
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
     }
 };
 

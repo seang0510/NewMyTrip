@@ -64,7 +64,7 @@
               <a href="#" class="btn btn-secondary w-100" onclick="redirectKakao();">구글 로그인</a>
             </div>
             <div class="d-inline-flex align-items-center w-50">
-              <a href="#" class="btn btn-warning w-100" onclick="redirectGoogle();">카카오 로그인</a>
+              <a href="/login/kakao" class="btn btn-warning w-100">카카오 로그인</a>
             </div>
           </div>
           <div class="d-flex justify-content-center mt-3">
@@ -329,9 +329,7 @@
     };
 
     function redirectKakao() {
-      $("#modalAlert .modal-title").html("카카오 로그인");
-      $("#modalAlert .modal-body").html("개발중입니다.");
-      $("#modalAlert").modal('show');
+      
     };
 
     function redirectGoogle() {
