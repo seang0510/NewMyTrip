@@ -143,18 +143,36 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
 
         //성공
         if (user.IS_SUCCESS == 1) {
-            resModel = helper.createResponseModel(true, '소셜 회원가입 및 로그인에 성공하셨습니다.', user);
+            //세션 스토어가 이루어진 후 redirect를 해야함.
+            req.session.save(function(){ 
+                req.session.email = user.EMAIL;
+                req.session.joinTypeCode = user.JOIN_TYP_COD;
+                req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.isLogined = true;
+                req.session.valid = true;
+
+                resModel = helper.createResponseModel(true, '소셜 회원가입 및 로그인에 성공하셨습니다.', user);
+                return res.status(200).json(resModel);
+            });            
         }
         //실패
         else if (user.IS_SUCCESS == -1) {
             resModel = helper.createResponseModel(false, '소셜 회원가입 및 로그인에 실패하셨습니다.', user);
+            return res.status(200).json(resModel);
         }
         //이미 존재
         else{
-            resModel = helper.createResponseModel(true, '소셜 로그인에 성공하셨습니다.', user);
-        }        
+            req.session.save(function(){ 
+                req.session.email = user.EMAIL;
+                req.session.joinTypeCode = user.JOIN_TYP_COD;
+                req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.isLogined = true;
+                req.session.valid = true;
 
-        return res.status(200).json(resModel);
+                resModel = helper.createResponseModel(true, '소셜 로그인에 성공하셨습니다.', user);
+                return res.status(200).json(resModel);
+            });                        
+        }                
     }
     catch (err) {
         return res.status(500).json(err);
