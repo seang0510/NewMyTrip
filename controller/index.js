@@ -138,6 +138,9 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
       }    
 
     try {
+
+        //아래 부분을 새로운 Route에서 하도록 하고, 현재 부분에서는 세션에 Token키 넣고, 회원가입 창으로 이동하면 될듯
+
         //회원가입(1:등록, 0:이미 존재, -1:실패)
         let user = await userService.setLoginWithSignUp(email, 'K', token);
 

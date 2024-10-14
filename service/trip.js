@@ -127,7 +127,7 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
         res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
         if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
-          console.log("오늘의 출장 상세 등록 성공");
+           console.log("오늘의 출장 상세 등록 성공");
           isSuccess = true;
           returnCode = 1; //등록 성공          
         }

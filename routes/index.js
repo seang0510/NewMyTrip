@@ -11,7 +11,7 @@ router.post('/setPassword', indexController.setPassword);
 router.post('/login', indexController.setLogin);
 
 router.get('/login/kakao', indexController.getLoginKakao);
-router.get('/oauth/callback/kakao', indexController.getLoginKakaoCallback);
+router.get('/login/kakao/callback', indexController.getLoginKakaoCallback);
 
 router.post('/join', indexController.setSignUp);
 router.post('/logout', indexController.setLogout);
