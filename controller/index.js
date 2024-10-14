@@ -312,46 +312,12 @@ exports.getUserCheck = async (req, res, next) => {
         //사용자 조회
         let user = await userService.getUser(null, email, null);
         
-        //로그인 실패한 경우
-        if (user == null) {
-            //회원가입(1:등록, 0:이미 존재, -1:실패)
-            let retVal = await userService.createUser(null, email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);            
-
-            //성공
-            if (retVal == 1) {
-                let userTemp = await userService.getUserForLogin(email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken);
-
-                req.session.save(function(){ 
-                    req.session.email = userTemp.EMAIL;
-                    req.session.joinTypeCode = userTemp.JOIN_TYP_COD;
-                    req.session.authGroupCode = userTemp.AUTH_GRP_COD;
-                    req.session.isLogined = true;
-                    req.session.valid = true;
-    
-                    resModel = helper.createResponseModel(true, '로그인 성공', userTemp);
-                    return res.status(200).json(resModel);
-                });
-            }
-            else{
-                resModel = helper.createResponseModel(false, '로그인 실패', "");
-                return res.status(200).json(resModel);
-            }
+        if (user != null) {
+            resModel = helper.createResponseModel(true, '아이디 존재 합니다.', user);
+        } else {
+            resModel = helper.createResponseModel(true, '아이디가 존재 하지 않습니다.', '');
         }
-        //로그인 성공한 경우
-        else {
-            
-            //세션 스토어가 이루어진 후 redirect를 해야함.
-            req.session.save(function(){ 
-                req.session.email = user.EMAIL;
-                req.session.joinTypeCode = user.JOIN_TYP_COD;
-                req.session.authGroupCode = user.AUTH_GRP_COD;
-                req.session.isLogined = true;
-                req.session.valid = true;
-
-                resModel = helper.createResponseModel(true, '로그인 성공', user);
-                return res.status(200).json(resModel);
-            });
-        }
+        return res.status(200).json(resModel);
     }
     catch (err) {
         return res.status(500).json(err);
