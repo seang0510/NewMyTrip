@@ -55,22 +55,33 @@ exports.setTrip = async (req, res, next) => {
   const title = helper.changeUndefiendToNull(req.body.title);
   const expireDate = helper.changeUndefiendToNull(req.body.expireDate);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const uuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTrip(tripGuid, title, expireDate, userGuid);
+    let retVal = await tripService.setTrip(uuid, title, expireDate, userGuid);
 
     //등록
     if (retVal == 1) {
-      resModel = helper.createResponseModel(true, '오늘의 출장을 등록하였습니다.', null);
+      let tripMst = await tripService.getTripList(uuid, '', userGuid);
+      if(tripMst != null){
+        resModel = helper.createResponseModel(true, '오늘의 출장을 등록하였습니다.', tripMst[0]);
+      }else{
+        //master 삭제
+        console.log(uuid);
+        console.log(userGuid);
+        let tripMstDelete = await tripService.deleteTrip(uuid, userGuid);
+        resModel = helper.createResponseModel(true, '오늘의 출장 디테일 등록에 실패하였습니다.', '');
+      }
+      
     }
     //실패
     else if (retVal == -1) {
-      resModel = helper.createResponseModel(false, '오늘의 출장을 등록,수정에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '오늘의 출장을 등록,수정에 실패하였습니다.', '');
     }
     //수정
     else {
-      resModel = helper.createResponseModel(true, '오늘의 출장을 수정하였습니다.', null);
+      resModel = helper.createResponseModel(true, '오늘의 출장을 수정하였습니다.', '');
     }
 
     return res.status(200).json(resModel);

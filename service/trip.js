@@ -23,7 +23,6 @@ exports.getTripList = async (tripGuid, title, regUserGuid) => {
 
 //오늘의 출장 등록,수정
 exports.setTrip = async (tripGuid, title, expireDate, userGuid) => {
-  tripGuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
     let conn = await pool.getConnection();    
     try {        
         let params = [tripGuid, title, expireDate, userGuid];
