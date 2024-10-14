@@ -163,15 +163,15 @@ exports.setTripDetail = async (req, res, next) => {
 
     //등록
     if (retVal == 1) {
-      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 등록하였습니다.', null);
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 등록하였습니다.', '');
     }
     //수정
     else if (retVal == 0) {
-      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 수정하였습니다.', null);      
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 수정하였습니다.', '');      
     }
     //실패
     else {
-      resModel = helper.createResponseModel(false, '오늘의 출장 상세내역을 등록,수정에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세내역을 등록,수정에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);
