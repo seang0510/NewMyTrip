@@ -99,7 +99,7 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
 };
 
 //오늘의 출장 상세 등록,수정
-exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, latitude, longitude, order, tripDetailItems, userGuid) => {
+exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, order, tripDetailItems, userGuid) => {
   tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
   let conn = await pool.getConnection();    
   let params;
@@ -123,8 +123,8 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
 
       //오늘의 출장 상세 등록,수정
       if(isSuccess == true){        
-        params = [tripDetailGuid, tripGuid, facilityName, address, latitude, longitude, order, userGuid, 'N'];
-        res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+        params = [tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, order, userGuid, 'N'];
+        res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
         if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
            console.log("오늘의 출장 상세 등록 성공");

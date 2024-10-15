@@ -431,7 +431,7 @@ exports.getAddress = async (req, res, next) => {
 //TEST 다음 지도 띄우기
 exports.daumAddress = async (req, res, next) => {
     try {
-        return res.render('test/findAddress', { title: 'Express', layout: false });      
+        return res.render('daum/findAddress', { title: 'Express', layout: false });      
     }
     catch (err) {
         return res.status(500).json(err);
