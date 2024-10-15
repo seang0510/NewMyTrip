@@ -103,11 +103,11 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
     //삭제
     if (retVal == 1) {
-      resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', null);
+      resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', '');
     }
     //실패
     else {
-      resModel = helper.createResponseModel(false, '오늘의 출장 삭제에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '오늘의 출장 삭제에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);
