@@ -20,6 +20,29 @@
   <script src="/javascripts/common.js"></script>
   <script src="/javascripts/fixWidth.js"></script>
   <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <!-- <script src="http://dmaps.daum.net/map_js_init/postcode.v2.js?autoload=false"></script> -->
+
+
+  
+</head>
+
+<body>
+
+  <!-- LoadingBar Main  -->
+  <%- include('../ejs/loadingbar.ejs') %>
+  <!-- Alert Modal -->
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
+
+  
+
+  <script>
+    $(document).ready(function () {
+      console.log("########1");
+      execDaumPostcode();
+    });
+
+
+  </script>
 
   <script>
     function execDaumPostcode() {
@@ -77,6 +100,7 @@
                       console.log("x :: " + data.documents[0].x); 
                       console.log("y :: " + data.documents[0].y); 
 
+                      TBTAOS.getAddressInfo(tempAddress , data.documents[0].x , data.documents[0].y);
                     },
                     error: function (data, status, err) {
                       console.log("error"); 
@@ -98,24 +122,6 @@
             }
         }).open();
     }
-</script>
-</head>
-
-<body>
-
-  <!-- LoadingBar Main  -->
-  <%- include('../ejs/loadingbar.ejs') %>
-  <!-- Alert Modal -->
-  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
-
-  
-
-  <script>
-    $(document).ready(function () {
-      execDaumPostcode();
-    });
-
-
   </script>
 </body>
 
