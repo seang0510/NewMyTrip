@@ -117,7 +117,31 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   }
 };
 
-//오늘의 출장 상세 조회(POST)
+//오늘의 출장 상세 개별 조회(POST)
+exports.getTripDetail = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+
+  try {
+    //오늘의 출장 조회
+    let rows = await tripService.getTripDetail(tripDetailGuid, tripGuid);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 리스트 조회(POST)
 exports.getTripDetailList = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);

@@ -7,6 +7,7 @@ router.get('/trip', businessController.indexTrip);
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/setTrip', businessController.setTrip);
 router.post('/trip/deleteTrip', businessController.deleteTrip);
+router.post('/trip/getTripDetail', businessController.getTripDetail);
 router.post('/trip/getTripDetailList', businessController.getTripDetailList);
 router.post('/trip/setTripDetail', businessController.setTripDetail);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);

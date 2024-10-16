@@ -79,10 +79,44 @@ exports.deleteTrip = async (tripGuid, userGuid) => {
     }
 };
 
-//오늘의 출장 상세 조회
+//오늘의 출장 상세 조회(개별)
+exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
+    let tripDetail;
+    let tripDetailItems;
+    let res;
+
+    try {        
+        
+        res = await pool.query('CALL BIZ_TRIP_DTL_SELECT(?,?)', [tripDetailGuid, 'N']);
+
+        if(res[0][0].length > 0){
+            console.log("오늘의 출장 상세 조회 성공");
+            tripDetail = res[0][0][0];
+
+            res = await pool.query('CALL BIZ_TRIP_DTL_ITM_SELECT(?,?,?)', [tripDetailGuid, tripGuid, 'N']);
+
+            if(res[0][0].length > 0){
+                console.log("오늘의 출장 상세 아이템 조회 성공");
+                tripDetailItems = res[0][0];    
+                tripDetail.ITMS = tripDetailItems;
+            }
+
+            return tripDetail;
+        }
+        else{
+            console.log("오늘의 출장 상세 조회 실패");
+            return null;
+        }
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+};
+
+//오늘의 출장 상세 조회(리스트)
 exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, address, regUserGuid) => {
   try {        
-      const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT(?,?,?,?,?,?)', [tripDetailGuid, tripGuid, facilityName, address, regUserGuid, 'N']);
+      const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_LIST(?,?,?,?,?,?)', [tripDetailGuid, tripGuid, facilityName, address, regUserGuid, 'N']);
 
       if(rows[0].length > 0){
           console.log("오늘의 출장 상세 조회 성공");

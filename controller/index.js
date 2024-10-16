@@ -49,10 +49,12 @@ exports.setLogin = async (req, res, next) => {
     const email = req.body.email;
     const password = helper.changeUndefiendToNull(req.body.password);
     //password = descryptoPassword(password); //복호화(추후 작업)    
+    const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceTypeCode);           //ANDROID, IOS
+    const pushToken = helper.changeUndefiendToNull(req.body.pushToken);    
 
     try {
         //사용자 조회
-        let user = await userService.getUserForLogin(email, password);
+        let user = await userService.getUserForLogin(email, password, deviceTypeCode, pushToken);
 
         //로그인 실패한 경우
         if (user == null) {
@@ -208,7 +210,7 @@ exports.getPasswordByEmail = async (req, res, next) => {
     }
 };
 
-//일반 회원가입(POST)
+//일반,모바일 회원가입(POST)
 exports.setSignUp = async (req, res, next) => {
     let resModel;
     const email = req.body.email;
@@ -296,11 +298,7 @@ exports.setLogout = async (req, res, next) => {
     }
 };
 
-
-////////////////////////////////////////////////////
-//////////////추후 위치 변경 또는 제거////////////////
-////////////////////////////////////////////////////
-
+//사용자 조회(POST)
 exports.getUserCheck = async (req, res, next) => {
     let resModel;
     const email = req.body.email;
@@ -327,7 +325,53 @@ exports.getUserCheck = async (req, res, next) => {
     }
 }; 
 
-//소셜 로그인(POST) 로그인 및 회원가입 한 번에
+//사용자 등록,수정(POST)
+exports.setSignUp = async (req, res, next) => {
+    let resModel;
+    const email = req.body.email;
+    const joinTypeCode = req.body.joinTypeCode == undefined ? 'N' : req.body.joinTypeCode;  //"N , K , G"
+    const password = helper.changeUndefiendToNull(req.body.password);
+    //password = descryptoPassword(password); //복호화(추후 작업)
+    const joinToken = helper.changeUndefiendToNull(req.body.joinToken);                     //KAKAO, GOOGLE TOKEN
+    const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceTypeCode);           //ANDROID, IOS
+    const pushToken = helper.changeUndefiendToNull(req.body.pushToken);
+    
+    console.log("joinTypeCode :: " + joinTypeCode);
+    try {
+        //회원가입(1:등록, 0:이미 존재, -1:실패)
+        let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+
+        //성공
+        if (retVal == 1) {
+            resModel = helper.createResponseModel(true, '회원가입에 성공하셨습니다.', "");
+        }
+        //실패
+        else if (retVal == -1) {
+            resModel = helper.createResponseModel(false, '회원가입에 실패하였습니다.', "");
+        }
+        //이미 존재
+        else{
+            resModel = helper.createResponseModel(false, '이미 등록된 이메일입니다.', "");
+        }
+
+        return res.status(200).json(resModel);
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
+////////////////////////////////////////////////////
+////////////////모바일 소셜 로그인///////////////////   
+////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////
+//////////////추후 위치 변경 또는 제거////////////////
+////////////////////////////////////////////////////
+
+//모바일 로그인(POST) 로그인 및 회원가입 한 번에  --> 추후 삭제 예정
 exports.setMobileLogin = async (req, res, next) => {
     let resModel;
     const email = req.body.email;
@@ -349,7 +393,7 @@ exports.setMobileLogin = async (req, res, next) => {
 
             //성공
             if (retVal == 1) {
-                let userTemp = await userService.getUserForLogin(email, joinTypeCode, password, joinToken, deviceTypeCode, pushToken);
+                let userTemp = await userService.getUserForLogin(email, password, deviceTypeCode, pushToken);
 
                 req.session.save(function(){ 
                     req.session.email = userTemp.EMAIL;
@@ -388,8 +432,9 @@ exports.setMobileLogin = async (req, res, next) => {
     }
 }; 
 
+
 ////////////////////////////////////////////////////
-//////////////추후 위치 변경 또는 제거////////////////
+///////////////분석 후 위치 변경 필요////////////////
 ////////////////////////////////////////////////////
 
 const transporter = nodemailer.createTransport({
