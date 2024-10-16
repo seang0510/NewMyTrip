@@ -22,10 +22,10 @@ exports.getTripList = async (tripGuid, title, regUserGuid) => {
 };
 
 //오늘의 출장 등록,수정
-exports.setTrip = async (tripGuid, title, expireDate, userGuid) => {
+exports.setTrip = async (tripGuid, title, startDate, userGuid) => {
     let conn = await pool.getConnection();    
     try {        
-        let params = [tripGuid, title, expireDate, userGuid];
+        let params = [tripGuid, title, startDate, userGuid];
 
         await conn.beginTransaction();
         const res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,@RET_VAL); select @RET_VAL;', params);

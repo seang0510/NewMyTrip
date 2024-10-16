@@ -53,13 +53,13 @@ exports.setTrip = async (req, res, next) => {
   let resModel;
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
-  const expireDate = helper.changeUndefiendToNull(req.body.expireDate);
+  const startDate = helper.changeUndefiendToNull(req.body.startDate);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   const uuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTrip(uuid, title, expireDate, userGuid);
+    let retVal = await tripService.setTrip(uuid, title, startDate, userGuid);
 
     //등록
     if (retVal == 1) {
