@@ -100,7 +100,7 @@
                       console.log("x :: " + data.documents[0].x); 
                       console.log("y :: " + data.documents[0].y); 
 
-                      TBTAOS.getAddressInfo(tempAddress , data.documents[0].x , data.documents[0].y);
+                      TBTAOS.getAddressInfo(tempAddress , data.documents[0].y , data.documents[0].x);
                     },
                     error: function (data, status, err) {
                       console.log("error"); 
