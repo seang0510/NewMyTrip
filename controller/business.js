@@ -54,26 +54,33 @@ exports.setTrip = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
   const startDate = helper.changeUndefiendToNull(req.body.startDate);
+
+  const markFacilityNameYn = helper.changeUndefiendToNull(req.body.markFacilityNameYn);
+  const markAddressYn = helper.changeUndefiendToNull(req.body.markAddressYn);
+  const markItemYn = helper.changeUndefiendToNull(req.body.markItemYn);
+  const markItemName = helper.changeUndefiendToNull(req.body.markItemName);
+  const markColor = helper.changeUndefiendToNull(req.body.markColor);
+
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   const uuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTrip(uuid, title, startDate, userGuid);
+    let retVal = await tripService.setTrip(uuid, title, startDate,
+           markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid);
 
     //등록
     if (retVal == 1) {
       let tripMst = await tripService.getTripList(uuid, '', userGuid);
-      if(tripMst != null){
+      if (tripMst != null) {
         resModel = helper.createResponseModel(true, '오늘의 출장을 등록하였습니다.', tripMst[0]);
-      }else{
+      } else {
         //master 삭제
         console.log(uuid);
         console.log(userGuid);
         let tripMstDelete = await tripService.deleteTrip(uuid, userGuid);
         resModel = helper.createResponseModel(true, '오늘의 출장 디테일 등록에 실패하였습니다.', '');
       }
-      
     }
     //실패
     else if (retVal == -1) {
@@ -129,6 +136,29 @@ exports.getTripDetail = async (req, res, next) => {
 
     if(rows == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 워터마크 조회(POST)
+exports.getTripDetailWaterMark = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+
+  try {
+    //오늘의 출장 상세 워터마크 조회
+    let rows = await tripService.getTripDetailWaterMark(tripDetailGuid);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세 워터마크가 존재하지 않습니다.', null);        
     }
     else{
       resModel = helper.createResponseModel(true, '', rows);

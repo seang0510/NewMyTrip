@@ -22,13 +22,13 @@ exports.getTripList = async (tripGuid, title, regUserGuid) => {
 };
 
 //오늘의 출장 등록,수정
-exports.setTrip = async (tripGuid, title, startDate, userGuid) => {
+exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid) => {
     let conn = await pool.getConnection();    
     try {        
-        let params = [tripGuid, title, startDate, userGuid];
+        let params = [tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid];
 
         await conn.beginTransaction();
-        const res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+        const res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
         await conn.commit();
 
         if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
@@ -84,6 +84,7 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
     let tripDetail;
     let tripDetailItems;
     let res;
+    let isSuccess = false;
 
     try {        
         
@@ -99,12 +100,54 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
                 console.log("오늘의 출장 상세 아이템 조회 성공");
                 tripDetailItems = res[0][0];    
                 tripDetail.ITMS = tripDetailItems;
+                isSuccess = true;
             }
-
-            return tripDetail;
         }
         else{
             console.log("오늘의 출장 상세 조회 실패");
+            isSuccess = false;
+        }
+
+        if(isSuccess){
+            res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, tripDetailGuid, 'N']);
+
+            if(res[0][0].length > 0){
+                console.log("오늘의 출장 상세 이미지 조회 성공");
+                tripDetailImages = res[0][0];    
+                tripDetail.IMGS = tripDetailImages;
+                isSuccess = true;
+            }
+        }
+        else{
+            console.log("오늘의 출장 상세 이미지 조회 실패");
+            isSuccess = false;
+        }
+
+        if(isSuccess){
+            return tripDetail;
+        }
+        else{
+            return null;
+        }        
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+};
+
+//오늘의 출장 상세 워터마크 조회(개별)
+exports.getTripDetailWaterMark = async (tripDetailGuid) => {
+    try {        
+        
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_WMK(?,?)', [tripDetailGuid, 'N']);
+
+        if(rows[0].length > 0){
+            console.log("오늘의 출장 상세 워터마크 조회 성공");
+            return rows[0];            
+        }
+        else{
+            console.log("오늘의 출장 상세 워터마크 조회 실패");
             return null;
         }
     } catch (err) {
