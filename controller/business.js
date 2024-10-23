@@ -208,13 +208,14 @@ exports.setTripDetail = async (req, res, next) => {
   const addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
   const latitude = helper.changeUndefiendToNull(req.body.latitude);
   const longitude = helper.changeUndefiendToNull(req.body.longitude);
+  const compYn = helper.changeUndefiendToNull(req.body.compYn);
   const order = helper.changeUndefiendToNull(req.body.order);
   const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTripDetail(tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, order, tripDetailItems, userGuid);
+    let retVal = await tripService.setTripDetail(tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid);
 
     //등록
     if (retVal == 1) {
