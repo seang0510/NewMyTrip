@@ -1,6 +1,7 @@
 var businessController = require('../controller/business');
 var express = require('express');
 var router = express.Router();
+const { upload } = require('../helper/upload');
 
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
@@ -11,6 +12,7 @@ router.post('/trip/getTripDetail', businessController.getTripDetail);
 router.post('/trip/getTripDetailWaterMark', businessController.getTripDetailWaterMark);
 router.post('/trip/getTripDetailList', businessController.getTripDetailList);
 router.post('/trip/setTripDetail', businessController.setTripDetail);
+router.post('/trip/setTripDetailImage', upload(`business/trip`).single("file"), businessController.setTripDetailImage);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
 
 //########### 관광 명소 ########### 

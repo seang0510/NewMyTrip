@@ -212,10 +212,11 @@ exports.setTripDetail = async (req, res, next) => {
   const order = helper.changeUndefiendToNull(req.body.order);
   const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const file = req.file;
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTripDetail(tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid);
+    let retVal = await tripService.setTripDetail(tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, file, userGuid);
 
     //등록
     if (retVal == 1) {
@@ -228,6 +229,37 @@ exports.setTripDetail = async (req, res, next) => {
     //실패
     else {
       resModel = helper.createResponseModel(false, '오늘의 출장 상세내역을 등록,수정에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 등록(이미지)(POST)
+exports.setTripDetailImage = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const file = req.file;
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTripDetailImage(tripDetailGuid, file, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 등록하였습니다.', '');
+    }
+    //수정
+    else if (retVal == 0) {
+      resModel = helper.createResponseModel(false, '등록할 오늘의 출장 상세 이미지가 없습니다.', '');      
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지를 등록에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);
