@@ -176,14 +176,13 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
 };
 
 //오늘의 출장 상세 등록,수정
-exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, file, userGuid) => {
+exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid) => {
     tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
     let conn = await pool.getConnection();
     let params;
     let res;
     let returnCode = -1;
     let isSuccess = false;
-    let fileGuid = null;
 
     try {
         await conn.beginTransaction();
@@ -244,52 +243,6 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
                     isSuccess = false;
                     break;
                 }
-            }
-        }
-
-        //첨부파일이 존재하는 경우 
-        if (file != undefined) {
-            fileGuid = helper.generateUUID();
-            const fileType = 'I';
-            const fileName = file.originalname; //Web에서 보는 파일명
-            const orgFileName = file.filename; //실제 디스크에 저장되는 파일명
-            const filePath = file.path.replace(process.cwd(), '');
-            const urlPath = file.path.replace(process.cwd() + '\\uploads', '');
-
-            //첨부파일 등록
-            params = [fileGuid, fileType, fileName, orgFileName, filePath, urlPath, userGuid];
-            res = await pool.query('CALL CMN_FILE_MST_CREATE(?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
-
-            if (res[0][0].affectedRows >= 1 && res[0][1][0]["@RET_VAL"] == 'I') {
-                console.log("오늘의 출장 상세 이미지 등록 성공");
-
-                //오늘의 출장 상세 이미지 삭제
-                res = await pool.query('CALL BIZ_TRIP_DTL_IMG_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
-
-                if (res[0][1][0]["@RET_VAL"] == 'D') {
-                    console.log("오늘의 출장 상세 아이템 삭제 성공");
-
-                    //오늘의 출장 상세 이미지 등록
-                    let tripDetailImgGuid = helper.generateUUID();
-                    params = [tripDetailImgGuid, tripDetailGuid, fileGuid, 1, userGuid];
-                    res = await pool.query('CALL BIZ_TRIP_DTL_IMG_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
-
-                    if (res[0][1][0]["@RET_VAL"] == 'I') {
-                        console.log("오늘의 출장 상세 이미지 등록 성공");
-                    }
-                    else {
-                        console.log("오늘의 출장 상세 이미지 등록 실패");
-                        isSuccess = false;
-                    }
-                }
-                else {
-                    console.log("오늘의 출장 상세 아이템 삭제 실패");
-                    isSuccess = false;
-                }
-            }
-            else {
-                console.log("오늘의 출장 상세 이미지 등록 실패");
-                isSuccess = false;
             }
         }
 
