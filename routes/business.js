@@ -37,7 +37,7 @@ router.get('/banner/:imageName', function(req, res){
 router.get('/trip/:imageName', function(req, res){
   var imgName = req.params.imageName;
   console.log('이미지 요청: ' + imgName);
-  res.readFile('/uploads/business/trip/'+imgName);    
+  res.sendFile('/uploads/business/trip/'+imgName);    
 });
 
 module.exports = router;
