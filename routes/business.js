@@ -33,11 +33,11 @@ router.get('/banner/:imageName', function(req, res){
   res.sendFile('/public/banner/'+imgName);    
 });
 
-//디테일 상세 이미지(샘플 : http://54.252.145.88:3030/trip/라면.jpg)
+//디테일 상세 이미지(샘플 : http://192.168.0.13:3030/business/trip/1729702082687_라면.jpg)
 router.get('/trip/:imageName', function(req, res){
   var imgName = req.params.imageName;
   console.log('이미지 요청: ' + imgName);
-  res.sendFile('/uploads/business/trip/'+imgName);    
+  res.readFile('/uploads/business/trip/'+imgName);    
 });
 
 module.exports = router;
