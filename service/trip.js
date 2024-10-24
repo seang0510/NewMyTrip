@@ -202,6 +202,7 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
         //오늘의 출장 상세 등록,수정
         if (isSuccess == true) {
             params = [tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, userGuid, 'N'];
+            console.log(params);
             res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
             if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
