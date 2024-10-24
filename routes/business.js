@@ -12,7 +12,8 @@ router.post('/trip/getTripDetail', businessController.getTripDetail);
 router.post('/trip/getTripDetailWaterMark', businessController.getTripDetailWaterMark);
 router.post('/trip/getTripDetailList', businessController.getTripDetailList);
 router.post('/trip/setTripDetail', businessController.setTripDetail);
-router.post('/trip/setTripDetailImage', upload(`business/trip`).single("file"), businessController.setTripDetailImage);
+router.post('/trip/setTripDetailImages', upload(`business/trip`).array("files"), businessController.setTripDetailImages);
+router.post('/trip/setTripDetailWithImages', upload(`business/trip`).array("files"), businessController.setTripDetailWithImages);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
 
 //########### 관광 명소 ########### 

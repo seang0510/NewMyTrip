@@ -237,16 +237,16 @@ exports.setTripDetail = async (req, res, next) => {
   }
 };
 
-//오늘의 출장 상세 등록(이미지)(POST)
-exports.setTripDetailImage = async (req, res, next) => {
+//오늘의 출장 상세 이미지 등록(POST)
+exports.setTripDetailImages = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-  const file = req.file;
+  const files = req.files;
 
   try {
     //오늘의 출장 등록,수정
-    let retVal = await tripService.setTripDetailImage(tripDetailGuid, file, userGuid);
+    let retVal = await tripService.setTripDetailImages(tripDetailGuid, files, userGuid);
 
     //등록
     if (retVal == 1) {
@@ -259,6 +259,46 @@ exports.setTripDetailImage = async (req, res, next) => {
     //실패
     else {
       resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지를 등록에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 등록/수정(이미지 포함)(POST)
+exports.setTripDetailWithImages = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
+  const address = helper.changeUndefiendToNull(req.body.address);
+  const addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
+  const latitude = helper.changeUndefiendToNull(req.body.latitude);
+  const longitude = helper.changeUndefiendToNull(req.body.longitude);
+  const compYn = helper.changeUndefiendToNull(req.body.compYn);
+  const order = helper.changeUndefiendToNull(req.body.order);
+  const tripDetailItems = JSON.parse(helper.changeUndefiendToNull(req.body.tripDetailItems));
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const files = req.files;
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTripDetailWithImages(tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, files, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 등록하였습니다.', '');
+    }
+    //수정
+    else if (retVal == 0) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세내역을 수정하였습니다.', '');      
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세내역을 등록,수정에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);
