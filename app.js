@@ -7,7 +7,10 @@ const expressLayouts = require('express-ejs-layouts');
 const pool = require('./db/pool');
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
+const skylog = require("./helper/logger");
 
+// info와 error 로그 구현
+skylog.info("Hello world!"); 
 //MySQL Session setup
 const options = {
   createDatabaseTable: true,
