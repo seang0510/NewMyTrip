@@ -314,20 +314,6 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
             return returnCode
         }
 
-        //오늘의 출장 상세 이미지 삭제
-        if(isSuccess){
-            res = await pool.query('CALL BIZ_TRIP_DTL_IMG_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
-
-            if (res[0][1][0]["@RET_VAL"] == 'D') {
-                console.log("오늘의 출장 상세 아이템 삭제 성공");
-                isSuccess = true;
-            }
-            else {
-                console.log("오늘의 출장 상세 아이템 삭제 실패");
-                isSuccess = false;
-            }
-        }
-
         //오늘의 출장 상세 이미지 등록
         if(isSuccess){
             for (var i = 0; i < arrFileGuid.length; i++) {
@@ -335,9 +321,9 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
                 let fileGuid = arrFileGuid[i];
                 let order = i + 1;
                 params = [tripDetailImgGuid, tripDetailGuid, fileGuid, order, userGuid];
-                res = await pool.query('CALL BIZ_TRIP_DTL_IMG_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                res = await pool.query('CALL BIZ_TRIP_DTL_IMG_CREATE(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
     
-                if (res[0][1][0]["@RET_VAL"] == 'I') {
+                if (res[0][1][0]["@RET_VAL"] != 'N') {
                     if (i == arrFileGuid.length - 1) {
                         console.log("오늘의 출장 상세 이미지 등록 성공");
                     }
@@ -474,14 +460,15 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
 
         //오늘의 출장 상세 이미지 삭제
         if(isSuccess && arrFileGuid.length > 0){
-            res = await pool.query('CALL BIZ_TRIP_DTL_IMG_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
+            params = ['', tripDetailGuid, userGuid, 'N'];
+            res = await pool.query('CALL BIZ_TRIP_DTL_IMG_UPDATE_YN(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
             if (res[0][1][0]["@RET_VAL"] == 'D') {
-                console.log("오늘의 출장 상세 아이템 삭제 성공");
+                console.log("오늘의 출장 상세 이미지 삭제 성공");
                 isSuccess = true;
             }
             else {
-                console.log("오늘의 출장 상세 아이템 삭제 실패");
+                console.log("오늘의 출장 상세 이미지 삭제 실패");
                 isSuccess = false;
             }
         }
@@ -493,9 +480,9 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
                 let fileGuid = arrFileGuid[i];
                 let order = i + 1;
                 params = [tripDetailImgGuid, tripDetailGuid, fileGuid, order, userGuid];
-                res = await pool.query('CALL BIZ_TRIP_DTL_IMG_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                res = await pool.query('CALL BIZ_TRIP_DTL_IMG_CREATE(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
     
-                if (res[0][1][0]["@RET_VAL"] == 'I') {
+                if (res[0][1][0]["@RET_VAL"] != 'N') {
                     if (i == arrFileGuid.length - 1) {
                         console.log("오늘의 출장 상세 이미지 등록 성공");
                     }
@@ -551,4 +538,37 @@ exports.deleteTripDetail = async (tripDetailGuid, userGuid) => {
   } finally {
       conn.release();
   }
+};
+
+//오늘의 출장 상세 이미지 삭제
+exports.deleteTripDetailImages = async (tripDetailImageGuid, tripDetailGuid, userGuid) => {
+    let conn = await pool.getConnection();
+    let params;
+    let res;
+    let returnCode = -1;
+
+    try {
+        await conn.beginTransaction();
+
+        //오늘의 출장 상세 이미지 삭제
+        params = [tripDetailImageGuid, tripDetailGuid, userGuid, 'N'];
+        res = await pool.query('CALL BIZ_TRIP_DTL_IMG_UPDATE_YN(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+        if (res[0][1][0]["@RET_VAL"] == 'D') {
+            await conn.commit();
+            returnCode = 1;
+        }
+        else {
+            conn.rollback();
+            returnCode = -1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
 };

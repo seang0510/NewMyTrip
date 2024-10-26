@@ -15,6 +15,7 @@ router.post('/trip/setTripDetail', businessController.setTripDetail);
 router.post('/trip/setTripDetailImages', upload(`business/trip`).array("files"), businessController.setTripDetailImages);
 router.post('/trip/setTripDetailWithImages', upload(`business/trip`).array("files"), businessController.setTripDetailWithImages);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
+router.post('/trip/deleteTripDetailImages', businessController.deleteTripDetailImages);
 
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);

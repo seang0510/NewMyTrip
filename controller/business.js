@@ -334,6 +334,33 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   }
 };
 
+//오늘의 출장 상세 이미지 삭제(POST)
+exports.deleteTripDetailImages = async (req, res, next) => {
+  let resModel;
+  const tripDetailImageGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  
+    try {
+      //오늘의 출장 삭제
+      let retVal = await tripService.deleteTripDetailImages(tripDetailImageGuid, tripDetailGuid, userGuid);
+  
+      //삭제
+      if (retVal == 1) {
+        resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 삭제하였습니다.', null);
+      }
+      //실패
+      else {
+        resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지 삭제에 실패하였습니다.', null);
+      }
+  
+      return res.status(200).json(resModel);
+    }
+    catch (err) {
+      return res.status(500).json(err);
+    }
+  };
+
 //관광명소 화면(GET)
 exports.indexTourLocation = async (req, res, next) => {
   try {
