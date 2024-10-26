@@ -1,0 +1,14 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\Project\\MyTrip\\Project\\NewMyTrip\\logs\\.514c34a04aede6f3e18fb68b1d38c1ee470b1234-audit.json",
+    "files": [
+        {
+            "date": 1729926273512,
+            "name": "D:\\Project\\MyTrip\\Project\\NewMyTrip\\logs\\2024-10-26.log",
+            "hash": "234939301c4f0a89148a53a54a494c76"
+        }
+    ]
+}

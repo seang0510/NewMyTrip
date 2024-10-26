@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "app-root-path": "^3.1.0",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "cookie-parser": "~1.4.4",
@@ -27,8 +28,7 @@
     "mysql2": "^3.11.3",
     "nodemailer": "^6.9.15",
     "winston": "^3.15.0",
-    "winston-daily-rotate-file": "4.4.2",
-    "app-root-path": "^3.1.0"
+    "winston-daily-rotate-file": "4.4.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
