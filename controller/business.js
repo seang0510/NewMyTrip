@@ -1,6 +1,7 @@
 const helper = require('../helper/helper');
 const tourLocationService = require('../service/tourLocation');
 const tripService = require('../service/trip');
+const exceljs = require('../helper/trip/excel');
 
 //오늘의 출장 화면(GET)
 exports.indexTrip = async (req, res, next) => {
@@ -120,6 +121,47 @@ exports.importTrip = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 엑셀 다운로드(POST)
+exports.exportTrip = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+
+  //오늘의 출장 조회
+  const data = await tripService.exportTrip(tripGuid, regUserGuid);
+
+  if(data == null){
+    resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+  }
+
+  let fixedColumnCaptions = '순번,항목1,주소,상세주소,위도,경도';
+  let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG';
+  let variableColumns = '';
+  let fields = Object.keys(data.tripDetails[0]);
+
+  for (var i = 0; i < fields.length; i++) {
+    let colName = fields[i];
+
+    //고정컬럼이 아니며, 제외컬럼이 아니며, 가변컬럼에 등록되지 않은 경우
+    if(fixedColumns.indexOf(colName) == -1 && variableColumns.indexOf(colName) == -1){
+
+      //처음인 경우가 아니면 쉼표 붙이기
+      if(variableColumns != ''){
+        variableColumns += ',' + colName;
+      }
+      else{
+        variableColumns += colName;
+      }        
+    }
+  }
+
+  let columns = fixedColumns + ',' + variableColumns;
+  let captions =  fixedColumnCaptions + ',' + variableColumns;
+
+  var menu = data.title;
+  exceljs.excelDownload(menu, data.tripDetails, captions, columns, res);
+};
+
 //오늘의 출장 삭제(POST)
 exports.deleteTrip = async (req, res, next) => {
 let resModel;
@@ -204,7 +246,7 @@ exports.getTripDetailList = async (req, res, next) => {
 
   try {
     //오늘의 출장 조회
-    let rows = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
+    let rows  = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
 
     if(rows == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
@@ -362,26 +404,26 @@ exports.deleteTripDetailImages = async (req, res, next) => {
   const tripDetailImageGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-  
-    try {
-      //오늘의 출장 삭제
-      let retVal = await tripService.deleteTripDetailImages(tripDetailImageGuid, tripDetailGuid, userGuid);
-  
-      //삭제
-      if (retVal == 1) {
-        resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 삭제하였습니다.', null);
-      }
-      //실패
-      else {
-        resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지 삭제에 실패하였습니다.', null);
-      }
-  
-      return res.status(200).json(resModel);
+
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tripService.deleteTripDetailImages(tripDetailImageGuid, tripDetailGuid, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 삭제하였습니다.', null);
     }
-    catch (err) {
-      return res.status(500).json(err);
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지 삭제에 실패하였습니다.', null);
     }
-  };
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
 
 //관광명소 화면(GET)
 exports.indexTourLocation = async (req, res, next) => {
