@@ -1,6 +1,6 @@
 const pool = require('../db/pool');
 const helper = require('../helper/helper');
-
+const exceljs = require('../helper/trip/excel');
 
 //오늘의 출장 조회
 exports.getTripList = async (tripGuid, title, regUserGuid) => {
@@ -49,6 +49,111 @@ exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAdd
         throw Error(err);
     } finally {
         conn.release();
+    }
+};
+
+//오늘의 출장 일괄등록
+exports.importTrip = async (file, userGuid) => {
+
+    //엑셀 파일 읽기
+    let resModel = await exceljs.getTripData(file, userGuid);
+    if(resModel.isSuccess == false){
+        return resModel;
+    }
+
+    //DB 업로드
+    let params;
+    let isSuccess = false;
+    let message = '';
+    let conn = await pool.getConnection();    
+    try {
+        await conn.beginTransaction();
+
+        //오늘의 출장 등록
+        const trip = resModel.data.trip;
+        params = [trip.tripGuid, trip.title, trip.startDate, null, null, null, null, null, userGuid];        
+        res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+            console.log("오늘의 출장 등록 성공하였습니다.");
+            isSuccess = true;
+        }
+        else{
+            message = "오늘의 출장 등록에 실패하였습니다.";
+            console.log(message);
+            isSuccess = false;
+            resModel.isSuccess = isSuccess;
+            resModel.message = message;
+        }
+
+        //오늘의 출장 상세 등록        
+        if (isSuccess == true) {
+            const tripDetails = resModel.data.tripDetails;
+            for (var i = 0; i < tripDetails.length; i++) {
+                
+                params = [tripDetails[i].tripDetailGuid, tripDetails[i].tripGuid, tripDetails[i].facilityName,
+                    tripDetails[i].address, tripDetails[i].addressDetail, tripDetails[i].latitude, tripDetails[i].longitude, tripDetails[i].compYn,
+                    tripDetails[i].order, tripDetails[i].userGuid, 'N'];
+
+                res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                    if (i == tripDetails.length - 1) {
+                        console.log("오늘의 출장 상세 등록 성공하였습니다.");
+                        isSuccess = true;
+                    }                
+                }
+                else{
+                    message = "오늘의 출장 상세 등록 실패하였습니다.";
+                    console.log(message);
+                    isSuccess = false;
+                    resModel.isSuccess = isSuccess;
+                    resModel.message = message;
+                    break;
+                }
+            }            
+        }
+
+        //오늘의 출장 상세 아이템 등록        
+        if (isSuccess == true) {
+            const tripDetailItems = resModel.data.tripDetailItems;
+            for (var i = 0; i < tripDetailItems.length; i++) {
+                
+                params = [tripDetailItems[i].tripDetailItemGuid, tripDetailItems[i].tripDetailGuid,
+                    tripDetailItems[i].itemName, tripDetailItems[i].itemValue, tripDetailItems[i].order, 'N'];
+
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                    if (i == tripDetailItems.length - 1) {
+                        console.log("오늘의 출장 상세 아이템 등록 성공하였습니다.");
+                        isSuccess = true;
+                    }                
+                }
+                else{
+                    message = "오늘의 출장 상세 아이템 등록 실패하였습니다.";
+                    console.log(message);
+                    isSuccess = false;
+                    resModel.isSuccess = isSuccess;
+                    resModel.message = message;
+                    break;
+                }
+            }            
+        }
+
+        if (isSuccess == false) {
+            conn.rollback();
+        }
+        else {
+            await conn.commit();
+        }        
+        
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        resModel.isSuccess = false;
+        resModel.message = err;
+        throw Error(err);
+    } finally {
+        conn.release();
+        return resModel;
     }
 };
 

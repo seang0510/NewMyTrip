@@ -98,6 +98,28 @@ exports.setTrip = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 일괄등록(POST)
+exports.importTrip = async (req, res, next) => {
+  let resModel;
+  const file = req.file;
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  //파일타입이 올바르지 않은 경우
+  if (req.fileValidationError != undefined) {
+    resModel = helper.createResponseModel(false, req.fileValidationError, null);
+    return res.status(200).json(resModel);
+  }
+
+  try {
+    //오늘의 출장 엑셀 등록,수정
+    let resModel = await tripService.importTrip(file, userGuid);
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 삭제(POST)
 exports.deleteTrip = async (req, res, next) => {
 let resModel;
