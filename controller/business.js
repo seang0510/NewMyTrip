@@ -401,7 +401,7 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 //오늘의 출장 상세 이미지 삭제(POST)
 exports.deleteTripDetailImages = async (req, res, next) => {
   let resModel;
-  const tripDetailImageGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripDetailImageGuid = helper.changeUndefiendToNull(req.body.tripDetailImageGuid);
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 

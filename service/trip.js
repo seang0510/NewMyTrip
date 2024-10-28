@@ -466,6 +466,7 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
                 let fileGuid = arrFileGuid[i];
                 let order = i + 1;
                 params = [tripDetailImgGuid, tripDetailGuid, fileGuid, order, userGuid];
+                console.log(params);
                 res = await pool.query('CALL BIZ_TRIP_DTL_IMG_CREATE(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
     
                 if (res[0][1][0]["@RET_VAL"] != 'N') {

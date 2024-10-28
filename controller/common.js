@@ -59,7 +59,7 @@ exports.getNoticeList = async (req, res, next) => {
       let rows = await noticeService.getNoticeList(boardGuid, title, contents);
 
       if(rows == null){
-        resModel = helper.createResponseModel(false, '등록된 공지사항이 존재하지 않습니다.', null);        
+        resModel = helper.createResponseModel(false, '등록된 공지사항이 존재하지 않습니다.', '');        
       }
       else{
         resModel = helper.createResponseModel(true, '', rows);
@@ -86,15 +86,15 @@ exports.setNotice = async (req, res, next) => {
 
     //등록
     if(retVal == 1){
-      resModel = helper.createResponseModel(true, '공지사항을 등록하였습니다.', null);        
+      resModel = helper.createResponseModel(true, '공지사항을 등록하였습니다.', '');        
     }
     //실패
     else if (retVal == -1) {
-      resModel = helper.createResponseModel(false, '공지사항을 등록,수정에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '공지사항을 등록,수정에 실패하였습니다.', '');
     }
     //수정
     else{
-      resModel = helper.createResponseModel(true, '공지사항을 수정하였습니다.', null);        
+      resModel = helper.createResponseModel(true, '공지사항을 수정하였습니다.', '');        
     }
 
     return res.status(200).json(resModel);
@@ -116,11 +116,11 @@ exports.deleteNotice = async (req, res, next) => {
 
     //삭제
     if(retVal == 1){
-      resModel = helper.createResponseModel(true, '공지사항을 삭제하였습니다.', null);        
+      resModel = helper.createResponseModel(true, '공지사항을 삭제하였습니다.', '');        
     }
     //실패
     else{
-      resModel = helper.createResponseModel(false, '공지사항을 삭제에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '공지사항을 삭제에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);
@@ -141,7 +141,7 @@ exports.getAdList = async (req, res, next) => {
     let rows = await adService.getAdList(adGuid, adName);
 
     if(rows == null){
-      resModel = helper.createResponseModel(false, '등록된 광고가 존재하지 않습니다.', null);        
+      resModel = helper.createResponseModel(false, '등록된 광고가 존재하지 않습니다.', '');        
     }
     else{
       resModel = helper.createResponseModel(true, '', rows);
@@ -175,15 +175,15 @@ try {
 
   //등록
   if(retVal == 1){
-    resModel = helper.createResponseModel(true, '광고를 등록하였습니다.', null);        
+    resModel = helper.createResponseModel(true, '광고를 등록하였습니다.', '');        
   }
   //실패
   else if (retVal == -1) {
-    resModel = helper.createResponseModel(false, '광고를 등록,수정에 실패하였습니다.', null);
+    resModel = helper.createResponseModel(false, '광고를 등록,수정에 실패하였습니다.', '');
   }
   //수정
   else{
-    resModel = helper.createResponseModel(true, '광고를 수정하였습니다.', null);        
+    resModel = helper.createResponseModel(true, '광고를 수정하였습니다.', '');        
   }
 
   return res.status(200).json(resModel);
@@ -205,11 +205,11 @@ try {
 
   //삭제
   if(retVal == 1){
-    resModel = helper.createResponseModel(true, '광고를 삭제하였습니다.', null);        
+    resModel = helper.createResponseModel(true, '광고를 삭제하였습니다.', '');        
   }
   //실패
   else{
-    resModel = helper.createResponseModel(false, '광고를 삭제에 실패하였습니다.', null);
+    resModel = helper.createResponseModel(false, '광고를 삭제에 실패하였습니다.', '');
   }
 
   return res.status(200).json(resModel);
