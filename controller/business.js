@@ -36,7 +36,7 @@ exports.getTripList = async (req, res, next) => {
     let rows = await tripService.getTripList(tripGuid, title, regUserGuid);
 
     if(rows == null){
-      resModel = helper.createResponseModel(false, '등록된 오늘의 출장이 존재하지 않습니다.', null);        
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장이 존재하지 않습니다.', '');        
     }
     else{
       resModel = helper.createResponseModel(true, '', rows);
@@ -131,7 +131,7 @@ exports.exportTrip = async (req, res, next) => {
   const data = await tripService.exportTrip(tripGuid, regUserGuid);
 
   if(data == null){
-    resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+    resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
   }
 
   let fixedColumnCaptions = '순번,항목1,주소,상세주소,위도,경도';
@@ -199,7 +199,7 @@ exports.getTripDetail = async (req, res, next) => {
     let rows = await tripService.getTripDetail(tripDetailGuid, tripGuid);
 
     if(rows == null){
-      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
     }
     else{
       resModel = helper.createResponseModel(true, '', rows);
@@ -249,7 +249,7 @@ exports.getTripDetailList = async (req, res, next) => {
     let rows  = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
 
     if(rows == null){
-      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', null);        
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
     }
     else{
       resModel = helper.createResponseModel(true, '', rows);
@@ -411,11 +411,11 @@ exports.deleteTripDetailImages = async (req, res, next) => {
 
     //삭제
     if (retVal == 1) {
-      resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 삭제하였습니다.', null);
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세 이미지를 삭제하였습니다.', '');
     }
     //실패
     else {
-      resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지 삭제에 실패하였습니다.', null);
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지 삭제에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);

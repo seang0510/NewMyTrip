@@ -196,11 +196,11 @@ exports.getPasswordByEmail = async (req, res, next) => {
         let password = await userService.getPasswordByEmail(userEmail);
 
         if (password == null) {
-            resModel = helper.createResponseModel(false, '존재하지 않는 이메일이거나 소셜 로그인 계정입니다.', null);
+            resModel = helper.createResponseModel(false, '존재하지 않는 이메일이거나 소셜 로그인 계정입니다.', '');
         }
         else {
             //password = encryptPassword(password); //암호화 필요
-            resModel = helper.createResponseModel(true, '비밀번호는 ' + password + ' 입니다.', null);
+            resModel = helper.createResponseModel(true, '비밀번호는 ' + password + ' 입니다.', '');
         }
 
         return res.status(200).json(resModel);
@@ -288,7 +288,7 @@ exports.setLogout = async (req, res, next) => {
         req.session.destroy(() => {
             res
             .clearCookie();
-            resModel = helper.createResponseModel(true, '로그아웃에 성공하였습니다.', null);
+            resModel = helper.createResponseModel(true, '로그아웃에 성공하였습니다.', '');
             return res.status(200).json(resModel);            
         });                
     }
