@@ -267,6 +267,60 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
   }
 }; 
 
+//오늘의 출장 상세 조회(리스트):핀 목록
+exports.getTripDetailListForPin = async (tripGuid, regUserGuid) => {
+    let tripDetailList = [];
+    let tripDetailListForIntegrate = [];
+    let isSuccess = false;
+
+    try {        
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_LIST_FOR_PIN_MST(?,?,?)', [tripGuid, regUserGuid, 'N']);
+  
+        if(rows[0].length > 0){
+            console.log("오늘의 출장 상세 조회(핀 목록) 성공");
+            tripDetailList = rows[0];
+            isSuccess = true;
+        }
+        else{
+            console.log("오늘의 출장 상세 조회(핀 목록) 실패");
+            tripDetailList = null;
+            isSuccess = false;
+        }
+
+        //오늘의 출장 상세 조회(핀 목록:상세)
+        if(isSuccess){
+            const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_LIST_FOR_PIN_DTL(?,?,?)', [tripGuid, regUserGuid, 'N']);
+  
+            if(rows[0].length > 0){
+                console.log("오늘의 출장 상세 조회(핀 목록:상세) 성공");
+                tripDetailListForIntegrate = rows[0];
+
+                for (var i = 0; i < tripDetailListForIntegrate.length; i++) {
+                    let parentOrder = tripDetailListForIntegrate[i].PRNT_ODR;                    
+                    let index = tripDetailList.findIndex((item) => item.ODR === parentOrder);
+
+                    //Null인 경우 Obejct 선언
+                    if(tripDetailList[index].TRIP_DTL_LIST == null){
+                        tripDetailList[index].TRIP_DTL_LIST = [];
+                    }
+
+                    //Detail List에 Detail List 추가(통합)
+                    tripDetailList[index].TRIP_DTL_LIST.push(tripDetailListForIntegrate[i]);
+                }
+            }
+            else{
+                console.log("오늘의 출장 상세 조회(핀 목록:상세) 실패");
+            }        
+        }
+
+        return tripDetailList;
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+  }; 
+
 //오늘의 출장 상세 내보내기(리스트)
 exports.exportTrip = async (tripGuid, regUserGuid) => {
     let resModel = [];
