@@ -319,7 +319,26 @@ exports.getTripDetailListForPin = async (tripGuid, regUserGuid) => {
         console.log(err);
         throw Error(err);
     }
-  }; 
+}; 
+
+//오늘의 출장 상세 조회(리스트):이미지 전체 다운로드
+exports.getTripDetailListForImage = async (tripGuid, regUserGuid) => {
+    try {        
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_FOR_IMG(?,?,?)', [tripGuid, regUserGuid, 'N']);
+
+        if(rows[0].length > 0){
+            console.log("오늘의 출장 상세 조회(이미지 다운로드) 성공");
+            return rows[0];            
+        }
+        else{
+            console.log("오늘의 출장 상세 조회(이미지 다운로드) 실패");
+            return null;
+        }
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+}; 
 
 //오늘의 출장 상세 내보내기(리스트)
 exports.exportTrip = async (tripGuid, regUserGuid) => {
@@ -376,6 +395,7 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
 
 //오늘의 출장 상세 등록,수정
 exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid) => {
+    order = (tripDetailGuid == null || tripDetailGuid == '') ? 0 : order; //DetailGUID가 없으면 등록
     tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
     let conn = await pool.getConnection();
     let params;
@@ -427,10 +447,9 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
                 let tripDetailItemGuid = helper.generateUUID();
                 let itemName = tripDetailItems[i].itemName;
                 let itemValue = tripDetailItems[i].itemValue;
-                let order = i + 1;
 
-                params = [tripDetailItemGuid, tripDetailGuid, itemName, itemValue, order, 'N'];
-                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                params = [tripDetailItemGuid, tripDetailGuid, itemName, itemValue, 'N'];
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
                 if (res[0][0].affectedRows >= 1 && res[0][1][0]["@RET_VAL"] == 'I') {
                     if (i == tripDetailItems.length - 1) {
@@ -518,8 +537,7 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
             for (var i = 0; i < arrFileGuid.length; i++) {
                 let tripDetailImgGuid = helper.generateUUID();
                 let fileGuid = arrFileGuid[i];
-                let order = i + 1;
-                params = [tripDetailImgGuid, tripDetailGuid, fileGuid, order, userGuid];
+                params = [tripDetailImgGuid, tripDetailGuid, fileGuid, 0, userGuid];
                 console.log(params);
                 res = await pool.query('CALL BIZ_TRIP_DTL_IMG_CREATE(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
     
@@ -557,6 +575,7 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
 
 //오늘의 출장 상세 등록/수정(이미지 포함)
 exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, files, userGuid) => {
+    order = (tripDetailGuid == null || tripDetailGuid == '') ? 0 : order;
     tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
     let conn = await pool.getConnection();
     let params;
@@ -609,10 +628,9 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
                 let tripDetailItemGuid = helper.generateUUID();
                 let itemName = tripDetailItems[i].itemName;
                 let itemValue = tripDetailItems[i].itemValue;
-                let order = i + 1;
 
-                params = [tripDetailItemGuid, tripDetailGuid, itemName, itemValue, order, 'N'];
-                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+                params = [tripDetailItemGuid, tripDetailGuid, itemName, itemValue, 'N'];
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
                 if (res[0][0].affectedRows >= 1 && res[0][1][0]["@RET_VAL"] == 'I') {
                     if (i == tripDetailItems.length - 1) {
@@ -678,8 +696,7 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
             for (var i = 0; i < arrFileGuid.length; i++) {
                 let tripDetailImgGuid = helper.generateUUID();
                 let fileGuid = arrFileGuid[i];
-                let order = i + 1;
-                params = [tripDetailImgGuid, tripDetailGuid, fileGuid, order, userGuid];
+                params = [tripDetailImgGuid, tripDetailGuid, fileGuid, 0, userGuid];
                 res = await pool.query('CALL BIZ_TRIP_DTL_IMG_CREATE(?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
     
                 if (res[0][1][0]["@RET_VAL"] != 'N') {

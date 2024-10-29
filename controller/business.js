@@ -286,6 +286,30 @@ exports.getTripDetailListForPin = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 상세 조회(리스트):이미지 전체 다운로드(POST)
+exports.getTripDetailListForImage = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+
+  try {
+    //오늘의 출장 조회
+    let rows = await tripService.getTripDetailListForImage(tripGuid, regUserGuid);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세 이미지가 존재하지 않습니다.', '');        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 상세 등록/수정(POST)
 exports.setTripDetail = async (req, res, next) => {
   let resModel;
@@ -297,7 +321,7 @@ exports.setTripDetail = async (req, res, next) => {
   const latitude = helper.changeUndefiendToNull(req.body.latitude);
   const longitude = helper.changeUndefiendToNull(req.body.longitude);
   const compYn = helper.changeUndefiendToNull(req.body.compYn);
-  const order = helper.changeUndefiendToNull(req.body.order);
+  const order = helper.changeUndefiendToZero(req.body.order);
   const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
@@ -367,7 +391,7 @@ exports.setTripDetailWithImages = async (req, res, next) => {
   const latitude = helper.changeUndefiendToNull(req.body.latitude);
   const longitude = helper.changeUndefiendToNull(req.body.longitude);
   const compYn = helper.changeUndefiendToNull(req.body.compYn);
-  const order = helper.changeUndefiendToNull(req.body.order);
+  const order = helper.changeUndefiendToZero(req.body.order);
   const tripDetailItems = JSON.parse(helper.changeUndefiendToNull(req.body.tripDetailItems));
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   const files = req.files;
