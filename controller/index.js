@@ -3,6 +3,9 @@ const helper = require('../helper/helper');
 const axios = require("axios");
 const nodemailer = require('nodemailer'); // 모듈 import
 const qs = require('qs'); // 모듈 Query String
+var fs = require("fs");
+var zip = new require('node-zip')();
+const path = require('path');
 
 //로그인(GET)
 exports.getLogin = async (req, res, next) => {
@@ -477,6 +480,31 @@ exports.getAddress = async (req, res, next) => {
 exports.daumAddress = async (req, res, next) => {
     try {
         return res.render('daum/findAddress', { title: 'Express', layout: false });      
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
+//TEST zip 파일 만들기
+exports.testZip = async (req, res, next) => {
+    console.log("## testZip");
+    var folderNm = "imageTest";
+    var images = ["1729701920999_라면.jpg" , "1729701941956_라면.jpg"];
+    
+    try {
+        var createFolder = "../uploads/zip/" + folderNm;
+        fs.mkdir(path.join(__dirname, '../uploads/zip', folderNm),{}, (err) => {
+            // zip.file(createFolder+'/common.js', path.join(__dirname, '..', 'common.js'));
+            // var data = zip.generate({base64:false, compression:'DEFLATE'});
+            // fs.writeFileSync(folderNm+'.zip', data, 'binary');
+            
+            if (err) throw err;
+        });
+
+        
+
+        return res.status(200).json("");                      
     }
     catch (err) {
         return res.status(500).json(err);

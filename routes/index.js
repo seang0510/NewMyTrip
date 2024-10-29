@@ -43,6 +43,7 @@ router.get('/daumAddress', indexController.daumAddress);
 //TEST 메일 보내기 샘플
 router.post('/sendMailSample', indexController.sendMailSample);
 
+router.post('/testZip', indexController.testZip);
 
 console.log("server start! router");
 
