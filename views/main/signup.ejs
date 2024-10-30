@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입(소셜)</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/themes/smoothness/jquery-ui.min.css">
+  <link rel="stylesheet" href="/stylesheets/login.css">
+  <link rel="stylesheet" href="/stylesheets/common.css">
+  <style>
+  </style>
+  <script src="/jquery.min.js"></script>
+  <script src="/umd/popper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/jquery-ui.min.js"></script>
+  <script src="/jquery.cookie.js"></script>
+  <script src="/javascripts/common.js"></script>
+  <!-- <script src="/javascripts/fixWidth.js"></script> -->
+</head>
+
+<body>
+
+  <!-- LoadingBar Main  -->
+  <%- include('../ejs/loadingbar.ejs') %>
+  <!-- Alert Modal -->
+  <%- include('../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
+
+  <!-- The Modal of Personal Information -->
+  <div class="modal fade" id="modalPersonalInformation" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalSignUp" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of SignUp -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalSignUp">개인정보 및 이용약관(1/2)</h5>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <iframe src="/html/personalInformation.html" width="100%" height="500"></iframe>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-target="#modalTermsOfService" data-bs-toggle="modal" data-bs-dismiss="modal">다음</button>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- The Modal of Terms Of Service -->
+  <div class="modal fade" id="modalTermsOfService" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalSignUp" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of SignUp -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalSignUp">개인정보 및 이용약관(2/2)</h5>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <iframe src="/html/termsConditions.html" width="100%" height="500"></iframe>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-target="#modalPersonalInformation" data-bs-toggle="modal" data-bs-dismiss="modal">이전</button>
+            <button type="button" class="btn btn-primary" data-bs-target="#modalSignUp" data-bs-toggle="modal" data-bs-dismiss="modal">다음</button>            
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- The Modal of SingUp -->
+  <div class="modal fade" id="modalSignUp" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalSignUp" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of SignUp -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalSignUp">회원가입</h5>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form id="form" action="/join/social" method="POST" class="needs-validation" novalidate>
+              <input type="hidden" name="joinTypeCode" value="<%= joinTypeCode %>">
+              <input type="hidden" name="joinToken" value="<%= joinToken %>">              
+              <input type="hidden" name="isSocialLogin" value="Y">              
+              <button type="submit" id="btnSignUp" class="visually-hidden" onclick="signUp(this, event)"></button>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com"
+                    onkeypress="enterKey(event, 'btnSignUp')" value="<%= email %>" readonly>
+                  <label for="email">이메일</label>
+                </div>
+                <div class="invalid-feedback">
+                  이메일을 입력하세요.
+                </div>                
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="password" name="password" class="form-control" placeholder="e2rQ64ImVdtip65!!"
+                    onkeypress="enterKey(event, 'btnSignUp')" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" required>
+                  <label for="password">비밀번호</label>
+                </div>
+                <div class="invalid-feedback">
+                  최소 8글자 이상으로 영문, 숫자, 특수문자가 필요합니다.
+                </div>                
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordConfirmForSignUp" class="form-control"
+                    placeholder="e2rQ64ImVdtip65!!" onkeypress="enterKey(event, 'btnSignUp')" onkeyup="passwordEqual('password', 'passwordConfirmForSignUp')" required>
+                  <label for="passwordConfirmForSignUp">비밀번호 확인</label>
+                </div>
+                <div class="invalid-feedback">
+                  입력한 비밀번호와 동일하지 않습니다.
+                </div>                
+              </div>
+            </form>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-target="#modalTermsOfService" data-bs-toggle="modal" data-bs-dismiss="modal">뒤로가기</button>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('btnSignUp').click();">가입완료</button>            
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      $("#modalPersonalInformation").modal('show');
+    });
+
+    function passwordEqual(orgPassword, confirmPassword) {
+      if (!isEqualValue(orgPassword, confirmPassword)) {
+        $("#" + orgPassword).closest('form').addClass('was-validated');
+        document.getElementById(confirmPassword).setCustomValidity('invalid');
+      }
+      else {
+        document.getElementById(confirmPassword).setCustomValidity('');
+      }
+    };
+
+    function signUp(eThis, e) {
+      //HTML5 기본 Validation
+      if (!(document.getElementById("email").validity.valid &&
+        document.getElementById("password").validity.valid &&
+        document.getElementById("passwordConfirmForSignUp").validity.valid)) {
+        return false;
+      }
+
+      e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+
+      $("#form").submit();
+    };    
+  </script>
+
+</body>
+
+</html>
