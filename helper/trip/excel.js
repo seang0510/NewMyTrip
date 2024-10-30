@@ -1,6 +1,7 @@
 const exceljs = require("exceljs");
 const path = require('path');
 const helper = require('../helper');
+const { data } = require("jquery");
 
 //엑셀 업로드
 async function getTripDataFromExcel(file, userGuid) {
@@ -93,6 +94,13 @@ async function getTripDataFromExcel(file, userGuid) {
                   longitude = cell.value;
                   break;
               }
+
+
+              //위도 경도가 없을시에 주소로 위도 경도 가져오기
+              if(latitude == "" || latitude == null){
+                var datas = getKaKaoAddress(address);
+                //console.log("## datas :: " + datas);
+              }
             }
             else{
               //값이 있는 경우에만 입력
@@ -146,6 +154,28 @@ async function getTripDataFromExcel(file, userGuid) {
   }  
 };
 
+//주소로 위도 경도 가져오기
+async function getKaKaoAddress(address) {
+  try {        
+      console.log(address);
+      const encodedAddress = encodeURIComponent(address); // * //
+      console.log(encodedAddress);
+      
+      const response = await axios({
+          method: "GET",
+          url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+          headers: {
+            Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+          },
+        });
+      console.log("datas : " + JSON.stringify(response.data)); // * //
+      return "";                      
+  }
+  catch (err) {
+      return "";
+  }
+
+}
 //엑셀 다운로드
 function excelDownload(menu, data, headers, keys, res) {
 
