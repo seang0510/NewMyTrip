@@ -7,13 +7,11 @@ const path = require('path');
 router.get('/login', indexController.getLogin);
 router.post('/login/findPassword', indexController.getPasswordByEmail);
 router.post('/setPassword', indexController.setPassword);
-
 router.post('/login', indexController.setLogin);
-
 router.get('/login/kakao', indexController.getLoginKakao);
 router.get('/login/kakao/callback', indexController.getLoginKakaoCallback);
-
 router.post('/join', indexController.setSignUp);
+router.post('/join/social', indexController.setSignUpWithSocial);
 router.post('/logout', indexController.setLogout);
 
 

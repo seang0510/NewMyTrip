@@ -16,6 +16,7 @@ exports.getLogin = async (req, res, next) => {
         }
         //현재 로그인 되어 있는 경우    
         else{
+            res.clearCookie('MSG');
             return res.redirect('/');
         }        
     }
@@ -37,6 +38,7 @@ exports.getIndex = async (req, res, next) => {
         else{
             var email = req.session.email;
             var authGroupCode = req.session.authGroupCode;
+            res.clearCookie('MSG');
             return res.render('main/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
         }        
     }
@@ -121,7 +123,7 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
     catch (err) {
         console.log(err);
         resModel = helper.createResponseModel(true, '카카오 소셜 로그인: Access Token 가져오기에 실패하였습니다.', "");
-        return res.status(500).json(resModel);
+        return res.redirect('/login/kakao');
     }
   
     //사용자 이메일 가져오기
@@ -136,21 +138,17 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
         email = response.data.kakao_account.email;
         console.log("카카오 사용자 Email 가져오기 성공");
       }
-       catch (err) {
+    catch (err) {
         console.log(err);
         resModel = helper.createResponseModel(true, '카카오 소셜 로그인: 사용자 Email 가져오기에 실패하였습니다.', "");
-        return res.status(500).json(resModel);
-      }    
+        return res.redirect('/login/kakao');
+    }    
 
     try {
-
-        //아래 부분을 새로운 Route에서 하도록 하고, 현재 부분에서는 세션에 Token키 넣고, 회원가입 창으로 이동하면 될듯
-
-        //회원가입(1:등록, 0:이미 존재, -1:실패)
-        let user = await userService.setLoginWithSignUp(email, 'K', token);
-
-        //성공
-        if (user.IS_SUCCESS == 1) {
+        //사용자 조회
+        let user = await userService.getUser(null, email, null);
+        
+        if (user != null) {
             //세션 스토어가 이루어진 후 redirect를 해야함.
             req.session.save(function(){ 
                 req.session.email = user.EMAIL;
@@ -159,31 +157,16 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
                 req.session.isLogined = true;
                 req.session.valid = true;
 
-                resModel = helper.createResponseModel(true, '소셜 회원가입 및 로그인에 성공하셨습니다.', user);
-                return res.status(200).json(resModel);
-            });            
+                console.log("로그인 성공");
+                return res.redirect('/');
+            });
+        } 
+        else {
+            return res.render('main/signup', { title: 'Express', layout: false, email: email, joinTypeCode: 'K', joinToken: token });
         }
-        //실패
-        else if (user.IS_SUCCESS == -1) {
-            resModel = helper.createResponseModel(false, '소셜 회원가입 및 로그인에 실패하셨습니다.', user);
-            return res.status(200).json(resModel);
-        }
-        //이미 존재
-        else{
-            req.session.save(function(){ 
-                req.session.email = user.EMAIL;
-                req.session.joinTypeCode = user.JOIN_TYP_COD;
-                req.session.authGroupCode = user.AUTH_GRP_COD;
-                req.session.isLogined = true;
-                req.session.valid = true;
-
-                resModel = helper.createResponseModel(true, '소셜 로그인에 성공하셨습니다.', user);
-                return res.status(200).json(resModel);
-            });                        
-        }                
     }
     catch (err) {
-        return res.status(500).json(err);
+        return res.redirect('/login/kakao');
     }
 }; 
 
@@ -240,9 +223,48 @@ exports.setSignUp = async (req, res, next) => {
         //이미 존재
         else{
             resModel = helper.createResponseModel(false, '이미 등록된 이메일입니다.', "");
-        }
+        }        
 
         return res.status(200).json(resModel);
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
+//웹 소셜 회원가입(POST)
+exports.setSignUpWithSocial = async (req, res, next) => {
+    const email = req.body.email;
+    const joinTypeCode = req.body.joinTypeCode == undefined ? 'N' : req.body.joinTypeCode;  //"N , K , G"
+    const password = helper.changeUndefiendToNull(req.body.password);
+    //password = descryptoPassword(password); //복호화(추후 작업)
+    const joinToken = helper.changeUndefiendToNull(req.body.joinToken);                     //KAKAO, GOOGLE TOKEN
+    const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceTypeCode);           //ANDROID, IOS
+    const pushToken = helper.changeUndefiendToNull(req.body.pushToken);
+
+    try {
+        //회원가입(1:등록, 0:이미 존재, -1:실패)
+        let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+
+        //성공
+        if (retVal == 1) {
+            //세션 스토어가 이루어진 후 redirect를 해야함.
+            req.session.save(function(){ 
+                req.session.email = email;
+                req.session.joinTypeCode = joinTypeCode;
+                req.session.authGroupCode = 'N';
+                req.session.isLogined = true;
+                req.session.valid = true;
+
+                console.log('로그인 성공');
+                return res.redirect('/');       
+            });                
+        }
+        //실패 또는 이미 존재
+        else{
+            console.log('로그인 실패');
+            return res.redirect('/login');
+        }        
     }
     catch (err) {
         return res.status(500).json(err);
@@ -327,42 +349,6 @@ exports.getUserCheck = async (req, res, next) => {
         return res.status(500).json(err);
     }
 }; 
-
-//사용자 등록,수정(POST)
-exports.setSignUp = async (req, res, next) => {
-    let resModel;
-    const email = req.body.email;
-    const joinTypeCode = req.body.joinTypeCode == undefined ? 'N' : req.body.joinTypeCode;  //"N , K , G"
-    const password = helper.changeUndefiendToNull(req.body.password);
-    //password = descryptoPassword(password); //복호화(추후 작업)
-    const joinToken = helper.changeUndefiendToNull(req.body.joinToken);                     //KAKAO, GOOGLE TOKEN
-    const deviceTypeCode = helper.changeUndefiendToNull(req.body.deviceTypeCode);           //ANDROID, IOS
-    const pushToken = helper.changeUndefiendToNull(req.body.pushToken);
-    
-    console.log("joinTypeCode :: " + joinTypeCode);
-    try {
-        //회원가입(1:등록, 0:이미 존재, -1:실패)
-        let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
-
-        //성공
-        if (retVal == 1) {
-            resModel = helper.createResponseModel(true, '회원가입에 성공하셨습니다.', "");
-        }
-        //실패
-        else if (retVal == -1) {
-            resModel = helper.createResponseModel(false, '회원가입에 실패하였습니다.', "");
-        }
-        //이미 존재
-        else{
-            resModel = helper.createResponseModel(false, '이미 등록된 이메일입니다.', "");
-        }
-
-        return res.status(200).json(resModel);
-    }
-    catch (err) {
-        return res.status(500).json(err);
-    }
-};
 
 ////////////////////////////////////////////////////
 ////////////////모바일 소셜 로그인///////////////////   

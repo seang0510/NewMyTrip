@@ -18,7 +18,7 @@
   <script src="/jquery-ui.min.js"></script>
   <script src="/jquery.cookie.js"></script>
   <script src="/javascripts/common.js"></script>
-  <script src="/javascripts/fixWidth.js"></script>
+  <!-- <script src="/javascripts/fixWidth.js"></script> -->
 </head>
 
 <body>
@@ -61,7 +61,7 @@
           <button type="submit" class="btn btn-primary w-100" onclick="login(this, event)">로그인</button>
           <div class="d-flex gap-2 justify-content-center py-2">
             <div class="d-inline-flex align-items-center w-50">
-              <a href="#" class="btn btn-secondary w-100" onclick="redirectKakao();">구글 로그인</a>
+              <a href="#" class="btn btn-secondary w-100" onclick="redirectGoogle();">구글 로그인</a>
             </div>
             <div class="d-inline-flex align-items-center w-50">
               <a href="/login/kakao" class="btn btn-warning w-100">카카오 로그인</a>
@@ -76,7 +76,7 @@
     </div>
   </main>
 
-  <!-- The Modal of Terms Of Service -->
+  <!-- The Modal of Personal Information -->
   <div class="modal fade" id="modalPersonalInformation" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="lblModalSignUp" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -385,10 +385,6 @@
           setLoadingBar(false);  
         }
       });
-    };
-
-    function redirectKakao() {
-      
     };
 
     function redirectGoogle() {
