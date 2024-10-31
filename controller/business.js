@@ -517,3 +517,33 @@ exports.getTourLocationList = async (req, res, next) => {
       return res.status(500).json(err);
   }
 };
+
+
+//오늘의 출장 위도 경도 없는 주소 CRON 으로 위도,경도 가져오기
+exports.setNewAddress = async () => {
+  console.log("## setNewAddress");
+  let resModel;
+
+  const address = "원종동 283-17";
+    try {        
+        console.log(address);
+        const encodedAddress = encodeURIComponent(address); // * //
+        console.log(encodedAddress);
+        
+        const response = await axios({
+            method: "GET",
+            url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+            headers: {
+              Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+            },
+          });
+          
+
+        console.log(response.data.documents); // * //
+        return res.status(200).json("");                      
+    }
+    catch (err) {
+        resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);
+        return res.status(500).json(resModel);
+    }
+};
