@@ -94,13 +94,6 @@ async function getTripDataFromExcel(file, userGuid) {
                   longitude = cell.value;
                   break;
               }
-
-
-              //위도 경도가 없을시에 주소로 위도 경도 가져오기
-              if(latitude == "" || latitude == null){
-                var datas = getKaKaoAddress(address);
-                //console.log("## datas :: " + datas);
-              }
             }
             else{
               //값이 있는 경우에만 입력

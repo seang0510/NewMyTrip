@@ -9,7 +9,7 @@ require('dotenv').config();
 var app = require('../app');
 var debug = require('debug')('mytrip:server');
 var http = require('http');
-var cron = require('node-cron');
+//var cron = require('node-cron');
 var businessController = require('../controller/business');
 const pool = require('../db/pool');
 
@@ -36,28 +36,7 @@ server.on('listening', onListening);
 
 
 
-cron.schedule("*/1 * * * *", async function() {
-  console.log("1분..");
 
-  // try {        
-  //     let res = await pool.query('SELECT * FROM SYS_USER_MST LIMIT 1');
-      
-  //     if(res[0].length > 0){
-  //       console.log(res[0][0].USER_GUID);
-  //       console.log("조회 성공");
-
-  //     }
-  //     else{
-  //       console.log("조회 실패");
-  //     }
-  // } catch (err) {
-  //     console.log(err);
-  //     throw Error(err);
-  // }
-
-  
-
-});
 
 /**
  * Normalize a port into a number, string, or false.

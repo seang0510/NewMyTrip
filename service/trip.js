@@ -1,6 +1,7 @@
 const pool = require('../db/pool');
 const helper = require('../helper/helper');
 const exceljs = require('../helper/trip/excel');
+const axios = require('axios');
 
 //오늘의 출장 조회
 exports.getTripList = async (tripGuid, title, regUserGuid) => {
@@ -89,7 +90,52 @@ exports.importTrip = async (file, userGuid) => {
         //오늘의 출장 상세 등록        
         if (isSuccess == true) {      
             //BULK Insert
-            const tripDetails = resModel.data.tripDetails;            
+            const tripDetails = resModel.data.tripDetails;
+            
+
+            for await (let tempData of tripDetails) {
+                var latitude;
+                var longitude;
+                //console.log(tempData);
+                //console.log("xxxx :: "+ tempData[5].x);
+                if(tempData[5].x == 0){
+                    //console.log("#### kakako send api");
+                    //console.log("#### address :: " + tempData[3]);
+                    const encodedAddress = encodeURIComponent(tempData[3]);
+                    //const encodedAddress = encodeURIComponent("원종동 283-17");
+                    
+                    const response = await axios({
+                        method: "GET",
+                        url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+                        headers: {
+                        Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+                        },
+                    });
+
+                    
+                    try {        
+                        if(response.data.documents[0].address.y === undefined){
+                            tempData[5].x = 0;
+                            tempData[5].y = 0;
+                            latitude = 0;
+                            longitude = 0;
+                        }else{
+                            tempData[5].x = response.data.documents[0].address.y;
+                            tempData[5].y = response.data.documents[0].address.x;
+                        }
+                        //console.log("위도경도 가져오기 완료2::" + response.data.documents[0].address.x);                 
+                    }
+                    catch (err) {
+                        console.log("## err :: " + err.stack); 
+                        latitude = 0;
+                        longitude = 0;
+                    }            
+                }
+                //console.log('모든 api 통신 완료' + latitude + "/"  +longitude);
+            }
+
+
+            console.log("### tripDetails::" + JSON.stringify(tripDetails));  
             sql = 'INSERT INTO BIZ_TRIP_DTL (TRIP_DTL_GUID, TRIP_MST_GUID, FCLT_NM, ADDR, ADDR_DTL, LOC_POS, COMP_YN, ODR, REG_USER_GUID, REG_DT, UPDT_USER_GUID, UPDT_DT) VALUES ?';
             res = await pool.query(sql, [tripDetails]);
 
