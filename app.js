@@ -45,6 +45,8 @@ app.use(express.static(path.join(__dirname, '/node_modules/font-awesome')));
 app.use(express.static(path.join(__dirname, '/node_modules/jquery/dist')));
 app.use(express.static(path.join(__dirname, '/node_modules/jquery-ui/dist')));
 app.use(express.static(path.join(__dirname, '/node_modules/jquery.cookie')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-bs5')));
 
 //mysql-session setup
 app.use(session({
