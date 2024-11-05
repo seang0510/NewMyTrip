@@ -1,3 +1,4 @@
+const { render } = require('../app');
 const helper = require('../helper/helper');
 const adService = require('../service/ad');
 const noticeService = require('../service/notice');
@@ -16,8 +17,66 @@ exports.indexNotice = async (req, res, next) => {
       else{
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
-        return res.render('common/notice/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
+        return res.render('common/notice/index', { title: '공지사항', userEmail: email, authCode: authGroupCode });
       }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//공지사항 조회(GET)
+exports.getNotice = async (req, res, next) => {
+  try {
+    //로그인 되지 않은 경우
+    if(!(req.session.valid == true)){
+      var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+      res.cookie('MSG', msg, { httpOnly: false, secure: false });
+      return res.redirect('/login');
+    }
+    //현재 로그인 되어 있는 경우    
+    else{
+      let boardGuid = helper.changeUndefiendToNull(req.query.boardGuid);
+      const email = req.session.email;
+      const authGroupCode = req.session.authGroupCode;
+
+      //공지사항 조회
+      let rows;
+      let title;
+      let contents;
+      let regDate;
+      let renderUrl;
+
+      if(boardGuid != null){
+        rows = await noticeService.getNoticeList(boardGuid, null, null);
+        renderUrl = 'common/notice/read';
+      }
+      else{
+        boardGuid = helper.generateUUID();
+        renderUrl = 'common/notice/create';
+      }
+
+      if(rows != null){
+        title = rows[0]['TTL'];
+        contents = rows[0]['CNTS'];
+        regDate = rows[0]['REG_DT'];
+      }
+      else{
+        title = '';
+        contents = '';
+        regDate = helper.dateFormat(new Date());
+      }
+
+      return res.render(renderUrl, {
+        title: '공지사항',        
+        userEmail: email,
+        authCode: authGroupCode,
+        boardGuid: boardGuid,
+        noticeTitle: title,
+        contents: contents,
+        regDate: regDate,          
+      });
+    }    
   }
   catch (err) {
       return res.status(500).json(err);

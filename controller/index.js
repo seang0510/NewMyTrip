@@ -39,7 +39,8 @@ exports.getIndex = async (req, res, next) => {
             var email = req.session.email;
             var authGroupCode = req.session.authGroupCode;
             res.clearCookie('MSG');
-            return res.render('main/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
+            // return res.render('main/index', { title: '메인화면', userEmail: email, authCode: authGroupCode });
+            return res.redirect('/common/notice');
         }        
     }
     catch (err) {

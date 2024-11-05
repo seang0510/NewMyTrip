@@ -4,7 +4,16 @@
 <!-- CSS & JS -->
 <link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <style>
-  table.dataTable thead th.header-center-align {
+  /* Table */
+  table.dataTable tbody tr {
+    cursor: pointer;
+  }
+  table.dataTable thead tr th input[type=checkbox],
+  table.dataTable tbody tr td input[type=checkbox] {
+    cursor: pointer;
+  }    
+  /* 정렬 */
+  table.dataTable thead th.header:not(:first-child) {
     text-align: center;
   }
   table.dataTable tbody td.row-left-align {
@@ -16,23 +25,51 @@
   table.dataTable tbody td.row-right-align {
     text-align: right;
   }
+
+  /* Header&Row CSS수정 */
+  table.dataTable thead th.header {
+    background-color: #007BD5;
+    color: #ffffff;
+    font-weight: 400;
+  }
+  table.dataTable tbody td.row {
+    text-align: center;
+  }
 </style>>
 
 <!-- CSS & JS -->
 <script src="/js/dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/dataTables.select.js"></script>
+<script src="/js/select.dataTables.js"></script>
 
 <!-- 본문 -->
 <%- contentFor('body') %>
+
+<!-- 버튼 -->
+<div class="d-flex">
+  <div class="ps-1">
+    <h2>공지사항</h2>
+  </div>
+  <div class="d-flex ms-auto">
+    <div>
+      <button type="button" class="btn btn-primary" onclick="createItem()">등록</button>      
+    </div>
+    <div class="ms-1">
+      <button type="button" class="btn btn-danger" onclick="deleteItemList()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 그리드 -->
 <table id="tblMain" class="table table-striped">
   <thead>
       <tr>
+        <th></th>
         <th>No.</th>
         <th>제목</th>
         <th>등록자</th>
         <th>등록일시</th>
-        <th>수정자</th>
-        <th>수정일시</th>
       </tr>
   </thead>
   <tbody>
@@ -40,16 +77,29 @@
 </table>
 
 <script>
-  var columns = [
+  var table = {};
+
+  $(document).ready( function () {
+    //DataTable.js
+    table = DataTableJS('tblMain', '/common/notice/getNoticeList');
+
+    //Click Event
+    $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
+      const rowData = table.row(this).data();
+      var param = 'boardGuid=' + rowData.BOARD_MST_GUID;
+      location.href = '/common/notice/getNotice?' + param;
+    });    
+  });    
+
+  const columns = [
+    {data : 'CHK', width: "50px"},
     {data : "NO", width: "50px" },
     {data : "TTL", width: "auto"},
     {data : "REG_EMAIL", width: "200px"},
     {data : "REG_DT", width: "200px" },
-    {data : "UPDT_EMAIL", width: "200px"},
-    {data : "UPDT_DT", width: "200px" },    
   ];
   //Korean
-  var language = {
+  const language = {
     "decimal": "",
     "emptyTable": "데이터가 없습니다.",
     // "info": "_START_ - _END_(총 _TOTAL_ 명)",
@@ -74,8 +124,20 @@
       "sortDescending": " : 내림차순 정렬"
     }};
 
-  $(document).ready( function () {
-    $("#tblMain").DataTable({
+  const columnDefs = [
+    { className: "header", targets: "_all" },
+    { 
+      orderable: false,
+      render: DataTable.render.select(),
+      targets: 0
+    },    
+    { className: "row-left-align", targets: [2, 3] },
+    { className: "row-center-align", targets: [4] },
+    { className: "row-right-align", targets: [1] },
+  ];
+
+  function DataTableJS(tblId, url){
+    var table = new DataTable('#' + tblId, {
       columns: columns,
       language : language,
       paging: true,
@@ -83,18 +145,33 @@
       searching: false,
       ordering: true,
       info: true,      
-      columnDefs: [
-        { className: "header-center-align", targets: "_all" },
-        { className: "row-left-align", targets: [1, 2, 4] },
-        { className: "row-center-align", targets: [3, 5] },
-        { className: "row-right-align", targets: [0] },
-      ], 
-      order: [[1, 'NO']],     
+      columnDefs: columnDefs, 
+      fixedColumns: {
+        start: 2
+      },
+      order: [[1, 'NO']],    
+      select: {
+        style: 'os',
+        selector: 'td:first-child',
+      },
       ajax: {
-          url: '/common/notice/getNoticeList',
+          url: url,
           dataSrc: 'value' ,
           method: 'post',
       },
     });
-  } );  
+
+    return table;
+  };
+  
+  //신규 등록
+  function createItem(){
+    location.href = '/common/notice/getNotice';
+  };
+
+  //리스트 삭제
+  function deleteItemList(){
+    alert('아이템 삭제');
+  };
+
 </script>

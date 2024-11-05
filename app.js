@@ -47,6 +47,8 @@ app.use(express.static(path.join(__dirname, '/node_modules/jquery-ui/dist')));
 app.use(express.static(path.join(__dirname, '/node_modules/jquery.cookie')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-bs5')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-select')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-select-dt')));
 
 //mysql-session setup
 app.use(session({
