@@ -46,7 +46,7 @@
 <!-- 본문 -->
 <%- contentFor('body') %>
 
-<!-- 버튼 -->
+<!-- 메뉴명 & 버튼 -->
 <div class="d-flex">
   <div class="ps-1">
     <h2>공지사항</h2>
@@ -87,7 +87,7 @@
     $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
       const rowData = table.row(this).data();
       var param = 'boardGuid=' + rowData.BOARD_MST_GUID;
-      location.href = '/common/notice/getNotice?' + param;
+      location.href = '/common/notice/view?' + param;
     });    
   });    
 
@@ -149,7 +149,7 @@
       fixedColumns: {
         start: 2
       },
-      order: [[1, 'NO']],    
+      order: [[1, 'asc']],    
       select: {
         style: 'os',
         selector: 'td:first-child',
@@ -166,12 +166,12 @@
   
   //신규 등록
   function createItem(){
-    location.href = '/common/notice/getNotice';
+    location.href = '/common/notice/edit';
   };
 
   //리스트 삭제
   function deleteItemList(){
-    alert('아이템 삭제');
+    alert('개발중입니다.');
   };
 
 </script>

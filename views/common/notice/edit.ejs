@@ -1,0 +1,153 @@
+<!-- 공통 부분 -->
+<%- include('../../layout/common.ejs') %>
+
+<!-- CSS & JS -->
+<style>
+    .line-outer-contents {
+        height: calc(100vh - 15.2rem);
+    }
+        .line-outer-contents .contents {
+            height: 100%;
+        }  
+        .line-outer-contents .contents textarea {
+            width: 100%;
+            height: 100%;
+            font-size: 1rem;
+            resize: none;
+        }          
+</style>
+
+<!-- 본문 -->
+<%- contentFor('body') %>
+
+<input type="hidden" id="boardGuid" value="<%= boardGuid %>">
+
+<!-- 메뉴명 & 버튼  -->
+<div class="d-flex">
+    <div class="ps-1">
+        <h2>공지사항 편집</h2>
+      </div>
+    <div class="d-flex ms-auto">  
+        <div>
+            <button type="button" class="btn btn-warning" onclick="closeItem()">닫기</button>
+        </div>      
+        <% if((userEmail == regEmail) ||
+              (authCode == 'S' || authCode == 'A')) { %>
+        <div class="ms-1">
+            <button type="button" class="btn btn-primary" onclick="saveItem(event)">저장</button>      
+        </div>
+        <% } %>
+        <% if((boardGuid != null && userEmail == regEmail) ||
+              (boardGuid != null && (authCode == 'S' || authCode == 'A'))) { %>
+        <div class="ms-1">
+            <button type="button" class="btn btn-danger" onclick="deleteItem(event)">삭제</button>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- 제목 & 등록날짜 -->
+<div class="mt-2">
+    <div class="d-flex mt-2">
+        <span>제목</span>
+        <div class="ms-auto">
+            <span>등록날짜: </span><span><%= regDate %></span>
+        </div>
+    </div>
+    <div class="d-flex mt-2">
+        <div class="w-100">
+            <input type="text" id="txtTitle" class="form-control" value="<%- noticeTitle %>">
+        </div>
+    </div>
+</div>
+
+<!-- 내용 -->
+<div>
+    <div class="d-flex mt-2">
+        <span>내용</span>
+    </div>
+    <div class="mt-2 line-outer-contents">
+        <div class="contents">
+            <textarea class="form-control" id="txtContents"><%= contents %></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+  $(document).ready( function () { 
+  });   
+
+  //저장
+  function saveItem(e){    
+    var data = {
+      'boardGuid': $("#boardGuid").val(),
+      'title': $("#txtTitle").val(),
+      'contents': $("#txtContents").val(),
+    };
+
+    confirmModal(e, 'modalConfirm', '공지사항', '저장 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/common/notice/setNotice',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("공지사항");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/common/notice/';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    });
+  };
+
+  //삭제
+  function deleteItem(e){
+    var data = {
+      'boardGuid': $("#boardGuid").val(),
+    };
+
+    confirmModal(e, 'modalConfirm', '공지사항', '삭제 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/common/notice/deleteNotice',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("공지사항");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/common/notice/';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    });
+  };
+
+  //닫기
+  function closeItem(){
+    history.back();
+  };
+
+</script>

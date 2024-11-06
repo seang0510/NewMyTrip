@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>메인 화면</title>
+  <title><%- defineContent('title') %></title>
   
   <link href="/css/bootstrap.min.css" rel="stylesheet">
   <link href="/css/font-awesome.min.css" rel="stylesheet">
@@ -134,7 +134,7 @@
     });
 
     function logout(eThis, e) {                  
-      confirmModal(eThis, e, 'modalConfirm', '로그아웃', '로그아웃 하시겠습니까?', function () {
+      confirmModal(e, 'modalConfirm', '로그아웃', '로그아웃 하시겠습니까?', function () {
         $.ajax({
           url: '/logout',
           method: 'POST',

@@ -71,7 +71,7 @@ function isEqualValue(elemId1, elemId2) {
 };
 
 //입력한 Element가 포함된 Form Submit
-function confirmModal(eThis, e, modalId, title, text, callback) {  
+function confirmModal(e, modalId, title, text, callback) {  
   e.preventDefault();
   modalConfirm(modalId, title, text, function (confirm) {
     if (confirm) {

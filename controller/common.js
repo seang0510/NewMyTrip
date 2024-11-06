@@ -1,4 +1,3 @@
-const { render } = require('../app');
 const helper = require('../helper/helper');
 const adService = require('../service/ad');
 const noticeService = require('../service/notice');
@@ -17,7 +16,7 @@ exports.indexNotice = async (req, res, next) => {
       else{
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
-        return res.render('common/notice/index', { title: '공지사항', userEmail: email, authCode: authGroupCode });
+        return res.render('common/notice/index', { title: '모두의 출장(공지사항)', userEmail: email, authCode: authGroupCode });
       }        
   }
   catch (err) {
@@ -25,8 +24,8 @@ exports.indexNotice = async (req, res, next) => {
   }
 };
 
-//공지사항 조회(GET)
-exports.getNotice = async (req, res, next) => {
+//공지사항 편집(GET)
+exports.editNotice = async (req, res, next) => {
   try {
     //로그인 되지 않은 경우
     if(!(req.session.valid == true)){
@@ -42,39 +41,95 @@ exports.getNotice = async (req, res, next) => {
 
       //공지사항 조회
       let rows;
-      let title;
+      let noticeTitle;
       let contents;
       let regDate;
-      let renderUrl;
+      let regEmail;
 
       if(boardGuid != null){
         rows = await noticeService.getNoticeList(boardGuid, null, null);
-        renderUrl = 'common/notice/read';
-      }
-      else{
-        boardGuid = helper.generateUUID();
-        renderUrl = 'common/notice/create';
       }
 
+      //수정
       if(rows != null){
-        title = rows[0]['TTL'];
+        noticeTitle = rows[0]['TTL'];
         contents = rows[0]['CNTS'];
         regDate = rows[0]['REG_DT'];
+        regEmail = rows[0]['REG_EMAIL'];
       }
+      //등록
       else{
-        title = '';
+        noticeTitle = '';
         contents = '';
         regDate = helper.dateFormat(new Date());
+        regEmail = email;
       }
 
-      return res.render(renderUrl, {
-        title: '공지사항',        
+      return res.render('common/notice/edit', {
+        title: '모두의 출장(공지사항 편집)',        
         userEmail: email,
         authCode: authGroupCode,
         boardGuid: boardGuid,
-        noticeTitle: title,
+        noticeTitle: noticeTitle,
         contents: contents,
-        regDate: regDate,          
+        regDate: regDate,     
+        regEmail: regEmail,     
+      });
+    }    
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//공지사항 보기(GET)
+exports.viewNotice = async (req, res, next) => {
+  try {
+    //로그인 되지 않은 경우
+    if(!(req.session.valid == true)){
+      var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+      res.cookie('MSG', msg, { httpOnly: false, secure: false });
+      return res.redirect('/login');
+    }
+    //현재 로그인 되어 있는 경우    
+    else{
+      let boardGuid = helper.changeUndefiendToNull(req.query.boardGuid);
+      const email = req.session.email;
+      const authGroupCode = req.session.authGroupCode;
+
+      //공지사항 조회
+      let rows;
+      let noticeTitle;
+      let contents;
+      let regDate;
+      let regEmail;
+
+      if(boardGuid != null){
+        rows = await noticeService.getNoticeList(boardGuid, null, null);
+      }
+      else{
+        return res.redirect('/common/notice');
+      }
+
+      if(rows != null){
+        noticeTitle = rows[0]['TTL'];
+        contents = rows[0]['CNTS'];
+        regDate = rows[0]['REG_DT'];
+        regEmail = rows[0]['REG_EMAIL'];
+      }
+      else{
+        return res.redirect('/common/notice');
+      }
+
+      return res.render('common/notice/view', {
+        title: '모두의 출장(공지사항 보기)',        
+        userEmail: email,
+        authCode: authGroupCode,
+        boardGuid: boardGuid,
+        noticeTitle: noticeTitle,
+        contents: contents,
+        regDate: regDate,    
+        regEmail: regEmail,      
       });
     }    
   }
@@ -137,7 +192,12 @@ exports.setNotice = async (req, res, next) => {
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
   const contents = helper.changeUndefiendToNull(req.body.contents);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  //세션이 존재하는 경우 userGuid는 세션값으로 설정
+  if (req.session != null && req.session.userGuid != null) {
+    userGuid = req.session.userGuid;
+  }
 
   try {
     //공지사항 등록,수정
@@ -168,6 +228,11 @@ exports.deleteNotice = async (req, res, next) => {
   let resModel;
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  //세션이 존재하는 경우 userGuid는 세션값으로 설정
+  if (req.session != null && req.session.userGuid != null) {
+    userGuid = req.session.userGuid;
+  }
 
   try {
     //공지사항 삭제

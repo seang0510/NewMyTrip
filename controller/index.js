@@ -74,6 +74,7 @@ exports.setLogin = async (req, res, next) => {
                 req.session.email = user.EMAIL;
                 req.session.joinTypeCode = user.JOIN_TYP_COD;
                 req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.userGuid = user.USER_GUID;
                 req.session.isLogined = true;
                 req.session.valid = true;
 
@@ -155,6 +156,7 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
                 req.session.email = user.EMAIL;
                 req.session.joinTypeCode = user.JOIN_TYP_COD;
                 req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.userGuid = user.USER_GUID;
                 req.session.isLogined = true;
                 req.session.valid = true;
 
@@ -211,7 +213,8 @@ exports.setSignUp = async (req, res, next) => {
     console.log("joinTypeCode :: " + joinTypeCode);
     try {
         //회원가입(1:등록, 0:이미 존재, -1:실패)
-        let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+        let returnModel = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+        retVal = returnModel.retVal;
 
         //성공
         if (retVal == 1) {
@@ -245,7 +248,8 @@ exports.setSignUpWithSocial = async (req, res, next) => {
 
     try {
         //회원가입(1:등록, 0:이미 존재, -1:실패)
-        let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+        let returnModel = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken , deviceTypeCode, pushToken);
+        retVal = returnModel.retVal;
 
         //성공
         if (retVal == 1) {
@@ -253,6 +257,7 @@ exports.setSignUpWithSocial = async (req, res, next) => {
             req.session.save(function(){ 
                 req.session.email = email;
                 req.session.joinTypeCode = joinTypeCode;
+                req.session.userGuid = returnModel.userGuid;
                 req.session.authGroupCode = 'N';
                 req.session.isLogined = true;
                 req.session.valid = true;
@@ -380,6 +385,7 @@ exports.setMobileLogin = async (req, res, next) => {
         if (user == null) {
             //회원가입(1:등록, 0:이미 존재, -1:실패)
             let retVal = await userService.joinUser(email, joinTypeCode , 'N', password, joinToken, deviceTypeCode, pushToken);            
+            retVal = returnModel.retVal;
 
             //성공
             if (retVal == 1) {
@@ -389,6 +395,7 @@ exports.setMobileLogin = async (req, res, next) => {
                     req.session.email = userTemp.EMAIL;
                     req.session.joinTypeCode = userTemp.JOIN_TYP_COD;
                     req.session.authGroupCode = userTemp.AUTH_GRP_COD;
+                    req.session.userGuid = userTemp.USER_GUID;
                     req.session.isLogined = true;
                     req.session.valid = true;
     
@@ -409,8 +416,9 @@ exports.setMobileLogin = async (req, res, next) => {
                 req.session.email = user.EMAIL;
                 req.session.joinTypeCode = user.JOIN_TYP_COD;
                 req.session.authGroupCode = user.AUTH_GRP_COD;
+                req.session.userGuid = user.USER_GUID;
                 req.session.isLogined = true;
-                req.session.valid = true;
+                req.session.valid = true;                
 
                 resModel = helper.createResponseModel(true, '로그인 성공', user);
                 return res.status(200).json(resModel);

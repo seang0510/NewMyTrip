@@ -109,6 +109,7 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
     let userGuid;
     let returnCode = -1;
     let isSuccess = false;
+    let returnModel;
 
     try {
         await conn.beginTransaction();
@@ -208,7 +209,11 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
         throw Error(err);
     } finally {
         conn.release();
-        return returnCode;
+        returnModel = {
+            retVal: returnCode,
+            userGuid: userGuid,
+        };
+        return returnModel;
     }
 };
 

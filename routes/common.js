@@ -5,7 +5,8 @@ const { upload } = require('../helper/upload');
 
 //공지사항 관리(notice)
 router.get('/notice', commonController.indexNotice);
-router.get('/notice/getNotice', commonController.getNotice);
+router.get('/notice/edit', commonController.editNotice);
+router.get('/notice/view', commonController.viewNotice);
 router.post('/notice/getNoticeList', commonController.getNoticeList);
 router.post('/notice/setNotice', commonController.setNotice);
 router.post('/notice/deleteNotice', commonController.deleteNotice);
