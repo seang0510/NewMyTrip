@@ -4,7 +4,7 @@
 <!-- CSS & JS -->
 <style>
     .line-outer-contents {
-        height: calc(100vh - 11.5rem);
+        height: calc(100vh - 12.3rem);
     }
         .line-outer-contents .contents {
             height: 100%;
@@ -40,11 +40,24 @@
     </div>
 </div>
 
-<!-- 제목 & 등록날짜 -->
+<!-- 제목 & 등록자 & 등록날짜 -->
 <div class="d-flex align-items-start mt-2">
     <h4><%= noticeTitle %></h4>
     <div class="ms-auto">
-        <span>등록날짜: </span><span><%= regDate %></span>
+        <table>
+            <colgroup>
+                <col width="80px">
+                <col width="auto">
+            </colgroup>
+            <tr>
+                <td><span>등록자: </span></td>
+                <td><span><%= regEmail %></span></td>
+            </tr>
+            <tr>
+                <td><span>등록날짜: </span></td>
+                <td><span><%= regDate %></span></td>
+            </tr>
+        </table>
     </div>
 </div>
 
