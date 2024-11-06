@@ -98,9 +98,37 @@ exports.importTrip = async (file, userGuid) => {
                 var longitude;
                 console.log(tempData);
                 console.log("xxxx :: "+ tempData[5].x);
-                if(tempData[5].x == 0){
-                    console.log("#### kakako send api");
-                    console.log("#### address :: " + tempData[3]);
+                console.log("address :: "+ tempData[3]);
+                if(tempData[3] == null || tempData[3] == ""){
+                    console.log("#### kakako 위경도로 주소 찾기 : " + tempData[5].x + "/" + tempData[5].y);
+                    const response = await axios({
+                        method: "GET",
+                        url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ tempData[5].x + '&x=' + tempData[5].y,
+                        headers: {
+                        Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+                        },
+                    });
+
+                    
+
+                    try {       
+                        console.log("## response :: " + JSON.stringify(response.data)); 
+                        if(response.data.documents[0].address.address_name === undefined){
+                            
+                        }else{
+                            console.log("## address_name :: " + response.data.documents[0].address.address_name); 
+                            tempData[3] = response.data.documents[0].address.address_name;
+                        }
+                    }
+                    catch (err) {
+                        console.log("## err :: " + err.stack); 
+                        latitude = 0;
+                        longitude = 0;
+                    } 
+                }
+                else if(tempData[5].x == 0){
+                    console.log("#### kakako 주소로 위도 찾기 : " + tempData[3]);
+                    
                     const encodedAddress = encodeURIComponent(tempData[3]);
                     //const encodedAddress = encodeURIComponent("원종동 283-17");
                     
