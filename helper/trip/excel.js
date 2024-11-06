@@ -13,6 +13,7 @@ async function getTripDataFromExcel(file, userGuid) {
   const fileName = file.originalname; //Web에서 보는 파일명
   const orgFileName = file.filename; //실제 디스크에 저장되는 파일명
 
+  console.log("## orgFileName : " + orgFileName );
   if (file == null || file.originalname == null || file.filename == null) {
     return setResponseModel(false, '업로드한 파일이 올바르지 않습니다.', '');
   }
@@ -24,7 +25,7 @@ async function getTripDataFromExcel(file, userGuid) {
   //모두의 출장 Object
   let trip = {
     tripGuid : helper.generateUUID(),
-    title : path.parse(fileName).name,
+    title : decodeURI( path.parse(fileName).name ),
     startDate : helper.dateFormat(new Date()),
     markFacilityNameYn: null,
     markAddressYn: null,

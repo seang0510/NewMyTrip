@@ -19,7 +19,11 @@ exports.upload = (folderName) => {
       filename: function (req, file, cb) {
         console.log(file.originalname);
         console.log(file.mimetype);
-        const filename = Date.now() + "_" + file.originalname;
+        console.log(decodeURI( file.originalname ))
+
+        const filename = Date.now() + "_" + decodeURI( file.originalname );
+
+        //const filename = file.originalname;
         cb(null, filename);
       }
     }),

@@ -96,11 +96,11 @@ exports.importTrip = async (file, userGuid) => {
             for await (let tempData of tripDetails) {
                 var latitude;
                 var longitude;
-                //console.log(tempData);
-                //console.log("xxxx :: "+ tempData[5].x);
+                console.log(tempData);
+                console.log("xxxx :: "+ tempData[5].x);
                 if(tempData[5].x == 0){
-                    //console.log("#### kakako send api");
-                    //console.log("#### address :: " + tempData[3]);
+                    console.log("#### kakako send api");
+                    console.log("#### address :: " + tempData[3]);
                     const encodedAddress = encodeURIComponent(tempData[3]);
                     //const encodedAddress = encodeURIComponent("원종동 283-17");
                     
@@ -123,7 +123,7 @@ exports.importTrip = async (file, userGuid) => {
                             tempData[5].x = response.data.documents[0].address.y;
                             tempData[5].y = response.data.documents[0].address.x;
                         }
-                        //console.log("위도경도 가져오기 완료2::" + response.data.documents[0].address.x);                 
+                        console.log("위도경도 가져오기 완료2::" + response.data.documents[0].address.x);                 
                     }
                     catch (err) {
                         console.log("## err :: " + err.stack); 

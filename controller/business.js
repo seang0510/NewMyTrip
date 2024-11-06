@@ -101,9 +101,11 @@ exports.setTrip = async (req, res, next) => {
 
 //오늘의 출장 일괄등록(POST)
 exports.importTrip = async (req, res, next) => {
+  console.log("## importTrip ##");
   let resModel;
   const file = req.file;
   const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const fileName = helper.changeUndefiendToNull(req.body.fileName);
 
   //파일타입이 올바르지 않은 경우
   if (req.fileValidationError != undefined) {
@@ -113,6 +115,7 @@ exports.importTrip = async (req, res, next) => {
 
   try {
     //오늘의 출장 엑셀 등록,수정
+    console.log("오늘의 출장 엑셀 등록,수정");
     let resModel = await tripService.importTrip(file, userGuid);
     return res.status(200).json(resModel);
   }
