@@ -19,7 +19,7 @@ async function getTripDataFromExcel(file, userGuid) {
   }
 
   //고정,가변 컬럼
-  const fixedColumns = [ '순번', '항목1', '주소', '상세주소', '위도', '경도' ];
+  const fixedColumns = [ '순번', '명칭', '주소', '상세주소', '위도', '경도' ];
   const variableColumns = [];
 
   //모두의 출장 Object
@@ -79,7 +79,7 @@ async function getTripDataFromExcel(file, userGuid) {
                 case 1: //순번
                   order = cell.value;
                   break;
-                case 2: //항목1
+                case 2: //명칭
                   facilityName = cell.value;
                   break;
                 case 3: //주소
