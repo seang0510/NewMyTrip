@@ -119,3 +119,15 @@ function submitForm(method, action){
   form.appendTo('body');
   form.submit();
 };
+
+//Object List에서 keyName과 key만 가져오기
+function getValueList(rows, keyName){
+  let newArr = [];
+
+  for (i = 0; i < rows.length; i++) {
+    let value = rows[i][keyName];
+    newArr.push(value);
+  }
+
+  return newArr;
+};

@@ -79,3 +79,53 @@ exports.deleteNotice = async (boardGuid, userGuid) => {
         conn.release();
     }
 };
+
+//공지사항 삭제(리스트)
+exports.deleteNoticeList = async (boardGuidList, userGuid) => {
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {        
+
+        await conn.beginTransaction();
+
+        for (var i = 0; i < boardGuidList.length; i++) {
+            boardGuid = boardGuidList[i];
+            params = [boardGuid, userGuid];
+            
+            res = await pool.query('CALL CMN_BOARD_MST_UPDATE_YN(?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'Y'){
+                if (i == boardGuidList.length - 1) {
+                    console.log("공지사항 삭제 성공");
+                    isSuccess = true;
+                }
+            }
+            else{
+                console.log("공지사항 삭제 실패");
+                isSuccess = false;
+                break;
+            }
+        }
+    
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};

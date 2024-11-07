@@ -31,14 +31,12 @@
         <div>
             <button type="button" class="btn btn-warning" onclick="closeItem()">닫기</button>
         </div>      
-        <% if((userEmail == regEmail) ||
-              (authCode == 'S' || authCode == 'A')) { %>
+        <% if(authCode == 'S' || authCode == 'A') { %>
         <div class="ms-1">
             <button type="button" class="btn btn-primary" onclick="saveItem(event)">저장</button>      
         </div>
         <% } %>
-        <% if((boardGuid != null && userEmail == regEmail) ||
-              (boardGuid != null && (authCode == 'S' || authCode == 'A'))) { %>
+        <% if(boardGuid != null && (authCode == 'S' || authCode == 'A')) { %>
         <div class="ms-1">
             <button type="button" class="btn btn-danger" onclick="deleteItem(event)">삭제</button>
         </div>

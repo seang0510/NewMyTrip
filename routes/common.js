@@ -10,6 +10,7 @@ router.get('/notice/view', commonController.viewNotice);
 router.post('/notice/getNoticeList', commonController.getNoticeList);
 router.post('/notice/setNotice', commonController.setNotice);
 router.post('/notice/deleteNotice', commonController.deleteNotice);
+router.post('/notice/deleteNoticeList', commonController.deleteNoticeList);
 
 //사진 관리(photo)
 router.get('/photo', commonController.indexPhoto);

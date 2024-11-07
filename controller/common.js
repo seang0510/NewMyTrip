@@ -227,7 +227,7 @@ exports.setNotice = async (req, res, next) => {
 exports.deleteNotice = async (req, res, next) => {
   let resModel;
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
   //세션이 존재하는 경우 userGuid는 세션값으로 설정
   if (req.session != null && req.session.userGuid != null) {
@@ -245,6 +245,37 @@ exports.deleteNotice = async (req, res, next) => {
     //실패
     else{
       resModel = helper.createResponseModel(false, '공지사항을 삭제에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//공지사항 삭제 리스트(POST)
+exports.deleteNoticeList = async (req, res, next) => {
+  let resModel;
+  const boardGuidList = helper.changeUndefiendToNull(req.body.boardGuidList);
+  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  //세션이 존재하는 경우 userGuid는 세션값으로 설정
+  if (req.session != null && req.session.userGuid != null) {
+    userGuid = req.session.userGuid;
+  }
+
+  try {
+    //공지사항 삭제
+    let retVal = await noticeService.deleteNoticeList(boardGuidList, userGuid);
+
+    //삭제
+    if(retVal == 1){
+      resModel = helper.createResponseModel(true, '선택한 공지사항을 삭제하였습니다.', '');        
+    }
+    //실패
+    else{
+      resModel = helper.createResponseModel(false, '선택한 공지사항 삭제에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);

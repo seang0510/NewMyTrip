@@ -41,10 +41,15 @@
 <script src="/js/dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap5.min.js"></script>
 <script src="/js/dataTables.select.js"></script>
+<script src="/ejs.min.js"></script>
 <script src="/js/select.dataTables.js"></script>
+<script src="/javascripts/datatableOption.js"></script>
 
 <!-- 본문 -->
 <%- contentFor('body') %>
+
+<!-- DataTable CheckBox Visible -->
+<input type="hidden" id="chkVisible" value=<%= authCode %>>
 
 <!-- 메뉴명 & 버튼 -->
 <div class="d-flex">
@@ -52,12 +57,14 @@
     <h2>공지사항</h2>
   </div>
   <div class="d-flex ms-auto">
+    <% if(authCode == 'S' || authCode == 'A') { %>    
     <div>
       <button type="button" class="btn btn-primary" onclick="createItem()">등록</button>      
     </div>
     <div class="ms-1">
-      <button type="button" class="btn btn-danger" onclick="deleteItemList()">삭제</button>
+      <button type="button" class="btn btn-danger" onclick="deleteItemList(event)">삭제</button>
     </div>
+    <% } %>
   </div>
 </div>
 
@@ -83,6 +90,11 @@
     //DataTable.js
     table = DataTableJS('tblMain', '/common/notice/getNoticeList');
 
+    //CheckBox Visible
+    if($("#chkVisible").val() != 'N'){
+      table.column(0).visible(true);
+    }
+
     //Click Event
     $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
       const rowData = table.row(this).data();
@@ -98,38 +110,14 @@
     {data : "REG_EMAIL", width: "200px"},
     {data : "REG_DT", width: "200px" },
   ];
-  //Korean
-  const language = {
-    "decimal": "",
-    "emptyTable": "데이터가 없습니다.",
-    // "info": "_START_ - _END_(총 _TOTAL_ 명)",
-     "info": "(총 _TOTAL_ 개)",
-    "infoEmpty": "0개",
-    "infoFiltered":" (전체 _MAX_ 개 중 검색결과)",
-    "infoPostFix": "",
-    "thousands": ",",
-    "lengthMenu": "_MENU_&nbsp;&nbsp;개씩 보기",
-    "loadingRecords": "로딩중...",
-    "processing": "처리중...",
-    "search": "검색:",
-    "zeroRecords": "검색된 데이터가 없습니다.",
-    "paginate": {
-      "first":" 첫 페이지",
-      "last": "마지막 페이지",
-      "next": "다음",
-      "previous": "이전"
-    },
-    "aria":{
-      "sortAscending": " : 오름차순 정렬",
-      "sortDescending": " : 내림차순 정렬"
-    }};
 
   const columnDefs = [
     { className: "header", targets: "_all" },
     { 
       orderable: false,
       render: DataTable.render.select(),
-      targets: 0
+      targets: 0,
+      visible: false,
     },    
     { className: "row-left-align", targets: [2, 3] },
     { className: "row-center-align", targets: [4] },
@@ -139,7 +127,7 @@
   function DataTableJS(tblId, url){
     var table = new DataTable('#' + tblId, {
       columns: columns,
-      language : language,
+      language : getLanguage(),
       paging: true,
       lengthChange: true,
       searching: false,
@@ -151,7 +139,7 @@
       },
       order: [[1, 'asc']],    
       select: {
-        style: 'os',
+        style: 'multi',
         selector: 'td:first-child',
       },
       ajax: {
@@ -170,8 +158,40 @@
   };
 
   //리스트 삭제
-  function deleteItemList(){
-    alert('개발중입니다.');
+  function deleteItemList(e){
+    const rows = table.rows('.selected').data();
+    var boardGuidList = getValueList(rows, 'BOARD_MST_GUID');
+    var data = {
+      'boardGuidList': boardGuidList,
+    };
+
+    confirmModal(e, 'modalConfirm', '공지사항', '선택한 공지사항을 삭제 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/common/notice/deleteNoticeList',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("공지사항");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/common/notice/';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    });
   };
 
 </script>
