@@ -2,6 +2,7 @@ var businessController = require('../controller/business');
 var express = require('express');
 var router = express.Router();
 const { upload } = require('../helper/upload');
+const path = require('path');
 
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
@@ -9,6 +10,7 @@ router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/setTrip', businessController.setTrip);
 router.post('/trip/importTrip', upload(`business/trip`).single("file"), businessController.importTrip);
 router.post('/trip/exportTrip', businessController.exportTrip);
+router.post('/trip/mobile/exportTrip', businessController.mobileExportTrip);
 router.post('/trip/deleteTrip', businessController.deleteTrip);
 router.post('/trip/getTripDetail', businessController.getTripDetail);
 router.post('/trip/getTripDetailWaterMark', businessController.getTripDetailWaterMark);
@@ -44,6 +46,12 @@ router.get('/trip/:imageName', function(req, res){
   var imgName = req.params.imageName;
   console.log('이미지 요청: ' + imgName);
   res.sendFile('/uploads/business/trip/'+imgName);    
+});
+
+//http://192.168.0.13:3030/business/excelDown/2024-11-7위도경도없는중복_TripData.xlsx
+router.get('/excelDown/:fileName', function(req, res){
+  var fileName = req.params.fileName;
+  res.sendFile(path.join(__dirname, '..', 'public/download/' + fileName));    
 });
 
 module.exports = router;

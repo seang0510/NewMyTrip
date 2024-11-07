@@ -208,17 +208,75 @@ function excelDownload(menu, data, headers, keys, res) {
     worksheet.addRow(data[i]);
   }
 
+  console.log("시작");
+  workbook.xlsx.writeFile('output.xlsx');
+  console.log("끝");
   //엑셀시트을 생성하기위해서 헤더셋팅
   let fileName = encodeURI(currentDayFormat + '_TripData'); //한글 UTF-8 방법이 없는 것 같음
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader("Content-Disposition", "attachment; filename=" + fileName + ".xlsx");//menu와 파일명을 동일하게 취급하여 파일명 = 메뉴+오늘날짜.xlsx 로 셋팅
   //실제로 workbook을 만들고 파일로 다운로드 할수있게 만들어주는함수
+  console.log("끝2");
   workbook.xlsx.write(res)
     .then(function (data) {
       res.end();
       console.log('엑셀 다운로드중...');
+      
     });
 };
+
+
+//엑셀 다운로드
+function excelMobileDownload(menu, data, dataTitle, headers, keys, res) {
+  let resModel;
+
+  //파일이름에들어갈 오늘날짜를 위해서 데이트선언 ( 중복 방지는 덤 )
+  const currentDate = new Date();
+
+  //오늘날짜를 YYYY-MM-DD 로 선언하여 파일이름에 붙이기 위해서.
+  const currentDayFormat = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate();
+
+  //exceljs 를써서 새로운 엑셀객체 생성
+  const workbook = new exceljs.Workbook();
+
+  //해당객체의 시트를 생성하면서 이름을 정해준다.
+  const worksheet = workbook.addWorksheet(menu);
+
+  //엑셀 헤더부분에 들어갈 첫줄데이터, 구분자로 되어있기때문에 받아서 다시 배열로 셋팅하는것.
+  headers = headers.split(',');
+  //데이터를 넣을때 헤더부분에 셋팅하게위해 키값을 선언하여 addrow 데이터의 json key값과 동일하게 선언해주면된다.
+  keys = keys.split(',');
+
+  //시트의 첫 헤더를 정해줄 데이터를 담을 json데이터
+  const columnsHeader = {
+    headerData: []
+  };
+
+  //위에서 ,구분자로 짤라서 담아놓은 배열의 사이즈만큼 반복하여 헤더데이터에 셋팅 셋팅값은 {header : --, key: -- 두가지는 필수값}
+  for (var i = 0; i < headers.length; i++) {
+    columnsHeader.headerData[i] = { header: headers[i], key: keys[i] };
+  }
+
+  //포문을 통해서 직접 셋팅하게되면 write 할시에 에러를 뱉어내기때문에 다른객체에 담아서 넣어줍니다.
+  worksheet.columns = columnsHeader.headerData;
+
+  //row데이터 바인딩
+  for (var i = 0; i < data.length; i++) {
+    worksheet.addRow(data[i]);
+  }
+  //let fileName = encodeURI(currentDayFormat + dataTitle + '_TripData'); //한글 UTF-8 방법이 없는 것 같음
+  let fileName = currentDayFormat + dataTitle + '_TripData';
+
+  console.log("시작");
+  workbook.xlsx.writeFile("./public/download/"+fileName + ".xlsx");
+  console.log(fileName + ".xlsx");
+
+  var returnData = fileName + ".xlsx";
+  resModel = helper.createResponseModel(true, '엑셀 파일을 다운로드 하였습니다.', returnData);
+  return res.status(200).json(resModel);
+
+};
+
 
 //return Model 제작
 function setResponseModel(isSuccess, message, data){
@@ -246,4 +304,5 @@ class Point {
 module.exports = {
   getTripDataFromExcel,
   excelDownload,
+  excelMobileDownload,
 };

@@ -165,7 +165,53 @@ exports.exportTrip = async (req, res, next) => {
   exceljs.excelDownload(menu, data.tripDetails, captions, columns, res);
 };
 
-//오늘의 출장 삭제(POST)
+
+//오늘의 출장 엑셀 다운로드(POST)
+exports.mobileExportTrip = async (req, res, next) => {
+  let resModel;
+  let resExcelModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+
+  //오늘의 출장 조회
+  const data = await tripService.exportTrip(tripGuid, regUserGuid);
+
+  console.log(data.title);
+  if(data == null){
+    resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
+  }
+
+  let fixedColumnCaptions = '순번,항목1,주소,상세주소,위도,경도';
+  let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG';
+  let variableColumns = '';
+  let fields = Object.keys(data.tripDetails[0]);
+
+  for (var i = 0; i < fields.length; i++) {
+    let colName = fields[i];
+
+    //고정컬럼이 아니며, 제외컬럼이 아니며, 가변컬럼에 등록되지 않은 경우
+    if(fixedColumns.indexOf(colName) == -1 && variableColumns.indexOf(colName) == -1){
+
+      //처음인 경우가 아니면 쉼표 붙이기
+      if(variableColumns != ''){
+        variableColumns += ',' + colName;
+      }
+      else{
+        variableColumns += colName;
+      }        
+    }
+  }
+
+  let columns = fixedColumns + ',' + variableColumns;
+  let captions =  fixedColumnCaptions + ',' + variableColumns;
+
+  var menu = data.title;
+  resExcelModel = exceljs.excelMobileDownload(menu, data.tripDetails,data.title, captions, columns, res);
+
+  
+};
+
+//오늘의 출장 삭제(POST) 
 exports.deleteTrip = async (req, res, next) => {
 let resModel;
 const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
@@ -177,7 +223,7 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
     //삭제
     if (retVal == 1) {
-      resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', '');
+     resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', '');
     }
     //실패
     else {
