@@ -171,7 +171,7 @@ async function getKaKaoAddress(address) {
 
 }
 //엑셀 다운로드
-function excelDownload(menu, data, headers, keys, res) {
+function excelDownload(menu, data, dataTitle, headers, keys, res) {
 
   //파일이름에들어갈 오늘날짜를 위해서 데이트선언 ( 중복 방지는 덤 )
   const currentDate = new Date();
@@ -208,15 +208,11 @@ function excelDownload(menu, data, headers, keys, res) {
     worksheet.addRow(data[i]);
   }
 
-  console.log("시작");
-  workbook.xlsx.writeFile('output.xlsx');
-  console.log("끝");
   //엑셀시트을 생성하기위해서 헤더셋팅
-  let fileName = encodeURI(currentDayFormat + '_TripData'); //한글 UTF-8 방법이 없는 것 같음
+  let fileName = encodeURI(currentDayFormat + '_'+dataTitle + '_TripData'); //한글 UTF-8 방법이 없는 것 같음
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader("Content-Disposition", "attachment; filename=" + fileName + ".xlsx");//menu와 파일명을 동일하게 취급하여 파일명 = 메뉴+오늘날짜.xlsx 로 셋팅
   //실제로 workbook을 만들고 파일로 다운로드 할수있게 만들어주는함수
-  console.log("끝2");
   workbook.xlsx.write(res)
     .then(function (data) {
       res.end();
@@ -265,7 +261,7 @@ function excelMobileDownload(menu, data, dataTitle, headers, keys, res) {
     worksheet.addRow(data[i]);
   }
   //let fileName = encodeURI(currentDayFormat + dataTitle + '_TripData'); //한글 UTF-8 방법이 없는 것 같음
-  let fileName = currentDayFormat + dataTitle + '_TripData';
+  let fileName = currentDayFormat + '_'+dataTitle + '_TripData';
 
   console.log("시작");
   workbook.xlsx.writeFile("./public/download/"+fileName + ".xlsx");

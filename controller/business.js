@@ -162,7 +162,7 @@ exports.exportTrip = async (req, res, next) => {
   let captions =  fixedColumnCaptions + ',' + variableColumns;
 
   var menu = data.title;
-  exceljs.excelDownload(menu, data.tripDetails, captions, columns, res);
+  exceljs.excelDownload(menu, data.tripDetails,data.title, captions, columns, res);
 };
 
 
