@@ -340,6 +340,7 @@ exports.getTripDetailListForImage = async (req, res, next) => {
   let resModel;
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+  const fileName = helper.changeUndefiendToNull(req.body.fileName);
 
   try {
     //오늘의 출장 조회
@@ -352,6 +353,39 @@ exports.getTripDetailListForImage = async (req, res, next) => {
       resModel = helper.createResponseModel(true, '', rows);
     }    
 
+    var fs = require("fs");
+    var zip = new require('node-zip')();
+    var checkFile = 0;
+
+    for (var i = 0; i < resModel.value.length; i++) {
+      //console.log(resModel.value[i].FILE_NM);
+      if(fs.existsSync('.' + resModel.value[i].FILE_PATH)){ // 파일이 존재한다면 true 그렇지 않은 경우 false 반환
+        console.log("## 파일 OO");
+
+        checkFile = 1;
+        zip.file(resModel.value[i].FILE_NM, fs.readFileSync('.' + resModel.value[i].FILE_PATH));
+      }else{
+        console.log("## 파일 XX");
+      }
+    }
+
+    if(checkFile > 0){
+      //파일 존재
+      var data = zip.generate({base64:false, compression:'DEFLATE'});
+      fs.writeFileSync("./public/download/"+fileName + ".zip", data, 'binary');
+
+      var returnData = new Object();
+      returnData.url = fileName + ".zip";
+      resModel = helper.createResponseModel(true, '이미지 파일이 존재 합니다.', returnData);
+    }else{
+      //이미지 파일 존재 하지 않음
+      
+      
+      resModel = helper.createResponseModel(false, '이미지 파일이 존재 하지 않습니다.', '');
+    }
+    
+    
+    
     return res.status(200).json(resModel);
   }
   catch (err) {

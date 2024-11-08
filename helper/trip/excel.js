@@ -267,7 +267,9 @@ function excelMobileDownload(menu, data, dataTitle, headers, keys, res) {
   workbook.xlsx.writeFile("./public/download/"+fileName + ".xlsx");
   console.log(fileName + ".xlsx");
 
-  var returnData = fileName + ".xlsx";
+  var returnData = new Object();
+  returnData.url = fileName + ".xlsx";
+  
   resModel = helper.createResponseModel(true, '엑셀 파일을 다운로드 하였습니다.', returnData);
   return res.status(200).json(resModel);
 
