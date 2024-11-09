@@ -1,7 +1,7 @@
-<!-- 공통 부분 -->
+<%# 공통 부분 %>
 <%- include('../../layout/common.ejs') %>
 
-<!-- CSS & JS -->
+<%# CSS & JS %>
 <link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 <style>
   /* Table */
@@ -37,21 +37,20 @@
   }
 </style>>
 
-<!-- CSS & JS -->
+<%# CSS & JS %>
 <script src="/js/dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap5.min.js"></script>
 <script src="/js/dataTables.select.js"></script>
-<script src="/ejs.min.js"></script>
 <script src="/js/select.dataTables.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
 
-<!-- 본문 -->
+<%# 본문 %>
 <%- contentFor('body') %>
 
-<!-- DataTable CheckBox Visible -->
+<%# DataTable CheckBox Visible %>
 <input type="hidden" id="chkVisible" value=<%= authCode %>>
 
-<!-- 메뉴명 & 버튼 -->
+<%# 메뉴명 & 버튼 %>
 <div class="d-flex">
   <div class="ps-1">
     <h2>공지사항</h2>
@@ -68,7 +67,7 @@
   </div>
 </div>
 
-<!-- 그리드 -->
+<%# 그리드 %>
 <table id="tblMain" class="table table-striped">
   <thead>
       <tr>

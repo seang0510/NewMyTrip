@@ -1,7 +1,7 @@
-<!-- 공통 부분 -->
+<%# 공통 부분 %>
 <%- include('../../layout/common.ejs') %>
 
-<!-- CSS & JS -->
+<%# CSS & JS %>
 <style>
     .line-outer-contents {
         height: calc(100vh - 16.9rem);
@@ -17,12 +17,12 @@
         }          
 </style>
 
-<!-- 본문 -->
+<%# 본문 %>
 <%- contentFor('body') %>
 
 <input type="hidden" id="boardGuid" value="<%= boardGuid %>">
 
-<!-- 메뉴명 & 버튼  -->
+<%# 메뉴명 & 버튼  %>
 <div class="d-flex">
     <div class="ps-1">
         <h2>공지사항 편집</h2>
@@ -44,7 +44,7 @@
     </div>
 </div>
 
-<!-- 제목 & 등록자 & 등록날짜 -->
+<%# 제목 & 등록자 & 등록날짜 %>
 <div class="mt-2">
     <div class="d-flex align-items-end mt-2">
         <span>제목</span>
@@ -74,7 +74,7 @@
     </div>
 </div>
 
-<!-- 내용 -->
+<%# 내용 %>
 <div>
     <div class="d-flex mt-2">
         <span>내용</span>

@@ -1,12 +1,12 @@
-<!-- 사용자 이메일 -->
+<%# 사용자 이메일 %>
 <%- contentFor('userEmail') %>
 <%= userEmail %>
 
-<!-- 권한에 따른 메뉴(Nav) -->
+<%# 권한에 따른 메뉴(Nav) %>
 <%- contentFor('menuNavByAuth') %>
 <% if(authCode == 'A'){ %>
-  <!-- This menu is hidden in bigger devices with d-sm-none. 
-    The sidebar isn't proper for smaller screens imo, so this dropdown menu can keep all the useful sidebar itens exclusively for smaller screens  -->
+  <%# This menu is hidden in bigger devices with d-sm-none. 
+    The sidebar isn't proper for smaller screens imo, so this dropdown menu can keep all the useful sidebar itens exclusively for smaller screens  %>
   <li class="nav-item dropdown d-sm-block d-md-none">
     <a class="nav-link dropdown-toggle" href="#" aria-controls="smallerscreenmenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       설정
@@ -18,17 +18,17 @@
         <a class="dropdown-item" href="/common/photo">사진 관리</a>
     </div>
   </li>
-  <!-- Smaller devices menu END -->
+  <%# Smaller devices menu END %>
 <% } %>
 
-<!-- 권한에 따른 메뉴(Body)  -->
+<%# 권한에 따른 메뉴(Body)  %>
 <%- contentFor('menuBodyByAuth') %>
 <% if(authCode == 'A'){ %>
-  <!-- Separator with title -->
+  <%# Separator with title %>
   <li class="list-group-item sidebar-separator-title d-flex align-items-center menu-collapsed">
     <small class="text-muted">설정</small>
   </li>
-  <!-- /END Separator -->
+  <%# /END Separator %>
   <a href="/system/user" class="bg-dark list-group-item list-group-item-action">
     <div class="d-flex w-100 justify-content-start align-items-center">
         <span class="fa fa-user fa-fw me-3"></span>
