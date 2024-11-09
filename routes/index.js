@@ -14,10 +14,10 @@ router.post('/join', indexController.setSignUp);
 router.post('/join/social', indexController.setSignUpWithSocial);
 router.post('/logout', indexController.setLogout);
 
-
 //메인화면
 router.get('/', indexController.getIndex);
 router.post('/', indexController.setLogout);
+router.post('/changePassword', indexController.changePassword);
 
 //mobile
 router.post('/mobile/login', indexController.setMobileLogin);
@@ -37,9 +37,6 @@ router.post('/testAddress', indexController.getAddress);
 
 //TEST 다음 지도 띄우기
 router.get('/daumAddress', indexController.daumAddress);
-
-//TEST 메일 보내기 샘플
-router.post('/sendMailSample', indexController.sendMailSample);
 
 router.post('/testZip', indexController.testZip);
 

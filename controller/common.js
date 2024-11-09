@@ -6,18 +6,20 @@ const noticeService = require('../service/notice');
 //공지사항 화면(GET)
 exports.indexNotice = async (req, res, next) => {
   try {
-      //로그인 되지 않은 경우
-      if(!(req.session.valid == true)){
+    //로그인 되지 않은 경우
+    if(!(req.session.valid == true)){
         var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
         res.cookie('MSG', msg, { httpOnly: false, secure: false });
         return res.redirect('/login');
     }
-      //현재 로그인 되어 있는 경우    
-      else{
-        var email = req.session.email;
-        var authGroupCode = req.session.authGroupCode;
-        return res.render('common/notice/index', { title: '모두의 출장(공지사항)', userEmail: email, authCode: authGroupCode });
-      }        
+    //현재 로그인 되어 있는 경우    
+    else{
+      var email = req.session.email;
+      var authGroupCode = req.session.authGroupCode;
+      let bannerList = await adService.getAdList('', ''); //광고 조회
+
+      return res.render('common/notice/index', { title: '모두의 출장(공지사항)', userEmail: email, authCode: authGroupCode, bannerList: bannerList });
+    }        
   }
   catch (err) {
       return res.status(500).json(err);
@@ -38,6 +40,7 @@ exports.editNotice = async (req, res, next) => {
       let boardGuid = helper.changeUndefiendToNull(req.query.boardGuid);
       const email = req.session.email;
       const authGroupCode = req.session.authGroupCode;
+      let bannerList = await adService.getAdList('', ''); //광고 조회
 
       //공지사항 조회
       let rows;
@@ -69,6 +72,7 @@ exports.editNotice = async (req, res, next) => {
         title: '모두의 출장(공지사항 편집)',        
         userEmail: email,
         authCode: authGroupCode,
+        bannerList: bannerList,
         boardGuid: boardGuid,
         noticeTitle: noticeTitle,
         contents: contents,
@@ -96,6 +100,7 @@ exports.viewNotice = async (req, res, next) => {
       let boardGuid = helper.changeUndefiendToNull(req.query.boardGuid);
       const email = req.session.email;
       const authGroupCode = req.session.authGroupCode;
+      let bannerList = await adService.getAdList('', ''); //광고 조회
 
       //공지사항 조회
       let rows;
@@ -125,6 +130,7 @@ exports.viewNotice = async (req, res, next) => {
         title: '모두의 출장(공지사항 보기)',        
         userEmail: email,
         authCode: authGroupCode,
+        bannerList: bannerList,
         boardGuid: boardGuid,
         noticeTitle: noticeTitle,
         contents: contents,
@@ -292,7 +298,7 @@ exports.getAdList = async (req, res, next) => {
   const adName = helper.changeUndefiendToNull(req.body.adName);
 
   try {
-    //공지사항 조회
+    //광고 조회
     let rows = await adService.getAdList(adGuid, adName);
 
     if(rows == null){
@@ -355,7 +361,7 @@ const adGuid = helper.changeUndefiendToNull(req.body.adGuid);
 const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
 
 try {
-  //공지사항 삭제
+  //광고 삭제
   let retVal = await adService.deleteAd(adGuid, userGuid);
 
   //삭제

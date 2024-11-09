@@ -76,63 +76,7 @@
     </div>
   </main>
 
-  <!-- The Modal of Personal Information -->
-  <div class="modal fade" id="modalPersonalInformation" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-    aria-labelledby="lblModalSignUp" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-
-        <!-- LoadingBar Modal of SignUp -->
-        <%- include('../ejs/loadingbar.ejs') %>
-
-          <!-- Modal Header -->
-          <div class="modal-header">
-            <h5 class="modal-title" id="lblModalSignUp">개인정보 및 이용약관(1/2)</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-
-          <!-- Modal body -->
-          <div class="modal-body">
-            <iframe src="./html/personalInformation.html" width="100%" height="500"></iframe>
-          </div>
-
-          <!-- Modal footer -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-target="#modalTermsOfService" data-bs-toggle="modal" data-bs-dismiss="modal">다음</button>
-          </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- The Modal of Terms Of Service -->
-  <div class="modal fade" id="modalTermsOfService" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-    aria-labelledby="lblModalSignUp" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-
-        <!-- LoadingBar Modal of SignUp -->
-        <%- include('../ejs/loadingbar.ejs') %>
-
-          <!-- Modal Header -->
-          <div class="modal-header">
-            <h5 class="modal-title" id="lblModalSignUp">개인정보 및 이용약관(2/2)</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-
-          <!-- Modal body -->
-          <div class="modal-body">
-            <iframe src="./html/termsConditions.html" width="100%" height="500"></iframe>
-          </div>
-
-          <!-- Modal footer -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-target="#modalSignUp" data-bs-toggle="modal" data-bs-dismiss="modal">다음</button>
-          </div>
-
-      </div>
-    </div>
-  </div>
+  <%- include('../ejs/terms.ejs', {lastModal: 'modal'}) %>
 
   <!-- The Modal of SingUp -->
   <div class="modal fade" id="modalSignUp" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -255,16 +199,6 @@
       }
     });
 
-    function passwordEqual(orgPassword, confirmPassword) {
-      if (!isEqualValue(orgPassword, confirmPassword)) {
-        $("#" + orgPassword).closest('form').addClass('was-validated');
-        document.getElementById(confirmPassword).setCustomValidity('invalid');
-      }
-      else {
-        document.getElementById(confirmPassword).setCustomValidity('');
-      }
-    };
-
     function findPassword(e) {
       //HTML5 기본 Validation
       if (!document.getElementById("emailForFindPassword").validity.valid) {
@@ -276,7 +210,7 @@
       var email = $("#emailForFindPassword").val();
       var data = { 'email': email };
       $.ajax({
-        url: './login/findPassword',
+        url: '/login/findPassword',
         method: 'POST',
         data: data,
         beforeSend: function (xhr) {

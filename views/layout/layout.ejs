@@ -8,18 +8,21 @@
   
   <link href="/css/bootstrap.min.css" rel="stylesheet">
   <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link href="/jquery.contextMenu.min.css" rel="stylesheet">
   <link href="/stylesheets/common.css" rel="stylesheet">
   <link href="/stylesheets/dashboard.css" rel="stylesheet">  
   <%- style %>
-  <!-- <link href="/stylesheets/fixWidth.css" rel="stylesheet"> -->  
+  <!-- <link href="/stylesheets/fixWidth.css" rel="stylesheet">   -->
 
   <script src="/jquery.min.js"></script>
   <script src="/umd/popper.min.js"></script>
   <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/ejs.min.js"></script>
+  <script src="/jquery.contextMenu.min.js"></script>
   <script src="/javascripts/common.js"></script>  
-  <script src="/javascripts/common.js"></script>  
+  <script src="/javascripts/contextmenu.js"></script>  
   <%- script %>
-  <!-- <script src="/javascripts/fixWidth.js"></script> -->  
+  <!-- <script src="/javascripts/fixWidth.js"></script>   -->
 </head>
 <body>
   <!-- LoadingBar Main  -->
@@ -30,8 +33,8 @@
 
   <!-- NavBar START -->
   <nav class="navbar navbar-expand-md navbar-dark bg-light-bule fixed-top px-3">
-    <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false">
-        <span class="navbar-toggler-icon"></span>
+    <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false">
+        <span class="fa fa-bars fa-fw w-100"></span>
     </button>
     <a class="navbar-brand" href="/">
         <img src="/images/logo_white.png" width="30" height="30" class="d-inline-block align-top me-2" alt="">        
@@ -59,12 +62,18 @@
             </li>
         </ul>
     </div>
+    <!-- 상단 버튼 -->
+    <a class="btn btn-light me-3 navbar-right-none top-menu" href="/common/notice">공지사항</a>
+    <a class="btn btn-light me-3 navbar-right-none top-menu" href="/business/trip">모두의 출장</a>
+
+    <%- defineContent('menuBodyByAuth') %>
+
     <a class="nav-link text-white me-3 navbar-right-none" href="#">
       <%- defineContent('userEmail') %>
     </a>
-    <button class="btn btn-light navbar-right-none" onclick="logout(this, event)">
-      <span class="fa fa-sign-out fa-fw w-100"></span>
-    </button>
+    <button class="context-menu-layout btn btn-light navbar-right-none">
+      <span class="fa fa-bars fa-fw w-100"></span>
+    </button>    
   </nav>
   <!-- NavBar END -->
 
@@ -76,33 +85,11 @@
         <ul class="list-group sticky-top sticky-offset">
             <!-- Separator with title -->
             <li class="list-group-item sidebar-separator-title d-flex align-items-center menu-collapsed">
-                <small class="text-muted">주요 기능</small>
+                <small class="text-muted">광고</small>
             </li>
             <!-- /END Separator -->
-            <!-- Menu with submenu -->
-            <a href="/common/notice" class="bg-dark list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-start align-items-center">
-                    <span class="fa fa-dashboard fa-fw me-3"></span>
-                    <span class="menu-collapsed">공지사항</span>
-                    <span class="submenu-icon ms-auto"></span>
-                </div>
-            </a>
-            <a href="/business/trip" class="bg-dark list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-start align-items-center">
-                    <span class="fa fa-car fa-fw me-3"></span>
-                    <span class="menu-collapsed">오늘의 출장</span>
-                    <span class="submenu-icon ms-auto"></span>
-                </div>
-            </a>
-            <a href="/business/tourLocation" class="bg-dark list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-start align-items-center">
-                    <span class="fa fa-map fa-fw me-3"></span>
-                    <span class="menu-collapsed">관광 명소</span>
-                </div>
-            </a>
-
-            <%- defineContent('menuBodyByAuth') %>
-
+            <!-- banner Link & URL -->
+            <%- defineContent('banner') %>  
             <!-- Logo -->
             <li class="list-group-item logo-separator d-flex justify-content-center align-items-center" style="height: 200px;">
                 <img src="/images/logo_full.png" width="150" height="150">
@@ -118,46 +105,141 @@
     </div>
     <!-- SideBar END -->
 
-    <!-- MAIN -->
+    <!-- Main & Footer -->
     <div class="col py-3">
-        <%- defineContent('body') %>
+      <!-- Main -->
+      <div class="">
+        <%- defineContent('body') %>    
+      </div>    
+      <!-- Footer -->           
+      <footer id="footer">
+        <img src="/images/bg_googleads.png" onerror=this.src="/images/no_image.png">
+      </footer>    
     </div>
-    <!-- Main Col END -->
-
-    <footer>
-    </footer>
-  </div>
+    <!-- Main & Footer END -->
+  </div>  
   <!-- body-row END -->  
 
+  <%# temrs modal %>
+  <%- include('../ejs/terms.ejs', {lastModal: ''}) %>
+
+  <!-- The Modal of ChangePassword -->
+  <div class="modal fade" id="modalChangePassword" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="lblModalFindPassword" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <!-- LoadingBar Modal of FindPassword -->
+        <%- include('../ejs/loadingbar.ejs') %>
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="lblModalFindPassword">비밀번호 변경</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form class="needs-validation" novalidate>
+              <button type="submit" id="btnChangePassword" class="visually-hidden" onclick="changePassword(event)"></button>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordBefore" class="form-control" placeholder="e2rQ64ImVdtip65!!"
+                    onkeypress="enterKey(event, 'btnChangePassword')" required>
+                  <label for="passwordBefore">기존 비밀번호</label>
+                </div>       
+              </div>              
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordNew" class="form-control" placeholder="e2rQ64ImVdtip65!!"
+                    onkeypress="enterKey(event, 'btnChangePassword')" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" required>
+                  <label for="passwordNew">신규 비밀번호</label>
+                </div>
+                <div class="invalid-feedback">
+                  최소 8글자 이상으로 영문, 숫자, 특수문자가 필요합니다.
+                </div>                
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <div class="form-floating has-validation">
+                  <input type="password" id="passwordNewConfirm" class="form-control"
+                    placeholder="e2rQ64ImVdtip65!!" onkeypress="enterKey(event, 'btnChangePassword')" onkeyup="passwordEqual('passwordNew', 'passwordNewConfirm')" required>
+                  <label for="passwordNewConfirm">비밀번호 확인</label>
+                </div>
+                <div class="invalid-feedback">
+                  입력한 비밀번호와 동일하지 않습니다.
+                </div>                
+              </div>
+            </form>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary"
+              onclick="document.getElementById('btnChangePassword').click();">변경</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
   <script>
+    const userEmail = "<%= userEmail.trim() %>";
+
     $(document).ready(function () {
 
-    });
+        // 선택된 상단 버튼 Active 클래스 추가
+        $(".navbar button.top-menu").each(function (idx, itm){
+            var test = this;
+            let url = $(location).attr('href');
+            let curHref = '';
+            
+            //기타 메뉴인 경우
+            if($(this).attr('id') == 'dropdownMenuButton'){
+                let listLink = $(this).closest('div').find('a');   
+                let etcBtn = $(this);               
+                $(listLink).each(function(idx, itm){                    
+                    curHref = $(this).attr('href');          
+                    if(url.includes(curHref)){
+                        $(etcBtn).addClass('active');
+                    }                          
+                });
+            }
+            else {
+                curHref = $(this).find('a').attr('href');
+                if(url.includes(curHref)){
+                    $(this).addClass('active');
+                }                
+            }
+        });
 
-    function logout(eThis, e) {                  
-      confirmModal(e, 'modalConfirm', '로그아웃', '로그아웃 하시겠습니까?', function () {
-        $.ajax({
-          url: '/logout',
-          method: 'POST',
-          beforeSend: function (xhr) {
-            setLoadingBar(true);
-          },
-          success: function (data, status, xhr) {
-            e.preventDefault();
-            location.href = '/login';
-          },
-          error: function (data, status, err) {
-            $("#modalAlert .modal-title").html("로그아웃 오류");
-            $("#modalAlert .modal-body").html(err);
-            $("#modalAlert").modal('show');
-          },
-          complete: function () {
-            $("#modalConfirm").modal('hide');
-            setLoadingBar(false);
+        // 선택된 기타 버튼 DropDown 이름 변경
+        $(".navbar button.top-menu").each(function (idx, itm){
+            var test = this;
+            let url = $(location).attr('href');
+            let curHref = $(this).find('a').attr('href');
+            
+            if(url.includes(curHref)){
+                $(this).addClass('active');
+            }
+        });  
+        
+        //사이드 바 크기 조절 이벤트
+        $(window).resize(function() {          
+          if ($("body").width() < 768) {
+            $('#footer').css("width", "100%");
           }
-        });       
-      });
-    };
+          else{
+            var sideBarWidth = $("#sidebar-container").css('width');
+            console.log('width: ' + sideBarWidth);
+            $('#footer').css("width", "calc(100% - " + sideBarWidth + ")");
+          }
+        });
+
+    });
 
   </script>
 </body>

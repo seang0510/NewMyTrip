@@ -2,6 +2,12 @@ body {
   padding-top: 56px;
 }
 
+a {
+  color: #000;
+  text-decoration: none;
+}
+
+
 .sticky-offset {
   top: 56px;
 }
@@ -80,10 +86,10 @@ body {
   background-color: #007BD5;
 }
 
-.navbar-dark .navbar-nav .active>.nav-link,
-.navbar-dark .navbar-nav .nav-link.active,
-.navbar-dark .navbar-nav .nav-link.show,
-.navbar-dark .navbar-nav .show>.nav-link {
+.navbar-nav .active>.nav-link,
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link.show,
+.navbar-nav .show>.nav-link {
   color: #fff;
 }
 

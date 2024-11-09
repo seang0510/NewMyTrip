@@ -326,7 +326,7 @@ exports.getPasswordByEmail = async (userEmail) => {
     }
 };
 
-//비밀번호 변경
+//비밀번호 변경 -- 구버전
 exports.setPassword= async (userGuid, password) => {
     let conn = await pool.getConnection();    
     let res;
@@ -375,6 +375,93 @@ exports.setPassword= async (userGuid, password) => {
         if(isSuccess == false){
             conn.rollback();
             returnCode = -1;
+        }
+        else{
+            await conn.commit();
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
+//비밀번호 변경
+exports.changePassword= async (userGuid, passwordBefore, passwordNew) => {
+    let conn = await pool.getConnection();    
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {
+        await conn.beginTransaction();
+        const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [userGuid, null, null, null, 'N']);
+        
+        if(rows[0].length > 0){
+            user = rows[0].length == 0 ? null : rows[0][0];
+            console.log("사용자 조회 성공");
+
+            if(user.PWD == passwordBefore){
+                console.log('사용자 (구)비밀번호 동일');
+                isSuccess = true;
+            }
+            else{
+                console.log('사용자 (구)비밀번호 틀림');
+                isSuccess = false;
+                returnCode = 0;
+            }            
+        }
+        else{
+            console.log("사용자 조회 실패");
+            isSuccess = false;
+            returnCode = -1;
+        }
+
+        if(isSuccess){
+            res = await conn.query('CALL SYS_USER_MST_UPDATE_PASSWORD(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, passwordNew, userGuid]);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                console.log("비밀번호 변경 성공");
+                isSuccess = true;
+                returnCode = 1; //등록 성공      
+            }
+            else{
+                console.log("비밀번호 변경 실패");
+                isSuccess = false;
+                returnCode = -1; //등록 실패
+            }
+        }
+
+        //일반계정이 등록되었는지 확인 후 등록
+        if(isSuccess == true){
+            const [rows, fields] = await pool.query('CALL SYS_USER_JOIN_TYP_SELECT(?,?,?,?)', [userGuid, 'N', '', 'N']);     
+            
+            if(rows[0].length > 0){
+                console.log("등록된 일반 계정 존재");
+            }
+            else{
+                console.log("등록된 일반 계정 없음");
+                res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, 'N', '']);
+
+                if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                    console.log("사용자 일반 계정 등록 성공");
+                    isSuccess = true;
+                    returnCode = 1; //등록 성공  
+                }
+                else{
+                    console.log("사용자 일반 계정 등록 실패");
+                    isSuccess = false;
+                    returnCode = -1; //등록 실패
+                }   
+            }            
+        }
+
+        if(isSuccess == false){
+            conn.rollback();            
         }
         else{
             await conn.commit();

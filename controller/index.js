@@ -1,7 +1,7 @@
 const userService = require('../service/user');
 const helper = require('../helper/helper');
 const axios = require("axios");
-const nodemailer = require('nodemailer'); // 모듈 import
+const mail = require('../helper/mail'); // 모듈 import
 const qs = require('qs'); // 모듈 Query String
 var fs = require("fs");
 var zip = new require('node-zip')();
@@ -173,32 +173,40 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
     }
 }; 
 
-//이메일로 패스워드 조회(POST)
+//이메일로 패스워드 조회(POST) With 이메일 발송
 exports.getPasswordByEmail = async (req, res, next) => {
-    let resModel;
-    const userEmail = req.body.email;
-
-    //validateParam(userEmail); //입력받은 값이 빈칸인 경우 체크 Try~Catch로
-    //userEmail = XSSFilter(userEmail); //XSS필터 적용        
+    console.log("## sendMailSample");
+    const userEmail = helper.changeUndefiendToNull(req.body.email);
 
     try {
-        let password = await userService.getPasswordByEmail(userEmail);
+        const password = await userService.getPasswordByEmail(userEmail);
 
         if (password == null) {
             resModel = helper.createResponseModel(false, '존재하지 않는 이메일이거나 소셜 로그인 계정입니다.', '');
         }
-        else {
-            //password = encryptPassword(password); //암호화 필요
-            resModel = helper.createResponseModel(true, '비밀번호는 ' + password + ' 입니다.', '');
-        }
+        else{
+            const mailOptions = {
+                from: 'gobiztrip@gmail.com', // 작성자
+                to: userEmail, // 수신자
+                subject: '(모두의 출장) 비밀번호 찾기', // 메일 제목
+                text: '비밀번호는 ' + password + ' 입니다.' // 메일 내용
+            };
 
-        return res.status(200).json(resModel);
+            let resp= await mail.wrapedSendMail(mailOptions);
+            if (!resp) {
+                resModel = helper.createResponseModel(false, '메일 발송에 오류가 발생하였습니다.', '');
+            }
+            else {
+                resModel = helper.createResponseModel(true, userEmail + ' 로 메일이 발송되었습니다.', '');
+            }
+
+            return res.status(200).json(resModel);
+        }                 
     }
     catch (err) {
         return res.status(500).json(err);
     }
 };
-
 //일반,모바일 회원가입(POST)
 exports.setSignUp = async (req, res, next) => {
     let resModel;
@@ -277,7 +285,7 @@ exports.setSignUpWithSocial = async (req, res, next) => {
     }
 };
 
-//비밀번호 변경(POST)
+//비밀번호 변경(POST) -- 구버전
 exports.setPassword = async (req, res, next) => {
     let resModel;
     const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
@@ -297,6 +305,44 @@ exports.setPassword = async (req, res, next) => {
         //성공
         if (retVal == 1) {
             resModel = helper.createResponseModel(true, '비밀번호 변경에 성공하셨습니다.', "");
+        }
+        //실패
+        else{
+            resModel = helper.createResponseModel(false, '비밀번호 변경에 실패하였습니다.', "");
+        }
+
+        return res.status(200).json(resModel);
+    }
+    catch (err) {
+        return res.status(500).json(err);
+    }
+};
+
+//비밀번호 변경(POST)
+exports.changePassword = async (req, res, next) => {
+    let resModel;
+    const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+    const passwordBefore = helper.changeUndefiendToNull(req.body.passwordBefore);
+    const passwordNew = helper.changeUndefiendToNull(req.body.passwordNew);
+    //password = descryptoPassword(password); //복호화(추후 작업)
+
+    //어떤 사용자인지 모르는 경우
+    if (userGuid == null) {
+        resModel = helper.createResponseModel(false, '사용자를 입력하셔야 합니다.', "");
+        return res.status(200).json(resModel);
+    }
+
+    try {
+        //비밀번호 변경(1:성공, -1:실패)
+        let retVal = await userService.changePassword(userGuid, passwordBefore, passwordNew);
+
+        //성공
+        if (retVal == 1) {
+            resModel = helper.createResponseModel(true, '비밀번호 변경에 성공하셨습니다.', "");
+        }
+        //기존 비밀번호 틀림
+        else if(retVal == 0){
+            resModel = helper.createResponseModel(false, '입력하신 비밀번호와 기존 비밀번호가 동일하지 않습니다.', "");
         }
         //실패
         else{
@@ -430,19 +476,9 @@ exports.setMobileLogin = async (req, res, next) => {
     }
 }; 
 
-
 ////////////////////////////////////////////////////
 ///////////////분석 후 위치 변경 필요////////////////
 ////////////////////////////////////////////////////
-
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // 사용할 이메일 서비스의 호스트 주소 (gamil)
-    port: 587, // 이메일 서비스의 포트 번호 (일반적으로 25, 587, 465, 2525 중 하나 사용)
-    auth: { // 이메일 서버 인증을 위한 사용자의 이메일 주소와 비밀번호
-        user: 'gobiztrip@gmail.com', // 나의 (작성자) 이메일 주소
-        pass: 'pczk ovhv ayin vjrf' // 이메일의 비밀번호
-    },
-});
 
 //TEST(주소 -> 위도,경도 변환)
 exports.getAddress = async (req, res, next) => {
@@ -499,31 +535,6 @@ exports.testZip = async (req, res, next) => {
 
         
 
-        return res.status(200).json("");                      
-    }
-    catch (err) {
-        return res.status(500).json(err);
-    }
-};
-
-//TEST 다음 지도 띄우기
-exports.sendMailSample = async (req, res, next) => {
-    console.log("## sendMailSample");
-    try {
-        const mailOptions = {
-            from: 'gobiztrip@gmail.com', // 작성자
-            to: 'seang0510@gmail.com', // 수신자
-            subject: 'Sending Email using Node.js', // 메일 제목
-            text: 'That was easy!' // 메일 내용
-        };
-        
-        transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Email sent: ' + info.response);
-        }
-        });
         return res.status(200).json("");                      
     }
     catch (err) {

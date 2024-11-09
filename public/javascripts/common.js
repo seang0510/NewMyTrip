@@ -131,3 +131,14 @@ function getValueList(rows, keyName){
 
   return newArr;
 };
+
+//입력받은 2개 비밀번호가 동일한지 확인
+function passwordEqual(orgPassword, confirmPassword) {
+  if (!isEqualValue(orgPassword, confirmPassword)) {
+    $("#" + orgPassword).closest('form').addClass('was-validated');
+    document.getElementById(confirmPassword).setCustomValidity('invalid');
+  }
+  else {
+    document.getElementById(confirmPassword).setCustomValidity('');
+  }
+};
