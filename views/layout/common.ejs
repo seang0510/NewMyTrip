@@ -23,7 +23,7 @@
 
 <%# 권한에 따른 메뉴(Body)  %>
 <%- contentFor('menuBodyByAuth') %>
-<% if(authCode == 'A'){ %>
+<% if(authCode == 'S' || authCode == 'A'){ %>
   <div class="dropdown">
     <button class="btn btn-light me-3 navbar-right-none top-menu dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
         그 외
