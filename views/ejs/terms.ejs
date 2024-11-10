@@ -49,7 +49,11 @@
 
         <!-- Modal footer -->
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-target="#modalSignUp" data-bs-toggle="<%= lastModal %>" data-bs-dismiss="modal">다음</button>
+          <% if (page == 'login') { %>
+            <button type="button" class="btn btn-primary" data-bs-target="#modalSignUp" data-bs-toggle="modal" data-bs-dismiss="modal">다음</button>
+          <% } else { %>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+          <% } %>
         </div>
 
     </div>
