@@ -42,7 +42,6 @@ async function getTripDataFromExcel(file, userGuid) {
     const workbook = new exceljs.Workbook();
     let folerPath = path.join(__dirname, `../../uploads/business/trip/`);
     const worksheet = await workbook.xlsx.readFile(folerPath + orgFileName);
-    var test = "";
     worksheet.eachSheet((sheet) => {
       sheet.eachRow((row, rowNumber) => {
 

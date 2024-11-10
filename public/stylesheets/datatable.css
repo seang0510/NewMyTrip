@@ -1,0 +1,31 @@
+  /* Table */
+  table.dataTable tbody tr {
+    cursor: pointer;
+  }
+  table.dataTable thead tr th input[type=checkbox],
+  table.dataTable tbody tr td input[type=checkbox] {
+    cursor: pointer;
+  }    
+  /* 정렬 */
+  table.dataTable thead th.header:not(:first-child) {
+    text-align: center;
+  }
+  table.dataTable tbody td.row-left-align {
+    text-align: left;
+  }
+  table.dataTable tbody td.row-center-align {
+    text-align: center;
+  }
+  table.dataTable tbody td.row-right-align {
+    text-align: right;
+  }
+
+  /* Header&Row CSS수정 */
+  table.dataTable thead th.header {
+    background-color: #007BD5;
+    color: #ffffff;
+    font-weight: 400;
+  }
+  table.dataTable tbody td.row {
+    text-align: center;
+  }

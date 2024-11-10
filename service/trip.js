@@ -245,6 +245,56 @@ exports.deleteTrip = async (tripGuid, userGuid) => {
     }
 };
 
+//오늘의 출장 삭제(리스트)
+exports.deleteTripList = async (tripGuidList, userGuid) => {
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {        
+
+        await conn.beginTransaction();
+
+        for (var i = 0; i < tripGuidList.length; i++) {
+            tripGuid = tripGuidList[i];
+            params = [tripGuid, userGuid];
+            
+            res = await pool.query('CALL BIZ_TRIP_MST_UPDATE_YN(?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'Y'){
+                if (i == tripGuidList.length - 1) {
+                    console.log("오늘의 출장 삭제 성공");
+                    isSuccess = true;
+                }
+            }
+            else{
+                console.log("오늘의 출장 삭제 실패");
+                isSuccess = false;
+                break;
+            }
+        }
+    
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
 //오늘의 출장 상세 조회(개별)
 exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
     let tripDetail;

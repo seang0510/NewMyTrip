@@ -3,41 +3,9 @@
 
 <%# CSS & JS %>
 <link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-<style>
-  /* Table */
-  table.dataTable tbody tr {
-    cursor: pointer;
-  }
-  table.dataTable thead tr th input[type=checkbox],
-  table.dataTable tbody tr td input[type=checkbox] {
-    cursor: pointer;
-  }    
-  /* 정렬 */
-  table.dataTable thead th.header:not(:first-child) {
-    text-align: center;
-  }
-  table.dataTable tbody td.row-left-align {
-    text-align: left;
-  }
-  table.dataTable tbody td.row-center-align {
-    text-align: center;
-  }
-  table.dataTable tbody td.row-right-align {
-    text-align: right;
-  }
+<link href="/stylesheets/datatable.css" rel="stylesheet" />
 
-  /* Header&Row CSS수정 */
-  table.dataTable thead th.header {
-    background-color: #007BD5;
-    color: #ffffff;
-    font-weight: 400;
-  }
-  table.dataTable tbody td.row {
-    text-align: center;
-  }
-</style>
-
-<%# CSS & JS %>
+<%# JS %>
 <script src="/js/dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap5.min.js"></script>
 <script src="/js/dataTables.select.js"></script>
@@ -69,17 +37,6 @@
 
 <%# 그리드 %>
 <table id="tblMain" class="table table-striped">
-  <thead>
-      <tr>
-        <th></th>
-        <th>No.</th>
-        <th>제목</th>
-        <th>등록자</th>
-        <th>등록일시</th>
-      </tr>
-  </thead>
-  <tbody>
-  </tbody>
 </table>
 
 <script>
@@ -103,11 +60,11 @@
   });    
 
   const columns = [
-    {data : 'CHK', width: "50px"},
-    {data : "NO", width: "50px" },
-    {data : "TTL", width: "auto"},
-    {data : "REG_EMAIL", width: "200px"},
-    {data : "REG_DT", width: "200px" },
+    {title: '', data : 'CHK', width: "50px"},
+    {title: 'No.', data : "NO", width: "50px" },
+    {title: '제목', data : "TTL", width: "auto"},
+    {title: '등록자', data : "REG_EMAIL", width: "200px"},
+    {title: '등록일시', data : "REG_DT", width: "200px" },
   ];
 
   const columnDefs = [

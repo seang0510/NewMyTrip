@@ -1,0 +1,18 @@
+#modalTripAdd .modal-dialog  {
+  --bs-modal-width: 600px;
+}
+#modalTripAdd .modal-body .img-outer  {
+  height: 15rem;
+}
+#modalTripAdd .modal-body .desp-outer  {
+  background-color: #8b8687;
+  padding: 2rem;
+}
+
+.input-file-button {
+  padding: 6px 25px;
+  background-color:#FF6600;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}

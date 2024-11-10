@@ -23,6 +23,10 @@ li {
   border: 0;
 }
 
+p {
+  margin-bottom: 0;
+}
+
 div.loadingBar {
   background-color: #000;
   width: 100%;
@@ -49,15 +53,11 @@ footer {
   width: calc(100% - 230px);
   height: 5rem;
   margin-left: calc(var(--bs-gutter-x)* -.5);
+  background-color: white;
+  z-index: 999;
 }
 
-footer img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.banner-img {
+img {
   width: 100%;
   height: 100%;
   object-fit: contain;

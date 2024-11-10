@@ -198,12 +198,7 @@ exports.setNotice = async (req, res, next) => {
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
   const contents = helper.changeUndefiendToNull(req.body.contents);
-  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-
-  //세션이 존재하는 경우 userGuid는 세션값으로 설정
-  if (req.session != null && req.session.userGuid != null) {
-    userGuid = req.session.userGuid;
-  }
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //공지사항 등록,수정
@@ -233,12 +228,7 @@ exports.setNotice = async (req, res, next) => {
 exports.deleteNotice = async (req, res, next) => {
   let resModel;
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
-  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-
-  //세션이 존재하는 경우 userGuid는 세션값으로 설정
-  if (req.session != null && req.session.userGuid != null) {
-    userGuid = req.session.userGuid;
-  }
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //공지사항 삭제
@@ -264,12 +254,7 @@ exports.deleteNotice = async (req, res, next) => {
 exports.deleteNoticeList = async (req, res, next) => {
   let resModel;
   const boardGuidList = helper.changeUndefiendToNull(req.body.boardGuidList);
-  let userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-
-  //세션이 존재하는 경우 userGuid는 세션값으로 설정
-  if (req.session != null && req.session.userGuid != null) {
-    userGuid = req.session.userGuid;
-  }
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //공지사항 삭제

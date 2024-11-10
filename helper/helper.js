@@ -78,6 +78,16 @@ function dateFormat(date) {
     return date.getFullYear() + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
 };
 
+//세션 존재유무 확인
+function existSessoin(sessionValue){
+    if (!(sessionValue == undefined || sessionValue == null || sessionValue == '')) {
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
 module.exports = {
     createResponseModel,
     generateUUID,
@@ -86,4 +96,5 @@ module.exports = {
     changeUndefiendToZero,
     getsessionValueOrRequsetValue,
     dateFormat,
+    existSessoin,
 };

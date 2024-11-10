@@ -6,12 +6,14 @@ const path = require('path');
 
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
+router.get('/trip/detail', businessController.indexTripDetail);
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/setTrip', businessController.setTrip);
 router.post('/trip/importTrip', upload(`business/trip`).single("file"), businessController.importTrip);
 router.post('/trip/exportTrip', businessController.exportTrip);
 router.post('/trip/mobile/exportTrip', businessController.mobileExportTrip);
 router.post('/trip/deleteTrip', businessController.deleteTrip);
+router.post('/trip/deleteTripList', businessController.deleteTripList);
 router.post('/trip/getTripDetail', businessController.getTripDetail);
 router.post('/trip/getTripDetailWaterMark', businessController.getTripDetailWaterMark);
 router.post('/trip/getTripDetailList', businessController.getTripDetailList);

@@ -19,8 +19,9 @@ exports.upload = (folderName) => {
       filename: function (req, file, cb) {
         console.log(file.originalname);
         console.log(file.mimetype);
-        console.log(decodeURI( file.originalname ))
+        console.log(decodeURI( file.originalname ));
 
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
         const filename = Date.now() + "_" + decodeURI( file.originalname );
 
         //const filename = file.originalname;

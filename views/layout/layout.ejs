@@ -12,7 +12,7 @@
   <link href="/stylesheets/common.css" rel="stylesheet">
   <link href="/stylesheets/dashboard.css" rel="stylesheet">  
   <%- style %>
-  <!-- <link href="/stylesheets/fixWidth.css" rel="stylesheet">   -->
+  <link href="/stylesheets/fixWidth.css" rel="stylesheet">  
 
   <script src="/jquery.min.js"></script>
   <script src="/umd/popper.min.js"></script>
@@ -22,7 +22,7 @@
   <script src="/javascripts/common.js"></script>  
   <script src="/javascripts/contextmenu.js"></script>  
   <%- script %>
-  <!-- <script src="/javascripts/fixWidth.js"></script>   -->
+  <script src="/javascripts/fixWidth.js"></script>  
 </head>
 <body>
   <!-- LoadingBar Main  -->
@@ -36,8 +36,8 @@
     <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false">
         <span class="fa fa-bars fa-fw w-100"></span>
     </button>
-    <a class="navbar-brand" href="/">
-        <img src="/images/logo_white.png" width="30" height="30" class="d-inline-block align-top me-2" alt="">        
+    <a class="navbar-brand" href="/" style="width: 30px">
+        <img src="/images/logo_white.png" class="d-inline-block align-top me-2" alt="">        
         <span class="menu-collapsed">모두의 출장</span>
     </a>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -143,7 +143,7 @@
             <form class="needs-validation" novalidate>
               <button type="submit" id="btnChangePassword" class="visually-hidden" onclick="changePassword(event)"></button>
               <div class="input-group mb-3">
-                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <span class="input-group-text"><i class="fa fa-key"></i></span>
                 <div class="form-floating has-validation">
                   <input type="password" id="passwordBefore" class="form-control" placeholder="e2rQ64ImVdtip65!!"
                     onkeypress="enterKey(event, 'btnChangePassword')" required>
@@ -151,7 +151,7 @@
                 </div>       
               </div>              
               <div class="input-group mb-3">
-                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <span class="input-group-text"><i class="fa fa-key"></i></span>
                 <div class="form-floating has-validation">
                   <input type="password" id="passwordNew" class="form-control" placeholder="e2rQ64ImVdtip65!!"
                     onkeypress="enterKey(event, 'btnChangePassword')" pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$" required>
@@ -162,7 +162,7 @@
                 </div>                
               </div>
               <div class="input-group mb-3">
-                <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                <span class="input-group-text"><i class="fa fa-key"></i></span>
                 <div class="form-floating has-validation">
                   <input type="password" id="passwordNewConfirm" class="form-control"
                     placeholder="e2rQ64ImVdtip65!!" onkeypress="enterKey(event, 'btnChangePassword')" onkeyup="passwordEqual('passwordNew', 'passwordNewConfirm')" required>
@@ -192,11 +192,10 @@
     $(document).ready(function () {
 
         // 선택된 상단 버튼 Active 클래스 추가
-        $(".navbar button.top-menu").each(function (idx, itm){
-            var test = this;
+        $(".navbar .top-menu").each(function (idx, itm){  
             let url = $(location).attr('href');
             let curHref = '';
-            
+
             //기타 메뉴인 경우
             if($(this).attr('id') == 'dropdownMenuButton'){
                 let listLink = $(this).closest('div').find('a');   
@@ -209,7 +208,7 @@
                 });
             }
             else {
-                curHref = $(this).find('a').attr('href');
+                curHref = $(this).attr('href');
                 if(url.includes(curHref)){
                     $(this).addClass('active');
                 }                

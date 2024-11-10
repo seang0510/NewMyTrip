@@ -1,6 +1,7 @@
 const helper = require('../helper/helper');
 const tourLocationService = require('../service/tourLocation');
 const tripService = require('../service/trip');
+const adService = require('../service/ad');
 const exceljs = require('../helper/trip/excel');
 
 //오늘의 출장 화면(GET)
@@ -16,7 +17,9 @@ exports.indexTrip = async (req, res, next) => {
       else{
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
-        return res.render('business/trip/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
+        let bannerList = await adService.getAdList('', ''); //광고 조회
+
+        return res.render('business/trip/index', { title: '모두의 출장', userEmail: email, authCode: authGroupCode, bannerList: bannerList });
       }        
   }
   catch (err) {
@@ -29,7 +32,18 @@ exports.getTripList = async (req, res, next) => {
   let resModel;
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
-  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+  let regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+
+  //시스템 관리자인 경우, 전체 조회
+  if(helper.existSessoin(req.session)){
+    const authGroupCode = req.session.authGroupCode;
+    if(authGroupCode == 'S'){
+      regUserGuid = null;
+    }
+    else{
+      regUserGuid = req.session.userGuid;
+    }
+  }
 
   try {
     //오늘의 출장 조회
@@ -104,8 +118,8 @@ exports.importTrip = async (req, res, next) => {
   console.log("## importTrip ##");
   let resModel;
   const file = req.file;
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-  const fileName = helper.changeUndefiendToNull(req.body.fileName);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  // const fileName = helper.changeUndefiendToNull(req.body.fileName);
 
   //파일타입이 올바르지 않은 경우
   if (req.fileValidationError != undefined) {
@@ -164,7 +178,6 @@ exports.exportTrip = async (req, res, next) => {
   var menu = data.title;
   exceljs.excelDownload(menu, data.tripDetails,data.title, captions, columns, res);
 };
-
 
 //오늘의 출장 엑셀 다운로드(POST)
 exports.mobileExportTrip = async (req, res, next) => {
@@ -234,6 +247,56 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
   }
   catch (err) {
     return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 삭제 리스트(POST) 
+exports.deleteTripList = async (req, res, next) => {
+  let resModel;
+  const tripGuidList = helper.changeUndefiendToNull(req.body.tripGuidList);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tripService.deleteTripList(tripGuidList, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 삭제하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 삭제에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 화면(GET)
+exports.indexTripDetail = async (req, res, next) => {
+  try {
+      //로그인 되지 않은 경우
+      if(!(req.session.valid == true)){
+        var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+        res.cookie('MSG', msg, { httpOnly: false, secure: false });
+        return res.redirect('/login');
+    }
+      //현재 로그인 되어 있는 경우    
+      else{
+        var email = req.session.email;
+        var authGroupCode = req.session.authGroupCode;
+        var tripGuid = req.query.tripGuid;
+        let bannerList = await adService.getAdList('', ''); //광고 조회
+
+        return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid });
+      }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
   }
 };
 
@@ -600,7 +663,6 @@ exports.getTourLocationList = async (req, res, next) => {
       return res.status(500).json(err);
   }
 };
-
 
 //오늘의 출장 위도 경도 없는 주소 CRON 으로 위도,경도 가져오기
 exports.setNewAddress = async () => {

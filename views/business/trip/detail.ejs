@@ -1,0 +1,191 @@
+<%# 공통 부분 %>
+<%- include('../../layout/common.ejs') %>
+
+<%# CSS & JS %>
+<link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="/stylesheets/datatable.css" rel="stylesheet" />
+<link href="/stylesheets/trip.css" rel="stylesheet" />
+
+<%# JS %>
+<script src="/js/dataTables.min.js"></script>
+<script src="/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/dataTables.select.js"></script>
+<script src="/js/select.dataTables.js"></script>
+<script src="/javascripts/datatableOption.js"></script>
+
+<%# 본문 %>
+<%- contentFor('body') %>
+
+<%# DataTable CheckBox Visible %>
+<input type="hidden" id="tripGuid" value='<%= tripGuid %>'>
+<input type="hidden" id="chkVisible" value='N'>
+
+<%# 메뉴명 & 버튼 %>
+<div class="d-flex">
+  <div class="ps-1">
+    <h2>모두의 출장 상세</h2>
+  </div>
+  <div class="d-flex ms-auto">
+    <div>
+      <button type="button" id="btnCreate" class="btn btn-primary" onclick="createItem()">등록</button>      
+    </div>
+    <div class="ms-1 visually-hidden">
+      <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteItemList(event)">삭제</button>
+    </div>
+    <div class="ms-1">
+      <button type="button" class="btn btn-warning" onclick="editItem(this)">편집</button>      
+    </div>    
+  </div>
+</div>
+
+<%# 그리드 %>
+<table id="tblMain" class="table table-striped">
+</table>
+
+<script>
+  var table = {};
+
+  $(document).ready( function () {
+    //DataTable.js
+    table = DataTableJS('tblMain', '/business/trip/getTripDetailList');  
+
+    //CheckBox Visible
+    table.column(0).visible(false);
+
+    //Click Event
+    $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
+      var isOn = table.column(0).visible();
+
+      //편집 모드
+      if(isOn){
+        $("#modalAlert .modal-title").html("오류");
+        $("#modalAlert .modal-body").html('개발중입니다.');
+        $("#modalAlert").modal('show');
+      }
+      //읽기 모드
+      else{
+        $("#modalAlert .modal-title").html("오류");
+        $("#modalAlert .modal-body").html('개발중입니다.');
+        $("#modalAlert").modal('show');
+      }
+    });          
+  });
+
+  const columns = [
+    {title: '', name: 'CHK', data : 'CHK', width: "50px"},
+    {title: 'No.', name: 'ODR', data : "ODR", width: "50px" },
+    {title: '명칭', name: 'FCLT_NM', data : "FCLT_NM", width: "auto"},
+    {title: '주소', name: 'ADDR', data : "ADDR", width: "auto"},
+    {title: '상세 주소', name: 'ADDR_DTL', data : "ADDR_DTL", width: "auto"},
+    {title: '위도', name: 'LAT', data : "LAT", width: "auto"},
+    {title: '경도', name: 'LNG', data : "LNG", width: "auto"},
+    {title: '등록자', name: 'REG_EMAIL', data : "REG_EMAIL", width: "auto"},
+    {title: '등록일시', name: 'REG_DT', data : "REG_DT", width: "auto" },
+  ];
+
+  const columnDefs = [
+    { className: "header", targets: "_all" },
+    { 
+      orderable: false,
+      render: DataTable.render.select(),
+      targets: 0,
+      visible: false,
+    },        
+    { className: "row-left-align", targets: ['FCLT_NM:name','ADDR:name','ADDR_DTL:name'] },
+    { className: "row-center-align", targets: ['LAT:name', 'LNG:name', 'REG_EMAIL:name', 'REG_DT:name'] },
+    { className: "row-right-align", targets: ['No.:name'] },
+  ];
+
+  function DataTableJS(tblId, url){
+    var table = new DataTable('#' + tblId, {
+      columns: columns,
+      columnDefs: columnDefs, 
+      language : getLanguage(),
+      paging: true,
+      lengthChange: true,
+      searching: false,
+      ordering: true,
+      info: true,            
+      destroy: true,
+      scrollX: true,
+      scrollY: true,
+      scrollCollapse: true,
+      scrollY: '50vh',
+      fixedColumns: {
+        start: 2
+      },
+      order: [['NO', 'asc']],    
+      select: {
+        style: 'multi',
+        selector: 'td:first-child',
+      },
+      ajax: {
+          url: url,
+          data: function(d){
+            d.tripGuid = $("#tripGuid").val()
+          },
+          dataSrc: 'value' ,
+          method: 'post',
+          beforeSend: function (xhr) {
+            setLoadingBar(true);
+          },
+          complete: function () {
+            setLoadingBar(false);
+          }          
+      },
+    });
+
+    return table;
+  };
+
+  //신규 등록
+  function createItem(){
+    $("#modalAlert .modal-title").html("오류");
+    $("#modalAlert .modal-body").html('개발중입니다.');
+    $("#modalAlert").modal('show');
+  };
+
+  //리스트 삭제
+  function deleteItemList(e){
+    $("#modalAlert .modal-title").html("오류");
+    $("#modalAlert .modal-body").html('개발중입니다.');
+    $("#modalAlert").modal('show');
+  };
+
+  //편집모드
+  function editItem(eThis){
+    var isOn = !(table.column(0).visible());
+
+    //Active 클래스 추가
+    if(isOn){
+      //편집,보기 버튼
+      $(eThis).addClass('active');
+      $(eThis).removeClass('btn-warning');
+      $(eThis).addClass('btn-success');
+      $(eThis).text('보기');
+
+      //체크박스
+      table.column(0).visible(true);
+
+      //삭제
+      $("#btnCreate").closest('div').addClass('visually-hidden');
+      $("#btnDelete").closest('div').removeClass('visually-hidden');
+    }
+    else{
+      //편집,보기
+      $(eThis).removeClass('active');
+      $(eThis).removeClass('btn-success');
+      $(eThis).addClass('btn-warning');
+      $(eThis).text('편집');
+      $("#chkVisible").val('N');
+
+      //체크박스
+      table.column(0).visible(false);
+
+      //등록,삭제
+      $("#btnCreate").closest('div').removeClass('visually-hidden');
+      $("#btnDelete").closest('div').addClass('visually-hidden');
+    }
+  };
+
+</script>
