@@ -23,9 +23,13 @@ async function getTripDataFromExcel(file, userGuid) {
   const variableColumns = [];
 
   //모두의 출장 Object
+  let titleName = decodeURI( path.parse(fileName).name );
+  titleName = titleName.replace('+', " ");
+  titleName = titleName.replace(/%2B/g, "+");
+
   let trip = {
     tripGuid : helper.generateUUID(),
-    title : decodeURI( path.parse(fileName).name ),
+    title : titleName,
     startDate : helper.dateFormat(new Date()),
     markFacilityNameYn: null,
     markAddressYn: null,

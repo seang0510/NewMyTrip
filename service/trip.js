@@ -148,8 +148,11 @@ exports.importTrip = async (file, userGuid) => {
                             latitude = 0;
                             longitude = 0;
                         }else{
-                            tempData[5].x = response.data.documents[0].address.y;
-                            tempData[5].y = response.data.documents[0].address.x;
+                            console.log("data ::: " + response.data.documents[0].address.x);
+                            // tempData[5].x = response.data.documents[0].address.y;
+                            // tempData[5].y = response.data.documents[0].address.x;
+                            tempData[5].x = 0;
+                            tempData[5].y = 0;
                         }
                         console.log("위도경도 가져오기 완료2::" + response.data.documents[0].address.x);                 
                     }
@@ -164,6 +167,7 @@ exports.importTrip = async (file, userGuid) => {
 
 
             console.log("### tripDetails::" + JSON.stringify(tripDetails));  
+            console.log("### tripDetails1::" + tripDetails[0][5].x);  
             sql = 'INSERT INTO BIZ_TRIP_DTL (TRIP_DTL_GUID, TRIP_MST_GUID, FCLT_NM, ADDR, ADDR_DTL, LOC_POS, COMP_YN, ODR, REG_USER_GUID, REG_DT, UPDT_USER_GUID, UPDT_DT) VALUES ?';
             res = await pool.query(sql, [tripDetails]);
 
