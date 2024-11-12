@@ -33,7 +33,7 @@ router.get('/joinConditions', function(req, res){
 });
 
 //TEST(주소 -> 위도,경도 변환)
-router.post('/testAddress', indexController.getAddress);
+router.post('/getAddress', indexController.getAddress);
 
 //TEST 다음 지도 띄우기
 router.get('/daumAddress', indexController.daumAddress);

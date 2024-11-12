@@ -149,10 +149,11 @@ exports.importTrip = async (file, userGuid) => {
                             longitude = 0;
                         }else{
                             console.log("data ::: " + response.data.documents[0].address.x);
-                            // tempData[5].x = response.data.documents[0].address.y;
-                            // tempData[5].y = response.data.documents[0].address.x;
-                            tempData[5].x = 0;
-                            tempData[5].y = 0;
+                            //tempData[5].x = new Point(response.data.documents[0].address.y,response.data.documents[0].address.x);
+                            tempData[5].x = response.data.documents[0].address.y;
+                            tempData[5].y = response.data.documents[0].address.x;
+                            //tempData[5].x = 0;
+                            //tempData[5].y = 0;
                         }
                         console.log("위도경도 가져오기 완료2::" + response.data.documents[0].address.x);                 
                     }

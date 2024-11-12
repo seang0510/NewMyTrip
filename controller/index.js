@@ -476,7 +476,7 @@ exports.setMobileLogin = async (req, res, next) => {
     }
 }; 
 
-////////////////////////////////////////////////////
+////////////////////////////////////////////////////원종동 283-17
 ///////////////분석 후 위치 변경 필요////////////////
 ////////////////////////////////////////////////////
 
@@ -484,6 +484,7 @@ exports.setMobileLogin = async (req, res, next) => {
 exports.getAddress = async (req, res, next) => {
     let resModel;
     const address = req.body.address;
+    console.log("## address :: " + address);
     try {        
         console.log(address);
         const encodedAddress = encodeURIComponent(address); // * //
@@ -499,7 +500,19 @@ exports.getAddress = async (req, res, next) => {
           
 
         console.log(response.data.documents); // * //
-        return res.status(200).json("");                      
+        console.log(response.data.documents.length); // * //
+
+        var returnData = new Object();
+        if(response.data.documents.length > 0){
+            returnData.address = response.data.documents[0].address.address_name;
+            returnData.latitude = response.data.documents[0].address.y;
+            returnData.longitude = response.data.documents[0].address.x;
+            resModel = helper.createResponseModel(true, '주소 정상 조회되었습니다.', returnData);
+        }else{
+            resModel = helper.createResponseModel(false, '주소 조회에 실패하였습니다.', '');
+        }
+
+        return res.status(200).json(resModel);                      
     }
     catch (err) {
         resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);

@@ -22,13 +22,19 @@ exports.upload = (folderName) => {
         console.log(decodeURI( file.originalname ));
 
         file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+
         let name = decodeURI( file.originalname );
+        console.log("#####");
+
         name = name.replace('+', " ");
         name = name.replace(/%2B/g, "+");
-        
+        console.log("#####1");
+
         const filename = Date.now() + "_" + name;
 
         //const filename = file.originalname;
+        console.log("##### filename " + filename);
+
         cb(null, filename);
       }
     }),
