@@ -733,6 +733,58 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
     }
 };
 
+//오늘의 출장 상세 확정
+exports.setTripDetailCompYN = async (tripDetailGuid, compYn, userGuid) => {
+    let conn = await pool.getConnection();
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {
+        await conn.beginTransaction();
+
+        //오늘의 출장 상세 아이템 삭제
+        res = await pool.query("UPDATE BIZ_TRIP_DTL SET COMP_YN = ?, UPDT_USER_GUID = ?, UPDT_DT = NOW() WHERE DEL_YN = 'N' AND TRIP_DTL_GUID = ?",[compYn, userGuid, tripDetailGuid]);
+
+        if (res[0].affectedRows >= 1) {
+            if(compYn == 'Y'){
+                console.log("오늘의 출장 상세 확정 성공");
+            }
+            else{
+                console.log("오늘의 출장 상세 확정 롤백 성공");
+            }
+            
+            isSuccess = true;
+        }
+        else {
+            if(compYn == 'Y'){
+                console.log("오늘의 출장 상세 확정 실패");
+            }
+            else{
+                console.log("오늘의 출장 상세 확정 롤백 실패");
+            }
+            isSuccess = false;
+        }     
+
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
 //오늘의 출장 상세 이미지 등록
 exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
     let conn = await pool.getConnection();

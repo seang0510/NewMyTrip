@@ -527,6 +527,35 @@ exports.setTripDetail = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 상세 확정
+exports.setTripDetailCompYN = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  let compYn = helper.changeUndefiendToNull(req.body.compYn);
+  compYn = compYn.toUpperCase();
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const msg = compYn == "Y" ? "확정" : "확정 롤백";
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTripDetailCompYN(tripDetailGuid, compYn, userGuid);
+
+    //성공
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세를 ' + msg + '하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세  ' + msg + '에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 상세 이미지 등록(POST)
 exports.setTripDetailImages = async (req, res, next) => {
   let resModel;
