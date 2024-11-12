@@ -113,6 +113,38 @@ exports.setTrip = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 등록/수정 + 오늘의 출장 상세 아이템(POST)
+exports.setTripWithItems = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const title = helper.changeUndefiendToNull(req.body.title);
+  const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+
+  try {
+    //오늘의 출장 등록,수정 + 오늘의 출장 상세 아이템
+    let retVal = await tripService.setTripWithItems(tripGuid, title, tripDetailItems, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 등록하였습니다.', '');
+    }
+    //실패
+    else if (retVal == -1) {
+      resModel = helper.createResponseModel(false, '오늘의 출장을 등록,수정에 실패하였습니다.', '');
+    }
+    //수정
+    else {
+      resModel = helper.createResponseModel(true, '오늘의 출장을 수정하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 일괄등록(POST)
 exports.importTrip = async (req, res, next) => {
   console.log("## importTrip ##");

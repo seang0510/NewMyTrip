@@ -53,6 +53,127 @@ exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAdd
     }
 };
 
+//오늘의 출장 등록/수정 + 오늘의 출장 상세 아이템(POST)
+exports.setTripWithItems = async (tripGuid, title, tripDetailItems, userGuid) => {
+    tripGuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
+    let tripDetailGuid;    
+    let conn = await pool.getConnection();
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+    let nowDay = helper.dayFormat(new Date());
+
+    try {        
+        await conn.beginTransaction();
+
+        //오늘의 출장 등록
+        params = [tripGuid, title, nowDay, null, null, null, null, null, userGuid];
+        res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
+            console.log("오늘의 출장 등록 성공");
+            isSuccess = true;
+            returnCode = 1; //등록 성공
+        }
+        else if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U'){
+            console.log("오늘의 출장 수정 성공");
+            isSuccess = true;
+            returnCode = 0; //수정 성공
+        }
+        else{
+            console.log("오늘의 출장 등록 실패");
+            isSuccess = false;
+            returnCode = -1; //등록 실패
+        }
+
+        //오늘의 출장 상세 등록,수정
+        if (isSuccess == true) {
+            res = await pool.query("SELECT TRIP_DTL_GUID FROM BIZ_TRIP_DTL WHERE DEL_YN='N' AND ODR = 0 AND TRIP_MST_GUID = ?", tripGuid);
+
+            if(res[0].length > 0){
+                tripDetailGuid = res[0][0].TRIP_DTL_GUID;    
+            }
+            else{
+                tripDetailGuid = helper.generateUUID();
+            }
+
+            params = [tripDetailGuid, tripGuid, '기본', null, null, 0, 0, 'N', -1, userGuid, 'N'];
+            console.log(params);
+            res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+                console.log("오늘의 출장 상세 등록 성공");
+                isSuccess = true;    
+            }
+            else if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U') {
+                console.log("오늘의 출장 상세 수정 성공");
+                isSuccess = true;
+            }
+            else {
+                console.log("오늘의 출장 상세 등록 실패");
+                isSuccess = false;
+                returnCode = -1; //등록 실패
+            }
+        }
+
+
+        //오늘의 출장 상세 아이템 삭제
+        if(isSuccess == true){
+            res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
+
+            if (res[0][1][0]["@RET_VAL"] == 'D') {
+                console.log("오늘의 출장 상세 아이템 삭제 성공");
+                isSuccess = true;
+            }
+            else {
+                console.log("오늘의 출장 상세 아이템 삭제 실패");
+                isSuccess = false;
+            }
+        }
+
+        //오늘의 출장 상세 아이템 등록
+        if (isSuccess == true) {            
+            for (var i = 0; i < tripDetailItems.length; i++) {
+                let tripDetailItemGuid = helper.generateUUID();
+                let itemName = tripDetailItems[i].itemName;
+                let itemValue = tripDetailItems[i].itemValue;
+
+                params = [tripDetailItemGuid, tripDetailGuid, itemName, itemValue, 'N'];
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+                if (res[0][0].affectedRows >= 1 && res[0][1][0]["@RET_VAL"] == 'I') {
+                    if (i == tripDetailItems.length - 1) {
+                        console.log("오늘의 출장 상세 아이템 등록 성공");
+                        isSuccess = true;
+                    }
+                }
+                else {
+                    console.log("오늘의 출장 상세 아이템 등록 실패");
+                    isSuccess = false;
+                    break;
+                }
+            }
+        }
+
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
 //오늘의 출장 일괄등록
 exports.importTrip = async (file, userGuid) => {
 
