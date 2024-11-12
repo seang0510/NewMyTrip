@@ -21,7 +21,8 @@ exports.upload = (folderName) => {
         console.log(file.mimetype);
         console.log(decodeURI( file.originalname ));
 
-        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        //이게 왜 들어가있을까
+        //file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
 
         let name = decodeURI( file.originalname );
         console.log("#####");

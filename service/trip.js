@@ -117,9 +117,8 @@ exports.setTripWithItems = async (tripGuid, title, tripDetailItems, userGuid) =>
             }
         }
 
-
         //오늘의 출장 상세 아이템 삭제
-        if(isSuccess == true){
+        if(isSuccess == true && tripDetailItems != null && tripDetailItems.length > 0){
             res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
 
             if (res[0][1][0]["@RET_VAL"] == 'D') {
@@ -133,7 +132,7 @@ exports.setTripWithItems = async (tripGuid, title, tripDetailItems, userGuid) =>
         }
 
         //오늘의 출장 상세 아이템 등록
-        if (isSuccess == true) {            
+        if (isSuccess == true && tripDetailItems != null && tripDetailItems.length > 0) {            
             for (var i = 0; i < tripDetailItems.length; i++) {
                 let tripDetailItemGuid = helper.generateUUID();
                 let itemName = tripDetailItems[i].itemName;
@@ -209,7 +208,7 @@ exports.importTrip = async (file, userGuid) => {
         }
 
         //오늘의 출장 상세 등록        
-        if (isSuccess == true) {      
+        if (isSuccess == true && resModel.data.tripDetails != null && resModel.data.tripDetails.length > 0) {      
             //BULK Insert
             const tripDetails = resModel.data.tripDetails;
             
@@ -293,7 +292,7 @@ exports.importTrip = async (file, userGuid) => {
             sql = 'INSERT INTO BIZ_TRIP_DTL (TRIP_DTL_GUID, TRIP_MST_GUID, FCLT_NM, ADDR, ADDR_DTL, LOC_POS, COMP_YN, ODR, REG_USER_GUID, REG_DT, UPDT_USER_GUID, UPDT_DT) VALUES ?';
             res = await pool.query(sql, [tripDetails]);
 
-            if(res[0].affectedRows > 1){
+            if(res[0].affectedRows >= 1){
                 console.log("오늘의 출장 상세 등록 총 " + res[0].affectedRows + "개 성공하였습니다.");
                 isSuccess = true;          
             }
@@ -307,12 +306,12 @@ exports.importTrip = async (file, userGuid) => {
         }
 
         // //오늘의 출장 상세 아이템 등록        
-        if (isSuccess == true) {
+        if (isSuccess == true && resModel.data.tripDetails != null && resModel.data.tripDetailItems.length > 0) {
             const tripDetailItems = resModel.data.tripDetailItems;
             sql = 'INSERT INTO BIZ_TRIP_DTL_ITM (TRIP_DTL_ITM_GUID, TRIP_DTL_GUID, ITM_NM, ITM_VAL, ODR) VALUES ?';
             res = await pool.query(sql, [tripDetailItems]);
 
-            if(res[0].affectedRows > 1){
+            if(res[0].affectedRows >= 1){
                 console.log("오늘의 출장 상세 아이템 등록 총 " + res[0].affectedRows + "개 성공하였습니다.");
                 isSuccess = true;          
             }
@@ -651,21 +650,27 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
     let params;
     let res;
     let returnCode = -1;
-    let isSuccess = false;
+    let isSuccess = true;
 
     try {
         await conn.beginTransaction();
 
         //오늘의 출장 상세 아이템 삭제
-        res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
+        if(tripDetailItems != null && tripDetailItems.length > 0){
+            
+            res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
 
-        if (res[0][1][0]["@RET_VAL"] == 'D') {
-            console.log("오늘의 출장 상세 아이템 삭제 성공");
-            isSuccess = true;
+            if (res[0][1][0]["@RET_VAL"] == 'D') {
+                console.log("오늘의 출장 상세 아이템 삭제 성공");
+                isSuccess = true;
+            }
+            else {
+                console.log("오늘의 출장 상세 아이템 삭제 실패");
+                isSuccess = false;
+            }
         }
-        else {
-            console.log("오늘의 출장 상세 아이템 삭제 실패");
-            isSuccess = false;
+        else{
+            isSuccess = true;
         }
 
         //오늘의 출장 상세 등록,수정
@@ -692,7 +697,7 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
         }
 
         //오늘의 출장 상세 아이템 등록
-        if (isSuccess == true) {
+        if (isSuccess == true && tripDetailItems != null && tripDetailItems.length > 0) {
             for (var i = 0; i < tripDetailItems.length; i++) {
                 let tripDetailItemGuid = helper.generateUUID();
                 let itemName = tripDetailItems[i].itemName;
@@ -743,7 +748,7 @@ exports.setTripDetailCompYN = async (tripDetailGuid, compYn, userGuid) => {
     try {
         await conn.beginTransaction();
 
-        //오늘의 출장 상세 아이템 삭제
+        //오늘의 출장 상세 아이템 확정
         res = await pool.query("UPDATE BIZ_TRIP_DTL SET COMP_YN = ?, UPDT_USER_GUID = ?, UPDT_DT = NOW() WHERE DEL_YN = 'N' AND TRIP_DTL_GUID = ?",[compYn, userGuid, tripDetailGuid]);
 
         if (res[0].affectedRows >= 1) {
@@ -890,15 +895,21 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
         await conn.beginTransaction();
 
         //오늘의 출장 상세 아이템 삭제
-        res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
+        if(tripDetailItems != null && tripDetailItems.length > 0){
+            
+            res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
 
-        if (res[0][1][0]["@RET_VAL"] == 'D') {
-            console.log("오늘의 출장 상세 아이템 삭제 성공");
-            isSuccess = true;
+            if (res[0][1][0]["@RET_VAL"] == 'D') {
+                console.log("오늘의 출장 상세 아이템 삭제 성공");
+                isSuccess = true;
+            }
+            else {
+                console.log("오늘의 출장 상세 아이템 삭제 실패");
+                isSuccess = false;
+            }
         }
-        else {
-            console.log("오늘의 출장 상세 아이템 삭제 실패");
-            isSuccess = false;
+        else{
+            isSuccess = true;
         }
 
         //오늘의 출장 상세 등록,수정
@@ -925,7 +936,7 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
         }
 
         //오늘의 출장 상세 아이템 등록
-        if (isSuccess == true) {
+        if (isSuccess == true && tripDetailItems != null && tripDetailItems.length > 0) {
             for (var i = 0; i < tripDetailItems.length; i++) {
                 let tripDetailItemGuid = helper.generateUUID();
                 let itemName = tripDetailItems[i].itemName;
