@@ -11,6 +11,7 @@ router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/setTrip', businessController.setTrip);
 router.post('/trip/setTripWithItems', businessController.setTripWithItems);
 router.post('/trip/importTrip', upload(`business/trip`).single("file"), businessController.importTrip);
+router.post('/trip/importTripForWeb', upload(`business/trip`, `latin1`).single("file"), businessController.importTrip);
 router.post('/trip/exportTrip', businessController.exportTrip);
 router.post('/trip/mobile/exportTrip', businessController.mobileExportTrip);
 router.post('/trip/deleteTrip', businessController.deleteTrip);

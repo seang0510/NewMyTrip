@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs-extra');
 
-exports.upload = (folderName) => {
+exports.upload = (folderName, encodeType) => {
   //미들웨어 만들기
   return upload = multer({
     //multer 미들웨어 설정
@@ -22,7 +22,9 @@ exports.upload = (folderName) => {
         console.log(decodeURI( file.originalname ));
 
         //이게 왜 들어가있을까
-        //file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        if(encodeType == 'latin1'){
+          file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+        }
 
         let name = decodeURI( file.originalname );
         console.log("#####");
