@@ -411,6 +411,7 @@ exports.getItem = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
 
+  console.log(tripGuid);
   try {
     //오늘의 출장 조회
     let tripItm  = await tripService.getItem(tripGuid, regUserGuid);
