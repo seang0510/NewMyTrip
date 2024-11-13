@@ -519,7 +519,7 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
 exports.getItem = async (tripGuid, regUserGuid) => {
     
     try {        
-        const [rows, fields] = await pool.query('SELECT ITM_NM , ITM_VAL , ODR FROM BIZ_TRIP_DTL_ITM WHERE TRIP_DTL_GUID = (SELECT TRIP_DTL_GUID FROM BIZ_TRIP_DTL WHERE TRIP_MST_GUID = ?) order by ODR ASC', [tripGuid]);
+        const [rows, fields] = await pool.query('SELECT ITM_NM , ITM_VAL , ODR FROM BIZ_TRIP_DTL_ITM WHERE TRIP_DTL_GUID = (SELECT TRIP_DTL_GUID FROM BIZ_TRIP_DTL WHERE TRIP_MST_GUID = ? LIMIT 1) order by ODR ASC', [tripGuid]);
         console.log(rows);
         return rows;
 
