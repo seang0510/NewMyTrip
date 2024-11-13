@@ -28,6 +28,8 @@ router.post('/trip/setTripDetailWithImages', upload(`business/trip`).array("file
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
 router.post('/trip/deleteTripDetailImages', businessController.deleteTripDetailImages);
 
+router.post('/trip/getItem', businessController.getItem);
+
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);
 router.post('/tourLocation/getTourLocationList', businessController.getTourLocationList);

@@ -516,6 +516,23 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
   }
 }; 
 
+exports.getItem = async (tripGuid, regUserGuid) => {
+    let tripDetailList = [];
+    let tripDetailListForIntegrate = [];
+    let isSuccess = false;
+
+    try {        
+        const [rows, fields] = await pool.query('SELECT ITM_NM , ITM_VAL , ODR FROM BIZ_TRIP_DTL_ITM WHERE TRIP_DTL_GUID = ?', [tripGuid]);
+        console.log(rows);
+        return rows;
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+    
+}; 
+
 //오늘의 출장 상세 조회(리스트):핀 목록
 exports.getTripDetailListForPin = async (tripGuid, regUserGuid) => {
     let tripDetailList = [];

@@ -406,6 +406,29 @@ exports.getTripDetailList = async (req, res, next) => {
   }
 };
 
+exports.getItem = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  const regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
+
+  try {
+    //오늘의 출장 조회
+    let tripItm  = await tripService.getItem(tripGuid, regUserGuid);
+
+    if(tripItm == null){
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 컬럼이 존재하지 않습니다.', '');        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '모두의 출장 컬럼이 조회 되었습니다.', tripItm);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 상세 리스트 조회:핀 목록(POST)
 exports.getTripDetailListForPin = async (req, res, next) => {
   let resModel;
