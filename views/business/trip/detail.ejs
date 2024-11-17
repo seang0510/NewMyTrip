@@ -159,9 +159,55 @@
   </div>
 </div>
 
+<%# 출장 이미지 등록 %>
+<div class="modal fade" id="modalTripDetailImage" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="lblModalTripDetailImage" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- LoadingBar Modal of modalTripDetailImage -->
+      <%- include('../../ejs/loadingbar.ejs') %>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lblModalTripDetailImage">출장 상세 이미지</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <form class="needs-validation" novalidate>
+            <button type="submit" id="btnImportImage" class="visually-hidden" onclick="importImage(this, event)"></button>
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-file"></i></span>
+              <div class="has-validation">
+                <input type="file" id="files" class="form-control" required accept="image/*" onchange="addFile(this)" multiple>
+              </div>
+              <div class="invalid-feedback">
+                파일을 업로드하세요.
+              </div>                
+            </div>            
+
+            <div class="file-list"></div>
+          </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary"
+          onclick="document.getElementById('btnImportImage').click();">파일 올리기</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
   var table = {};
   var tableItems = {};
+  var fileNo = 0;
+  var filesArr = [];
 
   $(document).ready( function () {
     //$("#modalTripDetail").modal('show');
@@ -207,7 +253,8 @@
         console.log(table.column(eThis).title() + ' 클릭(주소)');
         break;
       case 'IMG_CNT':
-      console.log(table.column(eThis).title() + ' 클릭(사진)');
+        $("#tripDetailGuid").val(tripDetailGuid);
+        $("#modalTripDetailImage").modal('show');
         break;
       default:
         getItem(tripDetailGuid);
@@ -323,8 +370,7 @@
       htmlCode += "<span class='me-2'>" + gridData[i].ADDR + "</span>";
       htmlCode += "<span class='badge text-bg-success ms-auto' onclick='openDaumMap(this, event);'>주소 변경</span>";
       htmlCode += "</div>";
-      gridData[i].ADDR = htmlCode;
-        
+      gridData[i].ADDR = htmlCode;        
     }
 
     return gridData;
@@ -656,6 +702,152 @@
   function closeItem(){
     history.back();
   };
+
+  //이미지 업로드
+  function importImage(eThis, e){
+    //HTML5 기본 Validation
+    if (filesArr.length == 0) {
+      $("#modalTripDetailImage").modal('hide');
+      $("#modalAlert .modal-title").html("출장 업로드");
+      $("#modalAlert .modal-body").html('bmp,jpg,jpeg,png,gif 파일만 업로드 할수 있습니다.');
+      $("#modalAlert").modal('show');
+      return false;
+    }
+
+    var fileVal = $("#files").val();
+    if(fileVal != "" ){
+        var ext = fileVal.split('.').pop().toLowerCase(); //확장자분리
+        //아래 확장자가 있는지 체크
+        if($.inArray(ext, ['bmp','jpg','jpeg','png','gif']) == -1) {
+          $("#modalTripDetailImage").modal('hide');
+          $("#modalAlert .modal-title").html("출장 업로드");
+          $("#modalAlert .modal-body").html('bmp,jpg,jpeg,png,gif 파일만 업로드 할수 있습니다.');
+          $("#modalAlert").modal('show');
+          e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+          return false;
+        }
+    }    
+
+    e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수    
+
+    var formData = new FormData();
+    var files = $("#modalTripDetailImage").find("form input[type=file]")[0].files;
+
+    for (var i = 0; i < filesArr.length; i++) {
+        // 삭제되지 않은 파일만 폼데이터에 담기
+        if (!filesArr[i].is_delete) {
+            formData.append("files", filesArr[i]);
+        }
+    }
+
+    formData.append('tripDetailGuid', $("#tripDetailGuid").val());
+
+    $.ajax({
+      url: '/business/trip/setTripDetailImagesForWeb',
+      method: 'POST',
+      data: formData,
+      cache: false,
+      contentType: false,
+      processData: false,
+      beforeSend: function (xhr) {
+        setLoadingBar(true, 'modalTripDetailImage');
+        $("#modalAlert .modal-title").html("출장 상세 이미지 업로드");
+      },
+      success: function (data, status, xhr) {
+        if(data.success){
+          location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val();
+        }
+        else
+        {
+          var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+        }        
+      },
+      error: function (data, status, err) {
+        $("#modalAlert .modal-body").html(err);
+      },
+      complete: function () {
+        setLoadingBar(false, 'modalTripDetailImage');
+        $("#modalTripDetailImage").modal('hide');
+        $("#modalAlert").modal('show');
+      }
+    });    
+  };
+
+  //첨부파일 업로드
+  function addFile(obj){
+    var maxFileCnt = 5;   // 첨부파일 최대 개수
+    var attFileCnt = document.querySelectorAll('.filebox').length;    // 기존 추가된 첨부파일 개수
+    var remainFileCnt = maxFileCnt - attFileCnt;    // 추가로 첨부가능한 개수
+    var curFileCnt = obj.files.length;  // 현재 선택된 첨부파일 개수
+
+    // 첨부파일 개수 확인
+    if (curFileCnt > remainFileCnt) {
+        alert("첨부파일은 최대 " + maxFileCnt + "개 까지 첨부 가능합니다.");
+    }
+
+    for (var i = 0; i < Math.min(curFileCnt, remainFileCnt); i++) {
+        const file = obj.files[i];
+
+        // 첨부파일 검증
+        if (validation(file)) {
+            // 파일 배열에 담기
+            var reader = new FileReader();
+            reader.onload = function () {
+                filesArr.push(file);
+            };
+            reader.readAsDataURL(file)
+
+            // 목록 추가
+            let htmlData = '';
+            htmlData += '<div id="file' + fileNo + '" class="filebox d-flex align-items-center">';
+            htmlData += '   <p class="name me-2">' + file.name + '</p>';
+            htmlData += '   <a class="delete" style="cursor:pointer" onclick="deleteFile(' + fileNo + ');"><i class="fa fa-times"></i></a>';
+            htmlData += '</div>';
+            $('.file-list').append(htmlData);
+            fileNo++;
+        } else {
+            continue;
+        }
+    }
+    // 초기화
+    document.querySelector("input[type=file]").value = "";
+}
+
+  //첨부파일 검증
+  function validation(obj){
+      const fileTypes = ['image/gif', 'image/jpg', 'image/jpeg', 'image/png', 'image/bmp'];
+      var isSuccess = false;
+      var msg = '';
+      if (obj.name.length > 100) {
+          msg = "파일명이 100자 이상인 파일은 제외되었습니다.";
+      } else if (obj.size > (100 * 1024 * 1024)) {
+          msg = "최대 파일 용량인 100MB를 초과한 파일은 제외되었습니다.";
+      } else if (obj.name.lastIndexOf('.') == -1) {
+          msg = "확장자가 없는 파일은 제외되었습니다.";
+      } else if (!fileTypes.includes(obj.type)) {
+          msg = "첨부가 불가능한 파일은 제외되었습니다.";
+      } else {
+          isSuccess = true;
+      }
+
+      if(isSuccess){
+        return true;
+      }
+      else {
+        $("#modalTripDetailImage").modal('hide');
+        $("#modalAlert .modal-title").html("모두의 출장 이미지");
+        $("#modalAlert .modal-body").html(msg);
+        $("#modalAlert").modal('show');
+        return false;
+      }
+  }
+
+  //첨부파일 삭제
+  function deleteFile(num) {
+      document.querySelector("#file" + num).remove();
+      filesArr[num].is_delete = true;
+  }
 
   //지도 보기
   function viewMap(){

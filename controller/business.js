@@ -354,7 +354,7 @@ exports.indexTripDetail = async (req, res, next) => {
         var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
         res.cookie('MSG', msg, { httpOnly: false, secure: false });
         return res.redirect('/login');
-    }
+      }
       //현재 로그인 되어 있는 경우    
       else{
         var email = req.session.email;
@@ -364,7 +364,12 @@ exports.indexTripDetail = async (req, res, next) => {
         let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
 
-        return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
+        if(tripGuid == null){
+          return res.redirect('/business/trip');
+        }
+        else{
+          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
+        }        
       }        
   }
   catch (err) {
@@ -624,7 +629,7 @@ exports.setTripDetailCompYN = async (req, res, next) => {
 exports.setTripDetailImages = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
   const files = req.files;
 
   try {

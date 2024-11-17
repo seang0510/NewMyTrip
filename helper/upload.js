@@ -21,7 +21,7 @@ exports.upload = (folderName, encodeType) => {
         console.log(file.mimetype);
         console.log(decodeURI( file.originalname ));
 
-        //이게 왜 들어가있을까
+        //JQuery Ajax 시, encodeType은 latin1이므로 아래 구문이 적용되어야함
         if(encodeType == 'latin1'){
           file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
         }

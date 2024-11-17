@@ -25,6 +25,7 @@ router.post('/trip/getTripDetailListForImage', businessController.getTripDetailL
 router.post('/trip/setTripDetail', businessController.setTripDetail);
 router.post('/trip/setTripDetailCompYN', businessController.setTripDetailCompYN);
 router.post('/trip/setTripDetailImages', upload(`business/trip`).array("files"), businessController.setTripDetailImages);
+router.post('/trip/setTripDetailImagesForWeb', upload(`business/trip`, `latin1`).array("files"), businessController.setTripDetailImages);
 router.post('/trip/setTripDetailWithImages', upload(`business/trip`).array("files"), businessController.setTripDetailWithImages);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
 router.post('/trip/deleteTripDetailList', businessController.deleteTripDetailList);
