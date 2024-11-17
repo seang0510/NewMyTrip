@@ -27,6 +27,7 @@ router.post('/trip/setTripDetailCompYN', businessController.setTripDetailCompYN)
 router.post('/trip/setTripDetailImages', upload(`business/trip`).array("files"), businessController.setTripDetailImages);
 router.post('/trip/setTripDetailWithImages', upload(`business/trip`).array("files"), businessController.setTripDetailWithImages);
 router.post('/trip/deleteTripDetail', businessController.deleteTripDetail);
+router.post('/trip/deleteTripDetailList', businessController.deleteTripDetailList);
 router.post('/trip/deleteTripDetailImages', businessController.deleteTripDetailImages);
 
 router.post('/trip/getItem', businessController.getItem);

@@ -532,7 +532,14 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
         if(res[0][0].length > 0){
             console.log("오늘의 출장 상세 조회 성공");
             tripDetail = res[0][0][0];
+            isSuccess = true;
+        }
+        else{
+            console.log("오늘의 출장 상세 조회 실패");
+            isSuccess = false;
+        }
 
+        if(isSuccess){
             res = await pool.query('CALL BIZ_TRIP_DTL_ITM_SELECT(?,?,?)', [tripDetailGuid, tripGuid, 'N']);
 
             if(res[0][0].length > 0){
@@ -541,10 +548,11 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
                 tripDetail.ITMS = tripDetailItems;
                 isSuccess = true;
             }
-        }
-        else{
-            console.log("오늘의 출장 상세 조회 실패");
-            isSuccess = false;
+            else{
+                console.log("오늘의 출장 상세 조회 실패");
+                tripDetailItems = null;    
+                tripDetail.ITMS = tripDetailItems;
+            }
         }
 
         if(isSuccess){
@@ -556,10 +564,10 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
                 tripDetail.IMGS = tripDetailImages;
                 isSuccess = true;
             }
-        }
-        else{
-            console.log("오늘의 출장 상세 이미지 조회 실패");
-            isSuccess = false;
+            else{
+                tripDetailImages = null;    
+                tripDetail.IMGS = tripDetailImages;
+            }
         }
 
         if(isSuccess){
@@ -615,10 +623,10 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
 }; 
 
 //오늘의 출장 상세 아이템 조회(개별)
-exports.getItem = async (tripGuid, regUserGuid) => {
+exports.getItem = async (tripGuid) => {
     
     try {        
-        const [rows, fields] = await pool.query('SELECT ITM_NM , ITM_VAL , ODR FROM BIZ_TRIP_DTL_ITM WHERE TRIP_DTL_GUID = (SELECT TRIP_DTL_GUID FROM BIZ_TRIP_DTL WHERE TRIP_MST_GUID = ? LIMIT 1) order by ODR ASC', [tripGuid]);
+        const [rows, fields] = await pool.query('SELECT ITM_NM, ITM_VAL, ODR FROM BIZ_TRIP_DTL_ITM WHERE TRIP_DTL_GUID = (SELECT TRIP_DTL_GUID FROM BIZ_TRIP_DTL WHERE TRIP_MST_GUID = ? LIMIT 1) order by ODR ASC', [tripGuid]);
         console.log(rows);
         return rows;
 
@@ -759,6 +767,7 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
 exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid) => {
     order = (tripDetailGuid == null || tripDetailGuid == '') ? 0 : order; //DetailGUID가 없으면 등록
     tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
+    compYn = compYn == null ? 'N' : compYn;
     let conn = await pool.getConnection();
     let params;
     let res;
@@ -1181,6 +1190,56 @@ exports.deleteTripDetail = async (tripDetailGuid, userGuid) => {
   } finally {
       conn.release();
   }
+};
+
+//오늘의 출장 상세 삭제(리스트)
+exports.deleteTripDetailList = async (tripDetailGuidList, userGuid) => {
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {        
+
+        await conn.beginTransaction();
+
+        for (var i = 0; i < tripDetailGuidList.length; i++) {
+            tripDetailGuid = tripDetailGuidList[i];
+            params = [tripDetailGuid, userGuid];
+            
+            res = await pool.query('CALL BIZ_TRIP_DTL_UPDATE_YN(?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'Y'){
+                if (i == tripDetailGuidList.length - 1) {
+                    console.log("오늘의 출장 상세 삭제 성공");
+                    isSuccess = true;
+                }
+            }
+            else{
+                console.log("오늘의 출장 상세 삭제 실패");
+                isSuccess = false;
+                break;
+            }
+        }
+    
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
 };
 
 //오늘의 출장 상세 이미지 삭제

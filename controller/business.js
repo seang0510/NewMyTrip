@@ -114,7 +114,7 @@ exports.setTrip = async (req, res, next) => {
   const markItemName = helper.changeUndefiendToNull(req.body.markItemName);
   const markColor = helper.changeUndefiendToNull(req.body.markColor);
 
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
   const uuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
 
   try {
@@ -298,7 +298,7 @@ exports.mobileExportTrip = async (req, res, next) => {
 exports.deleteTrip = async (req, res, next) => {
 let resModel;
 const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
-const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //오늘의 출장 삭제
@@ -360,9 +360,11 @@ exports.indexTripDetail = async (req, res, next) => {
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
         var tripGuid = req.query.tripGuid;
+        let itemList = await tripService.getItem(tripGuid);
+        let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
 
-        return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid });
+        return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
       }        
   }
   catch (err) {
@@ -452,7 +454,7 @@ exports.getItem = async (req, res, next) => {
   console.log(tripGuid);
   try {
     //오늘의 출장 조회
-    let tripItm  = await tripService.getItem(tripGuid, regUserGuid);
+    let tripItm  = await tripService.getItem(tripGuid);
 
     if(tripItm == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장 컬럼이 존재하지 않습니다.', '');        
@@ -563,7 +565,7 @@ exports.setTripDetail = async (req, res, next) => {
   const compYn = helper.changeUndefiendToNull(req.body.compYn);
   const order = helper.changeUndefiendToZero(req.body.order);
   const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //오늘의 출장 등록,수정
@@ -706,6 +708,32 @@ const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
     //실패
     else {
       resModel = helper.createResponseModel(false, '오늘의 출장 상세내역 삭제에 실패하였습니다.', null);
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 삭제 리스트(POST) 
+exports.deleteTripDetailList = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuidList = helper.changeUndefiendToNull(req.body.tripDetailGuidList);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tripService.deleteTripDetailList(tripDetailGuidList, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '오늘의 출장 상세를 삭제하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '오늘의 출장 상세 삭제에 실패하였습니다.', '');
     }
 
     return res.status(200).json(resModel);

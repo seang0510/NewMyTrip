@@ -49,7 +49,7 @@
 
 <%# 출장 추가 %>
 <div class="modal fade" id="modalTripAdd" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-  aria-labelledby="lblModalFindPassword" aria-hidden="true">
+  aria-labelledby="lblModalTripAdd" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
 
@@ -86,7 +86,7 @@
 
 <%# 출장 엑셀 등록 %>
 <div class="modal fade" id="modalImportTrip" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-  aria-labelledby="lblModalFindPassword" aria-hidden="true">
+  aria-labelledby="lblModalImportTrip" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -95,7 +95,7 @@
 
         <!-- Modal Header -->
         <div class="modal-header">
-          <h5 class="modal-title" id="lblModalTripAdd">출장 업로드</h5>
+          <h5 class="modal-title" id="lblModalImportTrip">출장 업로드</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -128,7 +128,7 @@
 
 <%# 출장 개별 등록,수정 %>
 <div class="modal fade" id="modalNewTrip" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-  aria-labelledby="lblModalFindPassword" aria-hidden="true">
+  aria-labelledby="lblModalNewTrip" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
@@ -137,7 +137,7 @@
 
         <!-- Modal Header -->
         <div class="modal-header">
-          <h5 class="modal-title" id="lblModalTripAdd">출장 만들기</h5>
+          <h5 class="modal-title" id="lblModalNewTrip">출장 만들기</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -200,7 +200,8 @@
     table = DataTableJS('tblMain', '/business/trip/getTripList');  
 
     //Click Event
-    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {      var isOn = table.column('CHK:name').visible();
+    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {
+      var isOn = table.column('CHK:name').visible();
       const rowData = table.row(this).data();
       let tripGuid = rowData.TRIP_MST_GUID;
 
@@ -235,7 +236,6 @@
         .remove()
         .draw(false);
       });
-
     });
 
   });
@@ -334,7 +334,7 @@
   function getDefaultItem(itemName, dataYn){
     var defItem = {
       title: "<span class=''>항목</span>",
-      itemName: "<input type=text class='item-name form-control w-100' placeholder='항목의 이름을 입력하세요.' value='" + itemName + "'' " + (dataYn == "Y" ? "readonly" : "") + " />",
+      itemName: "<input type=text class='item-name form-control w-100' placeholder='항목의 이름을 입력하세요.' value='" + itemName + "' " + (dataYn == "Y" ? "readonly" : "") + " />",
       del: "<button class='btn btn-sm btn-danger item-del' onclick='deleteItem(this, event);' " + (dataYn == "Y" ? "disabled" : "") + "><i class='fa fa-times'></i></button>",
     };
     return defItem;
@@ -393,7 +393,7 @@
         $("#modalAlert .modal-title").html("출장 업로드");
       },
       success: function (data, status, xhr) {
-        if(data.isSuccess){
+        if(data.success){
           location.reload(true);
         }
         else
@@ -431,11 +431,13 @@
         beforeSend: function (xhr) {
           setLoadingBar(true, 'modalNewTrip');
         },        
-        success: function(data){        
+        success: function(data){       
+          var itemList = [];
+
           if(!(isEmpty(data) || isEmpty(data.value))){
             $("#title").val(data.value.TTL);
             $("#tripGuid").val(data.value.TRIP_MST_GUID);
-            var itemList = [];
+            
             if(data.value.tripDetailItems != null){
               for(var i = 0; i < data.value.tripDetailItems.length;i++){
                 var itemName = data.value.tripDetailItems[i].ITM_NM;
@@ -458,6 +460,11 @@
 
   //개별 저장(등록,수정)
   function saveTrip(eThis, e){
+    //HTML5 기본 Validation
+    if (!(document.getElementById("title").validity.valid)) {
+      return false;
+    }
+
     e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
 
     var tripGuid = $("#tripGuid").val();
@@ -493,10 +500,14 @@
           $("#modalAlert .modal-title").html("모두의 출장");
         },
         success: function (data, status, xhr) {
-          // var message = data.message;
-          // $("#modalAlert .modal-body").html(message);
-          // $("#modalAlert").modal('show');
-          location.href = '/business/trip/';
+          if(data.success){
+            location.href = '/business/trip/';
+          }
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
+          }
         },
         error: function (data, status, err) {
           $("#modalAlert .modal-body").html(err);
@@ -516,6 +527,13 @@
       'tripGuidList': tripGuidList,
     };
 
+    if(tripGuidList.length == 0){
+      $("#modalAlert .modal-title").html("모두의 출장 상세");
+      $("#modalAlert .modal-body").html('선택한 행이 없습니다.');
+      $("#modalAlert").modal('show');
+      return;
+    }
+
     confirmModal(e, 'modalConfirm', '모두의 출장', '선택한 출장을 삭제 하시겠습니까?', function () {   
       $.ajax({
         url: '/business/trip/deleteTripList',
@@ -526,7 +544,7 @@
         beforeSend: function (xhr) {
           setLoadingBar(true);
           $("#modalConfirm").modal('hide');
-          $("#modalAlert .modal-title").html("공지사항");
+          $("#modalAlert .modal-title").html("모두의 출장");
         },
         success: function (data, status, xhr) {
           // var message = data.message;

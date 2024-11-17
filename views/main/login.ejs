@@ -233,9 +233,9 @@
 
     function signUp(eThis, e) {
       //HTML5 기본 Validation
-      if (!(document.getElementById("emailForSignUp").validity.valid &&
+      if (!((document.getElementById("emailForSignUp").validity.valid &&
         document.getElementById("passwordForSignUp").validity.valid &&
-        document.getElementById("passwordConfirmForSignUp").validity.valid)) {
+        document.getElementById("passwordConfirmForSignUp").validity.valid))) {
         return false;
       }
 

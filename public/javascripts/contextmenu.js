@@ -45,9 +45,9 @@ function openChangePassword(eThis, e){
 //비밀번호 변경 저장
 function changePassword(e){
     //HTML5 기본 Validation
-    if (!(document.getElementById("passwordBefore").validity.valid) &&
+    if (!((document.getElementById("passwordBefore").validity.valid) &&
       (document.getElementById("passwordNew").validity.valid) &&
-      (document.getElementById("passwordNewConfirm").validity.valid)) {
+      (document.getElementById("passwordNewConfirm").validity.valid))) {
       return false;
     }
 

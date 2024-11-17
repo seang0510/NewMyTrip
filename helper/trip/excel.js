@@ -283,7 +283,7 @@ function excelMobileDownload(menu, data, dataTitle, headers, keys, res) {
 //return Model 제작
 function setResponseModel(isSuccess, message, data){
   let resModel = {
-    isSuccess : isSuccess,
+    success : isSuccess,
     message : message,
     data : data,
   };  
