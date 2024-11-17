@@ -1,9 +1,10 @@
 //Controller -> ejs로 JSON 반환 모델
-function createResponseModel(isSuccess, message, data){
+function createResponseModel(isSuccess, message, data, columnNames){
     const resModel = {
         success : isSuccess,
         message : message,
-        value: data
+        value: data,
+        columnNames: columnNames,
     };
     return resModel;
 };
@@ -98,6 +99,15 @@ function existSessoin(sessionValue){
     }
 };
 
+//컬럼명 배열로 반환
+function getColumnNames(fields){
+    let arrColNames = [];
+    for (var i = 0; i < fields.length; i++) {
+        arrColNames.push(fields[i].name);
+    }   
+    return arrColNames;
+};
+
 module.exports = {
     createResponseModel,
     generateUUID,
@@ -108,4 +118,5 @@ module.exports = {
     dateFormat,
     dayFormat,
     existSessoin,
+    getColumnNames,
 };

@@ -21,4 +21,7 @@ $(document).ready(function () {
 
   $("body #sidebar-container").removeClass('d-none');
   $("body #footer").css('min-width', '1200px');
+
+  //숨김 버튼
+  $(".navbar-toggler").css('display','none');
 });

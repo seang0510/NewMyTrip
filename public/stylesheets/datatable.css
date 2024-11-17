@@ -10,6 +10,9 @@
   table.dataTable thead th.header:not(:first-child) {
     text-align: center;
   }
+  table.dataTable td,table.dataTable th {
+    white-space: nowrap;
+  }
   table.dataTable tbody td.row-left-align {
     text-align: left;
   }

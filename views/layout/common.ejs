@@ -4,7 +4,7 @@
 
 <%# 권한에 따른 메뉴(Nav) %>
 <%- contentFor('menuNavByAuth') %>
-<% if(authCode == 'A'){ %>
+<% if(authCode == 'S' || authCode == 'A'){ %>
   <%# This menu is hidden in bigger devices with d-sm-none. 
     The sidebar isn't proper for smaller screens imo, so this dropdown menu can keep all the useful sidebar itens exclusively for smaller screens  %>
   <li class="nav-item dropdown d-sm-block d-md-none">

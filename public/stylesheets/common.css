@@ -62,3 +62,7 @@ img {
   height: 100%;
   object-fit: contain;
 }
+
+span.input-group-text {
+  width: 42px;
+}

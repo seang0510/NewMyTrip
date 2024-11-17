@@ -63,6 +63,44 @@ exports.getTripList = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 조회 + 오늘의 출장 상세 아이템(POST)
+exports.getTripWithItems = async (req, res, next) => {
+  let resModel;
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  let regUserGuid;
+
+  //시스템 관리자인 경우, 전체 조회
+  if(helper.existSessoin(req.session)){
+    const authGroupCode = req.session.authGroupCode;
+    if(authGroupCode == 'S'){
+      regUserGuid = null;
+    }
+    else{
+      regUserGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);;
+    }
+  }
+
+  //시스템 관리자인 경우, 전체 조회
+  if(helper.existSessoin(req.session)){
+    const authGroupCode = req.session.authGroupCode;
+    if(authGroupCode == 'S'){
+      regUserGuid = null;
+    }
+    else{
+      regUserGuid = req.session.userGuid;
+    }
+  }
+
+  try {
+    //오늘의 출장 조회
+    resModel = await tripService.getTripWithItems(tripGuid, regUserGuid);
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 등록/수정(POST)
 exports.setTrip = async (req, res, next) => {
   let resModel;
@@ -119,8 +157,8 @@ exports.setTripWithItems = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
   const tripDetailItems = helper.changeUndefiendToNull(req.body.tripDetailItems);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
-
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  
   try {
     //오늘의 출장 등록,수정 + 오늘의 출장 상세 아이템
     let retVal = await tripService.setTripWithItems(tripGuid, title, tripDetailItems, userGuid);
@@ -390,13 +428,13 @@ exports.getTripDetailList = async (req, res, next) => {
 
   try {
     //오늘의 출장 조회
-    let rows  = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
-
+    let [rows, fields]  = await tripService.getTripDetailList(tripDetailGuid, tripGuid, facilityName, address, regUserGuid);
+    let columnNames = helper.getColumnNames(fields[0]);
     if(rows == null){
-      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
+      resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', rows[0], columnNames);        
     }
     else{
-      resModel = helper.createResponseModel(true, '', rows);
+      resModel = helper.createResponseModel(true, '', rows[0], columnNames);
     }    
 
     return res.status(200).json(resModel);

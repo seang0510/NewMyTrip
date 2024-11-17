@@ -51,6 +51,12 @@ app.use(express.static(path.join(__dirname, '/node_modules/datatables.net')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-bs5')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-select')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-select-dt')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-responsive')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-responsive-dt')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedcolumns')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedcolumns-dt')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedheader')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedheader-dt')));
 
 //mysql-session setup
 app.use(session({

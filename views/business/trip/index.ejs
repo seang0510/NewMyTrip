@@ -3,21 +3,27 @@
 
 <%# CSS & JS %>
 <link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="/css/select.dataTables.min.css" rel="stylesheet" />
+<link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
-<link href="/stylesheets/trip.css" rel="stylesheet" />
 
 <%# JS %>
 <script src="/js/dataTables.min.js"></script>
 <script src="/js/dataTables.bootstrap5.min.js"></script>
 <script src="/js/dataTables.select.js"></script>
 <script src="/js/select.dataTables.js"></script>
+<script src="/js/dataTables.responsive.js"></script>
+<script src="/js/responsive.dataTables.js"></script>
+<script src="/js/dataTables.fixedColumns.js"></script>
+<script src="/js/fixedColumns.dataTables.js"></script>
+<script src="/js/dataTables.fixedHeader.js"></script>
+<script src="/js/fixedHeader.dataTables.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
 
 <%# 본문 %>
 <%- contentFor('body') %>
-
-<%# DataTable CheckBox Visible %>
-<input type="hidden" id="chkVisible" value='N'>
 
 <%# 메뉴명 & 버튼 %>
 <div class="d-flex">
@@ -71,7 +77,7 @@
         <!-- Modal footer -->
         <div class="modal-footer">
           <button type="button" class="btn btn-warning" data-bs-target="#modalImportTrip" data-bs-toggle="modal" data-bs-dismiss="modal">엑셀 불러오기</button>
-          <button type="button" class="btn btn-primary" data-bs-target="#modalTermsOfService" data-bs-toggle="modal" data-bs-dismiss="modal" disabled>출장 만들기</button>
+          <button type="button" class="btn btn-primary" onclick="openModalNewTip()" data-bs-dismiss="modal">출장 만들기</button>
         </div>
 
     </div>
@@ -120,33 +126,90 @@
   </div>
 </div>
 
-<%# 출장 개별 등록 %>
+<%# 출장 개별 등록,수정 %>
+<div class="modal fade" id="modalNewTrip" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="lblModalFindPassword" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
-<%# 출장 개별 수정 %>
+      <!-- LoadingBar Modal of modalNewTrip -->
+      <%- include('../../ejs/loadingbar.ejs') %>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lblModalTripAdd">출장 만들기</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <form class="needs-validation" novalidate>
+            <input type="hidden" id="tripGuid" value="">
+            <button type="submit" id="btnSaveTrip" class="visually-hidden" onclick="saveTrip(this, event)"></button>
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-car"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="title" class="form-control" placeholder="10월의 출장"
+                  onkeypress="enterKey(event, 'btnSaveTrip')" required>
+                <label for="title">이름</label>
+              </div>
+              <div class="invalid-feedback">
+                이름을 입력하세요.
+              </div>                
+            </div>
+
+            <%# 항목 %>
+            <div class="d-flex align-items-center">
+              <div class="ps-1">
+                <h5 class="d-table-cell">출장 항목</h5>
+              </div>
+              <div class="d-flex ms-auto">
+                <div>
+                  <button type="button" id="btnAddItem" class="btn btn-sm btn-primary rounded-circle" onclick="addNewItem()">
+                    <i class="fa fa-plus"></i>
+                  </button>      
+                </div>
+              </div>
+            </div>
+            <div id="item-line" class="mt-2">
+              <table id="tblItems" class="table table-striped">
+              </table>              
+            </div>        
+          </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary"
+          onclick="document.getElementById('btnSaveTrip').click();">저장</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+        </div>
+
+    </div>
+  </div>
+</div>
 
 <script>
   var table = {};
+  var tableItems = {};
+  let itemCount = 1;
 
   $(document).ready( function () {
-
+    
     //DataTable.js
     table = DataTableJS('tblMain', '/business/trip/getTripList');  
 
-    //CheckBox Visible
-    table.column(0).visible(false);
-
     //Click Event
-    $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
-      var isOn = table.column(0).visible();
+    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {      var isOn = table.column('CHK:name').visible();
+      const rowData = table.row(this).data();
+      let tripGuid = rowData.TRIP_MST_GUID;
 
       //편집 모드
       if(isOn){
-        alert('개발중입니다.');
+        getTrip(tripGuid);
       }
       //읽기 모드
       else{
-        const rowData = table.row(this).data();
-        let tripGuid = rowData.TRIP_MST_GUID;
         let expiredDate = rowData.EXPIRE_DT;
         let nowDate = dateFormat(new Date(), false);
 
@@ -160,29 +223,40 @@
           $("#modalAlert").modal('show');
         }
       }
-    });          
+    });     
+    
+    //Reset Modal Items
+    $('#modalNewTrip').on('hidden.bs.modal', function (e) {
+      itemCount = 1;
+      $("#title").val('');
+      $("#tripGuid").val('');    
+      $("#tblItems .item-del").each(function(){
+        tableItems.row($(this).closest('tr'))
+        .remove()
+        .draw(false);
+      });
+
+    });
+
   });
 
   const columns = [
-    {title: '', name: 'CHK', data : 'CHK', width: "50px"},
-    {title: 'No.', name: 'NO', data : "NO", width: "50px" },
-    {title: '이름', name: 'TTL', data : "TTL", width: "auto"},
-    {title: '만료일', name: 'EXPIRE_DT', data : "EXPIRE_DT", width: "200px"},
-    {title: '등록자', name: 'REG_EMAIL', data : "REG_EMAIL", width: "200px"},
-    {title: '등록일시', name: 'REG_DT', data : "REG_DT", width: "200px" },
+    {title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false },
+    {title: '', data : null, name: 'CHK', width: "50px", visible: false },    
+    {title: 'No.', data : "NO", name: "NO", width: "50px" },
+    {title: '이름', data : "TTL", name: 'TTL', width: "200px"},
+    {title: '만료일', data : "EXPIRE_DT", name: 'EXPIRE_DT', width: "200px"},
+    {title: '등록자', data : "REG_EMAIL", name: 'REG_EMAIL', width: "200px"},
+    {title: '등록일시', data : "REG_DT", name: 'REG_DT', width: "200px" },
   ];
 
   const columnDefs = [
-    { className: "header", targets: "_all" },
-    { 
-      orderable: false,
-      render: DataTable.render.select(),
-      targets: 0,
-      visible: false,
-    },        
-    { className: "row-left-align", targets: 'TTL:name' },
-    { className: "row-center-align", targets: ['EXPIRE_DT:name', 'REG_EMAIL:name', 'REG_DT:name'] },
-    { className: "row-right-align", targets: ['No.:name'] },
+    { targets: "_all", className: "header" },
+    { targets: 0, orderable: false, searchable: false, className: 'control', render: false, },
+    { targets: 1, orderable: false, render: DataTable.render.select() },    
+    { targets: 'NO:name', className: "row-right-align" },    
+    { targets: 'TTL:name', className: "row-left-align" },    
+    { targets: ['EXPIRE_DT:name', 'REG_EMAIL:name', 'REG_DT:name'] , className: "row-center-align" },
   ];
 
   function DataTableJS(tblId, url){
@@ -194,16 +268,18 @@
       lengthChange: true,
       searching: false,
       ordering: true,
-      info: true,            
-      destroy: true,
-      fixedColumns: {
-        start: 2
-      },
-      order: [['NO', 'asc']],    
+      info: true,         
       select: {
         style: 'multi',
-        selector: 'td:first-child',
+        selector: 'td.dt-select',
+        items: 'row',
+      },         
+      scrollX: true,
+      // responsive: true,
+      fixedColumns: {
+        start: 3
       },
+      order: [['NO', 'asc']],    
       ajax: {
           url: url,
           dataSrc: 'value' ,
@@ -212,6 +288,65 @@
     });
 
     return table;
+  };
+
+  function DataTableForItems(tblId, data){
+    var table = new DataTable('#' + tblId, {
+      columns: [
+        {title: '항목', name: 'title', data : "title", width: '80px' },
+        {title: '이름', name: 'itemName', data : "itemName", width: 'auto'}, 
+        {title: '', name: 'del', data : "del", width: '30px' },      
+      ],
+      columnDefs: [
+        { targets: "_all", className: "header" },
+        { targets: ['title:name', 'itemName:name'], className: "row-left-align align-middle" },
+        { targets: 'del:name', className: "row-center-align align-middle" },
+      ],
+      data: data,
+      language : getLanguage(),
+      paging: false,
+      lengthChange: false,
+      searching: false,
+      ordering: false,
+      info: false,   
+      fixedColumns: true,
+      scrollCollapse: true,
+      autoWidth: false,
+      destroy: true,
+      layout: {
+        topStart: null,
+        topEnd: null,
+      },
+    });
+
+    return table;
+  };
+
+  //아이템 등록
+  function addNewItem(){
+    tableItems.row
+        .add(getDefaultItem('', ''))
+        .draw(false); 
+        itemCount++;    
+  };
+
+  //아이템 기본 모델
+  function getDefaultItem(itemName, dataYn){
+    var defItem = {
+      title: "<span class=''>항목</span>",
+      itemName: "<input type=text class='item-name form-control w-100' placeholder='항목의 이름을 입력하세요.' value='" + itemName + "'' " + (dataYn == "Y" ? "readonly" : "") + " />",
+      del: "<button class='btn btn-sm btn-danger item-del' onclick='deleteItem(this, event);' " + (dataYn == "Y" ? "disabled" : "") + "><i class='fa fa-times'></i></button>",
+    };
+    return defItem;
+  };
+
+  //아이템 삭제
+  function deleteItem(eThis, e){
+    e.preventDefault();
+    tableItems.row($(eThis).closest('tr'))
+      .remove()
+      .draw(false);
+      itemCount--;    
   };
 
   //신규 등록
@@ -258,9 +393,14 @@
         $("#modalAlert .modal-title").html("출장 업로드");
       },
       success: function (data, status, xhr) {
-        // var message = data.message;
-        // $("#modalAlert .modal-body").html(message);
-        location.reload(true);
+        if(data.isSuccess){
+          location.reload(true);
+        }
+        else
+        {
+          var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+        }        
       },
       error: function (data, status, err) {
         $("#modalAlert .modal-body").html(err);
@@ -272,6 +412,101 @@
       }
     });
     };
+
+  //개별 등록
+  function openModalNewTip(){
+    tableItems = DataTableForItems('tblItems', null);
+    $("#modalNewTrip").modal('show');
+  };
+
+  //조회
+  function getTrip(tripGuid){
+    $.ajax({
+        url: '/business/trip/getTripWithItems',
+        dataSrc: 'value',
+        method: 'post',
+        data: {
+          tripGuid: tripGuid,
+        },
+        beforeSend: function (xhr) {
+          setLoadingBar(true, 'modalNewTrip');
+        },        
+        success: function(data){        
+          if(!(isEmpty(data) || isEmpty(data.value))){
+            $("#title").val(data.value.TTL);
+            $("#tripGuid").val(data.value.TRIP_MST_GUID);
+            var itemList = [];
+            if(data.value.tripDetailItems != null){
+              for(var i = 0; i < data.value.tripDetailItems.length;i++){
+                var itemName = data.value.tripDetailItems[i].ITM_NM;
+                var dataYn = data.value.tripDetailItems[i].DATA_YN;
+
+                if(itemName != null){
+                  itemList.push(getDefaultItem(itemName, dataYn));
+                }                
+              }
+            }
+          }
+          tableItems = DataTableForItems('tblItems', itemList);
+        },
+        complete: function(data){
+          setLoadingBar(false, 'modalNewTrip');
+          $("#modalNewTrip").modal('show');
+        },        
+      });
+  };
+
+  //개별 저장(등록,수정)
+  function saveTrip(eThis, e){
+    e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+
+    var tripGuid = $("#tripGuid").val();
+    var title = $("#title").val();
+    var rows = tableItems.rows().data();
+    var tripDetailItems = [];
+
+    for(var i=0; i< rows.length; i++){
+      var itemName = $($('.item-name')[i]).val();
+      var itemValue = '';
+
+      tripDetailItems.push({
+        itemName: itemName,
+        itemValue: itemValue,
+      });
+    }
+
+    var data = {
+      tripGuid: tripGuid,
+      title : title,
+      tripDetailItems: tripDetailItems,
+    }
+
+    $.ajax({
+        url: '/business/trip/setTripWithItems',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalNewTrip").modal('hide');
+          $("#modalAlert .modal-title").html("모두의 출장");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/business/trip/';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });        
+  };
 
   //리스트 삭제
   function deleteItemList(e){
@@ -312,7 +547,7 @@
 
   //편집모드
   function editItem(eThis){
-    var isOn = !(table.column(0).visible());
+    var isOn = !(table.column('CHK:name').visible());
 
     //Active 클래스 추가
     if(isOn){
@@ -323,7 +558,7 @@
       $(eThis).text('보기');
 
       //체크박스
-      table.column(0).visible(true);
+      table.column('CHK:name').visible(true);
 
       //삭제
       $("#btnCreate").closest('div').addClass('visually-hidden');
@@ -335,10 +570,9 @@
       $(eThis).removeClass('btn-success');
       $(eThis).addClass('btn-warning');
       $(eThis).text('편집');
-      $("#chkVisible").val('N');
 
       //체크박스
-      table.column(0).visible(false);
+      table.column('CHK:name').visible(false);
 
       //등록,삭제
       $("#btnCreate").closest('div').removeClass('visually-hidden');

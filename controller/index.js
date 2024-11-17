@@ -40,7 +40,7 @@ exports.getIndex = async (req, res, next) => {
             var authGroupCode = req.session.authGroupCode;
             res.clearCookie('MSG');
             // return res.render('main/index', { title: '메인화면', userEmail: email, authCode: authGroupCode });
-            return res.redirect('/common/notice');
+            return res.redirect('/business/trip');
         }        
     }
     catch (err) {

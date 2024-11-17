@@ -3,6 +3,10 @@
 
 <%# CSS & JS %>
 <link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="/css/select.dataTables.min.css" rel="stylesheet" />
+<link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
 
 <%# JS %>
@@ -10,6 +14,12 @@
 <script src="/js/dataTables.bootstrap5.min.js"></script>
 <script src="/js/dataTables.select.js"></script>
 <script src="/js/select.dataTables.js"></script>
+<script src="/js/dataTables.responsive.js"></script>
+<script src="/js/responsive.dataTables.js"></script>
+<script src="/js/dataTables.fixedColumns.js"></script>
+<script src="/js/fixedColumns.dataTables.js"></script>
+<script src="/js/dataTables.fixedHeader.js"></script>
+<script src="/js/fixedHeader.dataTables.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
 
 <%# 본문 %>
@@ -48,11 +58,11 @@
 
     //CheckBox Visible
     if($("#chkVisible").val() != 'N'){
-      table.column(0).visible(true);
+      table.column('CHK:name').visible(true);
     }
 
     //Click Event
-    $('#tblMain tbody').on('click', 'tr td:not(:first-child)', function(e) {
+    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {
       const rowData = table.row(this).data();
       var param = 'boardGuid=' + rowData.BOARD_MST_GUID;
       location.href = '/common/notice/view?' + param;
@@ -60,44 +70,44 @@
   });    
 
   const columns = [
-    {title: '', data : 'CHK', width: "50px"},
-    {title: 'No.', data : "NO", width: "50px" },
-    {title: '제목', data : "TTL", width: "auto"},
-    {title: '등록자', data : "REG_EMAIL", width: "200px"},
-    {title: '등록일시', data : "REG_DT", width: "200px" },
+    {title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false },
+    {title: '', data : null, name: 'CHK', width: "50px", visible: false },    
+    {title: 'No.', data : "NO", name: "NO", width: "50px" },
+    {title: '제목', data : "TTL", name: "TTL", width: "600px" },
+    {title: '등록자', data : "REG_EMAIL", name: "REG_EMAIL", width: "200px"},
+    {title: '등록일시', data : "REG_DT", name: "REG_DT", width: "200px" },
   ];
 
   const columnDefs = [
-    { className: "header", targets: "_all" },
-    { 
-      orderable: false,
-      render: DataTable.render.select(),
-      targets: 0,
-      visible: false,
-    },    
-    { className: "row-left-align", targets: [2, 3] },
-    { className: "row-center-align", targets: [4] },
-    { className: "row-right-align", targets: [1] },
+    { targets: "_all", className: "header" },
+    { targets: 0, orderable: false, searchable: false, className: 'control', render: false, },
+    { targets: 1, orderable: false, render: DataTable.render.select() },    
+    { targets: 'NO:name', className: "row-right-align" },    
+    { targets: 'TTL:name', className: "row-left-align" },    
+    { targets: ['REG_EMAIL:name','REG_DT:name'] , className: "row-center-align" },
   ];
 
   function DataTableJS(tblId, url){
     var table = new DataTable('#' + tblId, {
       columns: columns,
+      columnDefs: columnDefs, 
       language : getLanguage(),
       paging: true,
       lengthChange: true,
       searching: false,
       ordering: true,
       info: true,      
-      columnDefs: columnDefs, 
-      fixedColumns: {
-        start: 2
-      },
-      order: [[1, 'asc']],    
       select: {
         style: 'multi',
-        selector: 'td:first-child',
+        selector: 'td.dt-select',
+        items: 'row',
+      },      
+      scrollX: true,
+      // responsive: true,
+      fixedColumns: {
+        start: 3
       },
+      order: [[2, 'asc']],    
       ajax: {
           url: url,
           dataSrc: 'value' ,

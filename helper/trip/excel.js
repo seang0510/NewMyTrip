@@ -142,6 +142,7 @@ async function getTripDataFromExcel(file, userGuid) {
       resModel.data.trip = trip;
       resModel.data.tripDetails = arrTripDetail;
       resModel.data.tripDetailItems = arrTripDetailItem;      
+      resModel.data.variableColumns = variableColumns;
     })
   } catch (err) {
     console.log(err);

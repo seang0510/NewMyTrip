@@ -82,6 +82,10 @@ a {
   padding-left: 10px;
 }
 
+.page-main {
+  min-width: 0px;
+}
+
 .bg-light-bule {
   background-color: #007BD5;
 }

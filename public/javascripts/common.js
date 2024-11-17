@@ -163,3 +163,13 @@ function dateFormat(date, isDateTime) {
     return date.getFullYear() + '-' + month + '-' + day;
   }  
 };
+
+//undefiend 및 null 체크
+function isEmpty(value){
+  if(typeof value == 'undefiend' || value == null || value == ''){
+    return true;
+  }
+  else{
+    return false;
+  }
+};

@@ -22,6 +22,59 @@ exports.getTripList = async (tripGuid, title, regUserGuid) => {
     }
 };
 
+//오늘의 출장 조회 + 오늘의 출장 상세 아이템(POST)
+exports.getTripWithItems = async (tripGuid, regUserGuid) => {
+    let resModel = [];
+    let title = '';
+    let tripDetailGuid = '';
+    let tripDetailItems = [];
+    let res;
+    let isSuccess = false;
+
+    try {        
+        res = await pool.query('CALL BIZ_TRIP_MST_SELECT_WITH_DTL_ITM(?,?,?)', [tripGuid, regUserGuid, 'N']);
+
+        if(res[0][0].length > 0){
+            console.log("오늘의 출장 조회 성공");
+            title = res[0][0][0].TTL;
+            tripDetailGuid = res[0][0][0].TRIP_DTL_GUID;
+
+            for (var i = 0; i < res[0][0].length; i++) {
+                tripDetailItems.push({
+                    ITM_NM: res[0][0][i].ITM_NM,
+                    DATA_YN: res[0][0][i].DATA_YN,
+                });
+            }
+
+            isSuccess = true;
+        }
+        else{
+            console.log("오늘의 출장 조회 실패");
+            isSuccess = false;
+        }
+
+        tripWithItems = {
+            TRIP_MST_GUID: tripGuid,
+            TRIP_DTL_GUID: tripDetailGuid,
+            TTL: title,
+            tripDetailItems: tripDetailItems,
+        };
+
+        if(isSuccess){            
+            resModel = helper.createResponseModel(isSuccess, '오늘의 상세 조회 성공', tripWithItems);
+        }
+        else {            
+            resModel = helper.createResponseModel(isSuccess, '오늘의 상세 조회 실패', tripWithItems);
+        }
+
+        return resModel;
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+};
+
 //오늘의 출장 등록,수정
 exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid) => {
     let conn = await pool.getConnection();    
@@ -187,7 +240,9 @@ exports.importTrip = async (file, userGuid) => {
     let isSuccess = false;
     let message = '';
     let sql = '';
+    let tripDetailGuidForOrderZero;
     let conn = await pool.getConnection();    
+    
     try {
         await conn.beginTransaction();
 
@@ -207,12 +262,31 @@ exports.importTrip = async (file, userGuid) => {
             resModel.message = message;
         }
 
+        //오늘의 출장 상세 등록(ODR=0)
+        if (isSuccess == true) {
+            let tripGuid = resModel.data.trip.tripGuid;
+            tripDetailGuidForOrderZero = helper.generateUUID();
+
+            params = [tripDetailGuidForOrderZero, tripGuid, '기본', null, null, 0, 0, 'N', -1, userGuid, 'N'];
+            res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+                console.log("오늘의 출장 상세 등록 성공");
+                isSuccess = true;    
+            }
+            else {
+                console.log("오늘의 출장 상세 등록 실패");
+                isSuccess = false;
+                resModel.isSuccess = isSuccess;
+                resModel.message = message;
+            }
+        }
+
         //오늘의 출장 상세 등록        
         if (isSuccess == true && resModel.data.tripDetails != null && resModel.data.tripDetails.length > 0) {      
             //BULK Insert
             const tripDetails = resModel.data.tripDetails;
             
-
             for await (let tempData of tripDetails) {
                 var latitude;
                 var longitude;
@@ -228,8 +302,6 @@ exports.importTrip = async (file, userGuid) => {
                         Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
                         },
                     });
-
-                    
 
                     try {       
                         console.log("## response :: " + JSON.stringify(response.data)); 
@@ -260,7 +332,6 @@ exports.importTrip = async (file, userGuid) => {
                         },
                     });
 
-                    
                     try {        
                         if(response.data.documents[0].address.y === undefined){
                             tempData[5].x = 0;
@@ -303,6 +374,33 @@ exports.importTrip = async (file, userGuid) => {
                 resModel.isSuccess = isSuccess;
                 resModel.message = message;
             }        
+        }
+
+        //오늘의 출장 상세 아이템 등록(ODR=0)
+        if(isSuccess && resModel.data.variableColumns.length > 0){
+            const variableColumns = resModel.data.variableColumns;
+            for (var i = 0; i < variableColumns.length; i++) {
+                let tripDetailItemGuid = helper.generateUUID();
+                let itemName = variableColumns[i];
+                let itemValue = '';
+
+                params = [tripDetailItemGuid, tripDetailGuidForOrderZero, itemName, itemValue, 'N'];
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_INSERT(?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+                if (res[0][0].affectedRows >= 1 && res[0][1][0]["@RET_VAL"] == 'I') {
+                    if (i == variableColumns.length - 1) {
+                        console.log("오늘의 출장 상세 아이템 등록 성공");
+                        isSuccess = true;
+                    }
+                }
+                else {
+                    console.log("오늘의 출장 상세 아이템 등록 실패");
+                    isSuccess = false;
+                    resModel.isSuccess = isSuccess;
+                    resModel.message = message;
+                    break;
+                }
+            }
         }
 
         // //오늘의 출장 상세 아이템 등록        
@@ -504,11 +602,11 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
 
       if(rows[0].length > 0){
           console.log("오늘의 출장 상세 조회 성공");
-          return rows[0];         
+          return [rows, fields];         
       }
       else{
           console.log("오늘의 출장 상세 조회 실패");
-          return null;
+          return [rows, fields];
       }
   } catch (err) {
       console.log(err);
@@ -516,6 +614,7 @@ exports.getTripDetailList = async (tripDetailGuid, tripGuid, facilityName, addre
   }
 }; 
 
+//오늘의 출장 상세 아이템 조회(개별)
 exports.getItem = async (tripGuid, regUserGuid) => {
     
     try {        
