@@ -91,7 +91,7 @@ function dayFormat(date) {
 
 //세션 존재유무 확인
 function existSessoin(sessionValue){
-    if (!(sessionValue == undefined || sessionValue == null || sessionValue == '')) {
+    if (!(sessionValue == undefined || sessionValue == null || sessionValue == '' || sessionValue.cookie.originalMaxAge == null)) {
         return true;
     }
     else {
