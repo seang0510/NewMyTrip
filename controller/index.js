@@ -504,9 +504,9 @@ exports.getAddress = async (req, res, next) => {
 
         var returnData = new Object();
         if(response.data.documents.length > 0){
-            returnData.address = response.data.documents[0].address.address_name;
-            returnData.latitude = response.data.documents[0].address.y;
-            returnData.longitude = response.data.documents[0].address.x;
+            returnData.address = response.data.documents[0].address_name;
+            returnData.latitude = response.data.documents[0].y;
+            returnData.longitude = response.data.documents[0].x;
             resModel = helper.createResponseModel(true, '주소 정상 조회되었습니다.', returnData);
         }else{
             resModel = helper.createResponseModel(false, '주소 조회에 실패하였습니다.', '');
