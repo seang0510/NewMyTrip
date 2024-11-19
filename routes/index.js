@@ -32,8 +32,12 @@ router.get('/joinConditions', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/termsConditions.html'));
 });
 
-//TEST(주소 -> 위도,경도 변환)
+//(주소 -> 위도,경도 변환)
 router.post('/getAddress', indexController.getAddress);
+
+//(위도,경도 -> 주소 변환)
+router.post('/getAddress2', indexController.getAddress2);
+
 
 //TEST 다음 지도 띄우기
 router.get('/daumAddress', indexController.daumAddress);

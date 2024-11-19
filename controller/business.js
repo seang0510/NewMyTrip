@@ -596,6 +596,31 @@ exports.setTripDetail = async (req, res, next) => {
   }
 };
 
+exports.setTripStartDay = async (req, res, next) => {
+  let resModel;
+  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const tripMstGuid = helper.changeUndefiendToNull(req.body.tripMstGuid);
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tripService.setTripStartDay(tripMstGuid , userGuid);
+
+    //성공
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '만료일을 수정 완료 하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '만료일을 수정 실패 하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 상세 확정
 exports.setTripDetailCompYN = async (req, res, next) => {
   let resModel;

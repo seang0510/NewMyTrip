@@ -480,6 +480,43 @@ exports.setMobileLogin = async (req, res, next) => {
 ///////////////분석 후 위치 변경 필요////////////////
 ////////////////////////////////////////////////////
 
+exports.getAddress2 = async (req, res, next) => {
+    let resModel;
+    const latitude = req.body.latitude;
+    const longitude = req.body.longitude;
+    console.log("## latitude :: " + latitude);
+    console.log("## longitude :: " + longitude);
+    try {        
+                
+        const response = await axios({
+            method: "GET",
+            url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ latitude + '&x=' + longitude,
+            headers: {
+              Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+            },
+          });
+          
+
+        console.log(response.data.documents); // * //
+        console.log(response.data.documents.length); // * //
+
+        var returnData = new Object();
+        if(response.data.documents.length > 0){
+            returnData.address = response.data.documents[0].address.address_name;
+            returnData.latitude = latitude;
+            returnData.longitude = longitude;
+            resModel = helper.createResponseModel(true, '주소 정상 조회되었습니다.', returnData);
+        }else{
+            resModel = helper.createResponseModel(false, '주소 조회에 실패하였습니다.', '');
+        }
+
+        return res.status(200).json(resModel);                      
+    }
+    catch (err) {
+        resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);
+        return res.status(500).json(resModel);
+    }
+};
 //TEST(주소 -> 위도,경도 변환)
 exports.getAddress = async (req, res, next) => {
     let resModel;

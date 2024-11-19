@@ -860,6 +860,44 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
     }
 };
 
+exports.setTripStartDay = async (tripMstGuid , userGuid) => {
+    let conn = await pool.getConnection();
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {
+        await conn.beginTransaction();
+
+        //오늘의 출장 상세 아이템 확정
+        res = await pool.query("UPDATE BIZ_TRIP_MST SET START_DT = DATE_FORMAT(NOW(), '%Y-%m-%d') WHERE REG_USER_GUID = ? AND TRIP_MST_GUID = ?",[userGuid , tripMstGuid]);
+
+        if (res[0].affectedRows >= 1) {          
+            isSuccess = true;
+        }
+        else {
+            isSuccess = false;
+        }     
+
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
 //오늘의 출장 상세 확정
 exports.setTripDetailCompYN = async (tripDetailGuid, compYn, userGuid) => {
     let conn = await pool.getConnection();
