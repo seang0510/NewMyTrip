@@ -404,11 +404,11 @@ exports.getTripDetail = async (req, res, next) => {
 //오늘의 출장 상세 워터마크 조회(POST)
 exports.getTripDetailWaterMark = async (req, res, next) => {
   let resModel;
-  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
 
   try {
     //오늘의 출장 상세 워터마크 조회
-    let rows = await tripService.getTripDetailWaterMark(tripDetailGuid);
+    let rows = await tripService.getTripDetailWaterMark(tripGuid);
 
     if(rows == null){
       resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세 워터마크가 존재하지 않습니다.', null);        

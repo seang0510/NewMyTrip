@@ -584,12 +584,22 @@ exports.getTripDetail = async (tripDetailGuid, tripGuid) => {
 };
 
 //오늘의 출장 상세 워터마크 조회(개별)
-exports.getTripDetailWaterMark = async (tripDetailGuid) => {
+exports.getTripDetailWaterMark = async (tripGuid) => {
+    console.log("tripGuid :: "  + tripGuid);
     try {        
-        
-        const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_SELECT_WMK(?,?)', [tripDetailGuid, 'N']);
+        var queryString = "SELECT tripMst.TRIP_MST_GUID , tripMst.WMK_FCLT_NM_YN";
+		queryString += ", tripMst.WMK_ADDR_YN";
+		queryString += ", tripMst.WMK_ITM_YN";
+		queryString += ", tripMst.WMK_ITM_NM";
+		queryString += ", tripMst.WMK_COLOR";
+		queryString += " FROM BIZ_TRIP_MST tripMst";
+		queryString += " WHERE tripMst.DEL_YN = 'N'";
+        queryString += " AND tripMst.TRIP_MST_GUID = '" + tripGuid + "'";
+        console.log("queryString :: "  + queryString);
 
-        if(rows[0].length > 0){
+        const [rows, fields] = await pool.query(queryString, []);
+        console.log(rows);
+        if(rows.length > 0){
             console.log("오늘의 출장 상세 워터마크 조회 성공");
             return rows[0];            
         }
