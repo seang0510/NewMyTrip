@@ -437,6 +437,9 @@ exports.importTrip = async (file, userGuid) => {
         throw Error(err);
     } finally {
         conn.release();
+        resModel.isSuccess = true;
+        resModel.message = "업로드 완료!!!!";
+        console.log("업로드 완료!!!!");
         return resModel;
     }
 };
