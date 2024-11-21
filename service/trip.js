@@ -408,6 +408,7 @@ exports.importTrip = async (file, userGuid) => {
             const tripDetailItems = resModel.data.tripDetailItems;
             sql = 'INSERT INTO BIZ_TRIP_DTL_ITM (TRIP_DTL_ITM_GUID, TRIP_DTL_GUID, ITM_NM, ITM_VAL, ODR) VALUES ?';
             res = await pool.query(sql, [tripDetailItems]);
+            console.log("tripDetailItems :: " + tripDetailItems);
 
             if(res[0].affectedRows >= 1){
                 console.log("오늘의 출장 상세 아이템 등록 총 " + res[0].affectedRows + "개 성공하였습니다.");

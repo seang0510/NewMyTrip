@@ -74,6 +74,7 @@ async function getTripDataFromExcel(file, userGuid) {
             }
             //가변컬럼인 경우
             else {
+              console.log("가변 컬럼 :: " + cell.value);
               variableColumns.push(cell.value);
             }
           }
@@ -102,6 +103,7 @@ async function getTripDataFromExcel(file, userGuid) {
               }
             }
             else{
+              /*
               //값이 있는 경우에만 입력
               if(cell.value.toString().trim() != ''){
                 //상세 아이템 레코드
@@ -112,9 +114,22 @@ async function getTripDataFromExcel(file, userGuid) {
                 tripDetailItem.push(cell.value.toString().trim());
                 tripDetailItem.push(colNumber - fixedColumns.length);
 
+                console.log(tripDetailItem);
                 //배열에 추가
                 arrTripDetailItem.push(tripDetailItem);
               }
+              */
+              //상세 아이템 레코드
+              console.log("cell.value :: " + cell.value);
+              let tripDetailItem = [];
+              tripDetailItem.push(helper.generateUUID());
+              tripDetailItem.push(tripDetailGuid);
+              tripDetailItem.push(variableColumns[colNumber - fixedColumns.length - 1]);
+              tripDetailItem.push(cell.value.toString().trim());
+              tripDetailItem.push(colNumber - fixedColumns.length);
+
+              //배열에 추가
+              arrTripDetailItem.push(tripDetailItem);
             }       
           }
         })
@@ -145,6 +160,10 @@ async function getTripDataFromExcel(file, userGuid) {
       resModel.data.tripDetails = arrTripDetail;
       resModel.data.tripDetailItems = arrTripDetailItem;      
       resModel.data.variableColumns = variableColumns;
+
+      console.log("arrTripDetailItem :: " + arrTripDetailItem);
+
+
     })
   } catch (err) {
     console.log(err);
