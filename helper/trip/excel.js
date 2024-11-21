@@ -66,9 +66,11 @@ async function getTripDataFromExcel(file, userGuid) {
             }
             //고정컬럼인 경우
             if (colNumber <= fixedColumns.length) {
+              /*
               if(cell.value != fixedColumns[colNumber - 1]){
                 throw new Error('업로드한 파일이 올바르지 않습니다.');
               }
+              */ 
             }
             //가변컬럼인 경우
             else {
@@ -101,13 +103,13 @@ async function getTripDataFromExcel(file, userGuid) {
             }
             else{
               //값이 있는 경우에만 입력
-              if(cell.value.trim() != ''){
+              if(cell.value.toString().trim() != ''){
                 //상세 아이템 레코드
                 let tripDetailItem = [];
                 tripDetailItem.push(helper.generateUUID());
                 tripDetailItem.push(tripDetailGuid);
                 tripDetailItem.push(variableColumns[colNumber - fixedColumns.length - 1]);
-                tripDetailItem.push(cell.value.trim());
+                tripDetailItem.push(cell.value.toString().trim());
                 tripDetailItem.push(colNumber - fixedColumns.length);
 
                 //배열에 추가
