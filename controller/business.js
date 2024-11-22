@@ -524,10 +524,11 @@ exports.getTripDetailListForImage = async (req, res, next) => {
     for (var i = 0; i < resModel.value.length; i++) {
       //console.log(resModel.value[i].FILE_NM);
       if(fs.existsSync('.' + resModel.value[i].FILE_PATH)){ // 파일이 존재한다면 true 그렇지 않은 경우 false 반환
-        console.log("## 파일 OO");
 
         checkFile = 1;
-        zip.file(resModel.value[i].FILE_NM, fs.readFileSync('.' + resModel.value[i].FILE_PATH));
+        
+        
+        zip.file(decodeURI(resModel.value[i].FILE_NM), fs.readFileSync('.' + resModel.value[i].FILE_PATH));
       }else{
         console.log("## 파일 XX");
       }
