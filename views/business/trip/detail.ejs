@@ -8,6 +8,7 @@
 <link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
+<link href="/stylesheets/trip.css" rel="stylesheet" />
 
 <%# JS %>
 <script src="/js/dataTables.min.js"></script>
@@ -74,7 +75,21 @@
           <form class="needs-validation" novalidate>
             <input type="hidden" id="tripDetailGuid" value="">
             <button type="submit" id="btnSaveTripDetail" class="visually-hidden" onclick="saveTripDetail(this, event)"></button>
-            <div class="input-group mb-3">
+
+            <div id="carouselOuter" class="carousel slide">
+              <div class="carousel-inner">           
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#carouselOuter" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#carouselOuter" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+
+            <div class="input-group mb-3 mt-3">
               <span class="input-group-text"><i class="fa fa-suitcase"></i></span>
               <div class="form-floating has-validation">
                 <input type="text" id="facilityName" class="form-control" placeholder="명칭"
@@ -114,7 +129,7 @@
               <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
               <div class="form-floating has-validation">
                 <input type="number" step="any" id="latitude" class="form-control" placeholder="위도"
-                  onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
+                  onkeypress="enterKey(event, 'btnSaveTripDetail')" value="0" readonly>
                 <label for="latitude">위도</label>
               </div>
               <div class="invalid-feedback">
@@ -126,7 +141,7 @@
               <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
               <div class="form-floating has-validation">
                 <input type="number" step="any" id="longitude" class="form-control" placeholder="경도"
-                  onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
+                  onkeypress="enterKey(event, 'btnSaveTripDetail')" value="0" readonly>
                 <label for="longitude">경도</label>
               </div>
               <div class="invalid-feedback">
@@ -210,31 +225,19 @@
   var filesArr = [];
 
   $(document).ready( function () {
-    //$("#modalTripDetail").modal('show');
+
+    //모달 초기화
+    InitModalTripDetail();
 
     //DataTable.js
     InitDataTableJS('tblMain', '/business/trip/getTripDetailList');  
-
-    //Reset Modal Items
-    $('#modalTripDetail').on('hidden.bs.modal', function (e) {
-      $("#tripDetailGuid").val('');
-      $("#facilityName").val('');    
-      $("#address").val('');    
-      $("#addressDetail").val('');    
-      $("#latitude").val('');    
-      $("#longitude").val('');    
-      $("#tblItems tr").each(function(){
-        tableItems.row($(this).closest('tr'))
-        .remove()
-        .draw(false);
-      });
-    });
 
     //scrollY + FixColumnHeader를 쓰고 Behind에서 Initial을 하게 되는 경우, Modal 열 때 Colunm 크기 재조정 필요
     $('#modalTripDetail').on('shown.bs.modal', function (e) {
       setLoadingBar(false, 'modalTripDetail');
       tableItems.columns.adjust();
     });    
+    
   });
 
   const columnDefs = [
@@ -344,7 +347,8 @@
             fixedColumns: {
               start: 4
             },        
-            order: [[2, 'asc']],                                
+            order: [[2, 'asc']],     
+            destroy: true,                           
           });
           
           //Click Event
@@ -352,6 +356,21 @@
             clickRecord($(this));
           }); 
         }   
+    });
+  };
+
+  //상세 등록,수정창 초기화
+  function InitModalTripDetail(){
+    $("#tripDetailGuid").val('');
+    $("#facilityName").val('');    
+    $("#address").val('');    
+    $("#addressDetail").val('');    
+    $("#latitude").val(0);    
+    $("#longitude").val(0);    
+    $("#tblItems tr").each(function(){
+      tableItems.row($(this).closest('tr'))
+      .remove()
+      .draw(false);
     });
   };
 
@@ -376,6 +395,7 @@
     return gridData;
   };
 
+  //컬럼에 따라 DataTable.js 컬럼 반환
   function getDataInfoFromColName(colName){
     let info = {};
     switch(colName){
@@ -479,6 +499,16 @@
 
   //신규 등록
   function createItem(){
+    InitModalTripDetail();
+
+    //이미지 슬라이드 초기화 및 기본 이미지 추가
+    $("#carouselOuter .carousel-inner").empty();
+
+    var imgHtmlCode = createCarouselItemCode('', '');
+    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
+    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
+
+    //아이템 리스트 설정
     var itemNameList = JSON.parse($("#itemNameList").val());
     var itemList = [];
 
@@ -492,21 +522,47 @@
   };
 
   //개별 조회
-  function getItem(tripDetailGuid){  
+  function getItem(tripDetailGuid){      
+
     $.ajax({
         url: '/business/trip/getTripDetail',
         method: 'post',
         data: {
           tripDetailGuid: tripDetailGuid,
+          tripGuid: $("#tripGuid").val(),
         },
         beforeSend: function (xhr) {
           setLoadingBar(true);
-          setLoadingBar(true, 'modalTripDetail');
           $("#modalAlert .modal-title").html("출장 상세");
+          InitModalTripDetail();
         },        
         success: function(data){           
-          if(data.success){
+          if(data.success){            
             if(!(isEmpty(data) || isEmpty(data.value))){
+              //이미지 슬라이드 초기화
+              $("#carouselOuter .carousel-inner").empty();
+
+              //이미지 연결
+              if(!isEmpty(data.value.IMGS)){
+                var tripDetailImages = data.value.IMGS;
+
+                for(var i = 0; i < tripDetailImages.length;i++){
+                  var imgGuid = tripDetailImages[i].TRIP_DTL_IMG_GUID;
+                  var imgUrl = isEmpty(tripDetailImages[i].URL_PATH) ? '' : tripDetailImages[i].URL_PATH;  
+                  if(!isEmpty(imgGuid)){
+                    var imgHtmlCode = createCarouselItemCode(imgGuid, imgUrl);
+                    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
+                    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
+                  }              
+                }
+              }
+              else{
+                var imgHtmlCode = createCarouselItemCode('', '');
+                $("#carouselOuter .carousel-inner").append(imgHtmlCode);     
+                $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');           
+              }
+
+              //입력 항목
               $("#tripDetailGuid").val(tripDetailGuid);
               $("#facilityName").val(data.value.FCLT_NM);
               $("#address").val(data.value.ADDR);
@@ -526,7 +582,7 @@
                     itemList.push(getDefaultItem(itemName, itemValue));
                   }                
                 }
-              }
+              }          
 
               tableItems = DataTableForItems('tblItems', itemList);
               $("#modalTripDetail").modal('show');
@@ -538,9 +594,87 @@
           }  
         },
         complete: function(data){
-          setLoadingBar(false);              
+          setLoadingBar(false);          
         },        
       });    
+  };
+
+  //이미지 바인딩
+  function createCarouselItemCode(imgGuid, imgUrl){
+    var htmlCode = "";
+
+    if(imgGuid != ''){
+      htmlCode += "<div class='carousel-item'>";
+      htmlCode += "<img data-guid = '" + imgGuid + "' src='" + imgUrl + "' class='d-block w-100' onerror=this.src='/images/no_image.png'>";
+      htmlCode += "<div>";
+      htmlCode += "<button class='btn btn-sm btn-danger' onclick='deleteDetailImgae(this, event);'><i class='fa fa-times'></i></button>";
+      htmlCode += "</div>";        
+    }
+    else{
+      htmlCode += "<div class='carousel-item'>";
+      htmlCode += "<img class='no-img' data-guid = '' src='' class='d-block w-100' onerror=this.src='/images/no_image.png'>";
+    }
+
+    htmlCode += "</div>";       
+    return htmlCode;
+  };
+
+  //이미지 개별삭제
+  function deleteDetailImgae(eThis, e){
+    e.preventDefault();
+
+    //이전 모달 z-index 변경
+    $("#modalTripDetail").css('z-index', 1050);
+
+    var tripDetailImageGuid = $(eThis).closest('div.carousel-item').find('img').data('guid');
+    var tripDetailGuid = $("#tripDetailGuid").val()
+    var data = {
+      'tripDetailImageGuid': tripDetailImageGuid,
+      'tripDetailGuid': tripDetailGuid,
+    };
+
+    confirmModal(e, 'modalConfirm', '모두의 출장 상세 이미지', '선택한 이미지를 삭제 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/business/trip/deleteTripDetailImages',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("모두의 출장 상세 이미지");
+        },
+        success: function (data, status, xhr) {
+          if(data.success){
+            getItem(tripDetailGuid);
+          }  
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+          }  
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+
+          //이전 모달 z-index 변경
+          $('#modalConfirm').on('hidden.bs.modal', function (e) {
+            $("#modalTripDetail").css('z-index', 1055);
+            $("#modalConfirm").off('hidden.bs.modal');
+          });       
+
+          InitDataTableJS('tblMain', '/business/trip/getTripDetailList');  
+        }
+      });   
+    }, function(){
+      //이전 모달 z-index 변경
+      $('#modalConfirm').on('hidden.bs.modal', function (e) {
+        $("#modalTripDetail").css('z-index', 1055);
+        $("#modalConfirm").off('hidden.bs.modal');
+      });          
+    });    
   };
 
   //아이템 항목 그리드
@@ -591,9 +725,7 @@
     //HTML5 기본 Validation
     if (!((document.getElementById("facilityName").validity.valid) &&
       (document.getElementById("address").validity.valid) &&
-      (document.getElementById("addressDetail").validity.valid) &&
-      (document.getElementById("latitude").validity.valid) &&
-      (document.getElementById("longitude").validity.valid))) {
+      (document.getElementById("addressDetail").validity.valid))) {
       return false;
     }
 
@@ -656,6 +788,10 @@
 
   //리스트 삭제
   function deleteItemList(e){
+    //이전 모달 제거
+    $("#btnConfirmN").attr('data-bs-target', '');
+    $("#btnConfirmN").attr('data-bs-toggle', '');
+
     const rows = table.rows('.selected').data();
     var tripDetailGuidList = getValueList(rows, 'TRIP_DTL_GUID');
     var data = {

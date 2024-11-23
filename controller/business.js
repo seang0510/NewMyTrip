@@ -779,7 +779,7 @@ exports.deleteTripDetailImages = async (req, res, next) => {
   let resModel;
   const tripDetailImageGuid = helper.changeUndefiendToNull(req.body.tripDetailImageGuid);
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
-  const userGuid = helper.changeUndefiendToNull(req.body.userGuid);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
     //오늘의 출장 삭제

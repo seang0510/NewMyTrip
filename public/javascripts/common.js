@@ -22,11 +22,11 @@ $(document).ready(function () {
 
   //Modal폼 닫을 때, FORM 내부 Clear
   $('.modal').on('hidden.bs.modal', function (e) {
-    $('.modal form').each(function () {
+    $(this).find('form').each(function () {
       this.reset();
     });
     //Form의 Validation Check 클래스 제거
-    $('.modal form').removeClass('was-validated');
+    $(this).find('form').removeClass('was-validated');
   });
 });
 
@@ -71,11 +71,16 @@ function isEqualValue(elemId1, elemId2) {
 };
 
 //입력한 Element가 포함된 Form Submit
-function confirmModal(e, modalId, title, text, callback) {  
+function confirmModal(e, modalId, title, text, callback, callbackCancel) {  
   e.preventDefault();
   modalConfirm(modalId, title, text, function (confirm) {
     if (confirm) {
       callback();
+    }
+    else{
+      if (callbackCancel !== undefined) {
+        callbackCancel();
+      }
     }
   });
 };
@@ -92,6 +97,10 @@ function modalConfirm(id, title, text, callback) {
   $("#" + id + " #btnConfirmY").unbind("click");
   $("#" + id + " #btnConfirmY").on("click", function () {
     callback(true);
+  });
+  $("#" + id + " #btnConfirmN").unbind("click");
+  $("#" + id + " #btnConfirmN").on("click", function () {
+    callback(false);
   });
 };
 
