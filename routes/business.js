@@ -7,6 +7,7 @@ const path = require('path');
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
 router.get('/trip/detail', businessController.indexTripDetail);
+router.get('/trip/detailmap', businessController.indexTripDetailMap);
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/getTripWithItems', businessController.getTripWithItems);
 router.post('/trip/setTrip', businessController.setTrip);

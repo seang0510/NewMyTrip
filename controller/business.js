@@ -379,6 +379,37 @@ exports.indexTripDetail = async (req, res, next) => {
   }
 };
 
+//오늘의 출장 상세 지도보기 화면(GET)
+exports.indexTripDetailMap = async (req, res, next) => {
+  try {
+      //로그인 되지 않은 경우
+      if(!(req.session.valid == true)){
+        var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+        res.cookie('MSG', msg, { httpOnly: false, secure: false });
+        return res.redirect('/login');
+      }
+      //현재 로그인 되어 있는 경우    
+      else{
+        var email = req.session.email;
+        var authGroupCode = req.session.authGroupCode;
+        var tripGuid = req.query.tripGuid;
+        let itemList = await tripService.getItem(tripGuid);
+        let itemNameList = itemList.map(x => x.ITM_NM);
+        let bannerList = await adService.getAdList('', ''); //광고 조회
+
+        if(tripGuid == null){
+          return res.redirect('/business/trip');
+        }
+        else{
+          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
+        }        
+      }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
 //오늘의 출장 상세 개별 조회(POST)
 exports.getTripDetail = async (req, res, next) => {
   let resModel;

@@ -34,3 +34,20 @@
   right: 10px; 
   z-index: 999;
 }
+
+.map-outer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.map-outer #map {
+  min-width: 350px;
+  width: calc(100% - 350px);
+  margin-top: 1rem;
+  /* width: 700px; */
+}
+
+.map-outer #tblMain {
+  width: 350px;
+}
