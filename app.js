@@ -57,6 +57,9 @@ app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedc
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedcolumns-dt')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedheader')));
 app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-fixedheader-dt')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-buttons')));
+app.use(express.static(path.join(__dirname, '/node_modules/datatables.net-buttons-dt')));
+app.use(express.static(path.join(__dirname, '/node_modules/jszip/dist')));
 
 //mysql-session setup
 app.use(session({

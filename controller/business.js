@@ -3,6 +3,8 @@ const tourLocationService = require('../service/tourLocation');
 const tripService = require('../service/trip');
 const adService = require('../service/ad');
 const exceljs = require('../helper/trip/excel');
+const path = require('path');
+const axios = require("axios");
 
 //오늘의 출장 화면(GET)
 exports.indexTrip = async (req, res, next) => {
@@ -798,6 +800,164 @@ exports.deleteTripDetailImages = async (req, res, next) => {
   }
   catch (err) {
     return res.status(500).json(err);
+  }
+};
+
+//오늘의 출장 상세 이미지 전체 다운로드(POST) - ZIP 파일 만들기(WEB용)
+exports.exportTripDetailImage = async (req, res, next) => {
+  const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
+  let userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+
+  //시스템 관리자인 경우, 전체 조회
+  if(helper.existSessoin(req.session)){
+    const authGroupCode = req.session.authGroupCode;
+    if(authGroupCode == 'S'){
+      userGuid = null;
+    }
+  }
+
+  try {
+    //오늘의 출장 이미지 전체 가져오기
+    let resModel = await tripService.getTripDetailListForImageWithTitle(tripGuid, userGuid);
+
+    if(!resModel.success){
+      return resModel;
+    }
+    else{
+      let fs = require("fs");
+      let zip = new require('node-zip')();
+      let isExisted = false;
+      let zipFileName = Date.now() + '_' + resModel.value.TTL + '.zip';
+      let tripDetailImages = resModel.value.tripDetailImages;
+
+      //파일 존재 확인 후 Zip파일 제작
+      for (var i = 0; i < tripDetailImages.length; i++) {      
+        var filePath = path.join(process.cwd(), tripDetailImages[i].FILE_PATH);
+        var fileName = tripDetailImages[i].FILE_NM;
+        if(fs.existsSync(filePath)){ // 파일이 존재한다면 true 그렇지 않은 경우 false 반환  
+          isExisted = true;
+          zip.file(fileName, fs.readFileSync(filePath));
+        }
+      }
+
+      if(isExisted){
+        //파일 존재
+        var data = zip.generate({base64:false, compression:'DEFLATE'});
+        var folderPath = path.join(process.cwd(), `/uploads/business/trip/`);
+        var filePath = path.join(folderPath, zipFileName);
+        var urlPath = path.join(`/business/trip/`, encodeURI(zipFileName));
+        fs.writeFileSync(filePath, data, 'binary');
+
+        var returnData = new Object();
+        returnData.URL = urlPath;
+        resModel = helper.createResponseModel(true, '오늘의 출장에 등록된 이미지를 전체 다운로드 하였습니다.', returnData);
+      }
+      else{
+        //이미지 파일 존재 하지 않음
+        resModel = helper.createResponseModel(false, '오늘의 출장에 등록된 이미지가 존재하지 않습니다.', '');
+      }
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//주소 -> 위도,경도 변환
+exports.getCoordinateByAddress = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  let address = helper.changeUndefiendToNull(req.body.address);
+  let addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
+  let zoneCode = helper.changeUndefiendToNull(req.body.addrzoneCodeess);
+  let latitude = 0;
+  let longitude = 0;
+
+  try {        
+    const encodedAddress = encodeURIComponent(address);      
+    const response = await axios({
+        method: "GET",
+        url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+        headers: {
+          Authorization: process.env.KAKAO_FIND_ADDR,
+        },
+      });
+
+      var returnData = new Object();
+      if(response.data.documents.length > 0){
+        latitude = response.data.documents[0].y;
+        longitude = response.data.documents[0].x;
+
+        returnData.address = address;
+        returnData.addressDetail = addressDetail;
+        returnData.latitude = latitude;
+        returnData.longitude = longitude;
+
+        resModel = helper.createResponseModel(true, '주소와 위도,경도가 조회되었습니다.', returnData);
+      }
+      else{
+        resModel = helper.createResponseModel(false, '주소와 위도,경도 조회에 실패하였습니다.', '');
+      }
+
+      return res.status(200).json(resModel);                      
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//주소 -> 위도,경도 변환 바로 상세 테이블에 적용
+exports.setCoordinateByAddress = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  let address = helper.changeUndefiendToNull(req.body.address);
+  let addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
+  const zoneCode = helper.changeUndefiendToNull(req.body.zoneCode);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  let latitude = 0;
+  let longitude = 0;
+
+  try {        
+      const encodedAddress = encodeURIComponent(address);      
+      const response = await axios({
+          method: "GET",
+          url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+          headers: {
+            Authorization: process.env.KAKAO_FIND_ADDR,
+          },
+        });
+
+      var returnData = new Object();
+      if(response.data.documents.length > 0){
+        latitude = response.data.documents[0].y;
+        longitude = response.data.documents[0].x;
+
+        returnData.address = address;
+        returnData.addressDetail = addressDetail;
+        returnData.latitude = latitude;
+        returnData.longitude = longitude;
+        
+        let retVal = await tripService.setTripDetail(tripDetailGuid, null, null, address, addressDetail, latitude, longitude, null, 0, null, userGuid);
+
+        //등록(1),수정(0)
+        if (retVal == 0 || retVal == 1) {
+          resModel = helper.createResponseModel(true, '주소,위도,경도가 갱신되었습니다.', returnData);
+        }
+        //실패
+        else {
+          resModel = helper.createResponseModel(false, '주소,위도,경도가 갱신에 실패하였습니다.', returnData);
+        }
+      }
+      else{
+          resModel = helper.createResponseModel(false, '주소와 위도,경도 조회에 실패하였습니다.', '');
+      }
+
+      return res.status(200).json(resModel);                      
+  }
+  catch (err) {
+      return res.status(500).json(err);
   }
 };
 

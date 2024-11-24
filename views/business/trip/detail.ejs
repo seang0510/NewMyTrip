@@ -7,6 +7,7 @@
 <link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
+<link href="/css/buttons.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
 <link href="/stylesheets/trip.css" rel="stylesheet" />
 
@@ -21,7 +22,13 @@
 <script src="/js/fixedColumns.dataTables.js"></script>
 <script src="/js/dataTables.fixedHeader.js"></script>
 <script src="/js/fixedHeader.dataTables.js"></script>
+<script src="/js/dataTables.buttons.min.js"></script>
+<script src="/js/buttons.dataTables.min.js"></script>
+<script src="/js/buttons.html5.min.js"></script>
+<script src="/jszip.min.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
+<script src="/javascripts/findAddress.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <%# 본문 %>
 <%- contentFor('body') %>
@@ -47,7 +54,12 @@
     </div>
     <div class="ms-1">
       <button type="button" class="btn btn-secondary" onclick="closeItem()">닫기</button>
-  </div>      
+    </div>
+    <div class="ms-1">
+      <button class="context-menu-tripDetail btn btn-dark">
+        <span class="fa fa-sign-out fa-fw w-100"></span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -106,6 +118,7 @@
               <div class="form-floating has-validation">
                 <input type="text" id="address" class="form-control" placeholder="주소"
                   onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
+                <button type="button" class="btn btn-sm btn-success" style="position: absolute; top:-10px; right:10px;" onclick="openDaumMap(this, event);">주소 변경</button>
                 <label for="address">주소</label>
               </div>
               <div class="invalid-feedback">
@@ -117,7 +130,7 @@
               <span class="input-group-text"><i class="fa fa-building-o"></i></span>
               <div class="form-floating has-validation">
                 <input type="text" id="addressDetail" class="form-control" placeholder="상세주소"
-                  onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
+                  onkeypress="enterKey(event, 'btnSaveTripDetail')">
                 <label for="addressDetail">상세주소</label>
               </div>
               <div class="invalid-feedback">
@@ -225,7 +238,6 @@
   var filesArr = [];
 
   $(document).ready( function () {
-
     //모달 초기화
     InitModalTripDetail();
 
@@ -237,7 +249,6 @@
       setLoadingBar(false, 'modalTripDetail');
       tableItems.columns.adjust();
     });    
-    
   });
 
   const columnDefs = [
@@ -246,6 +257,7 @@
     { targets: 1, orderable: false, render: DataTable.render.select() },    
   ];
 
+  //레코드 선택
   function clickRecord(eThis){
     const rowData = table.row(eThis).data();
     let tripDetailGuid = rowData.TRIP_DTL_GUID;
@@ -265,9 +277,11 @@
     }
   };
 
+  //그리드 바인딩
   function InitDataTableJS(tblId, url){
     var columns = [];
     var columnNames = [];
+    var exportColumns = [];
     var gridDate = [];
     var select = {};
 
@@ -290,6 +304,7 @@
             columns.push(getDataInfoFromColName('ADDR'));
             columns.push(getDataInfoFromColName('ADDR_DTL'));
             columns.push(getDataInfoFromColName('LAT'));
+            columns.push(getDataInfoFromColName('LNG'));
             columns.push(getDataInfoFromColName('IMG_CNT'));
             columns.push(getDataInfoFromColName('REG_EMAIL'));
             columns.push(getDataInfoFromColName('REG_DT'));
@@ -308,14 +323,18 @@
             //줄여보기 및 체크박스
             columns.push({title: '', data : null, defaultContent: '', width: "0px", visible: false });
             columns.push({title: '', data : null, width: "50px", visible: true });
-
+            
             for(var col = 0; col < columnNames.length; col++) {
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
+
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+                exportColumns.push(columnNames[col] + ':name');
+              }              
             }
 
             columnDefs.push({ targets: ['NO:name'], className: "row-right-align" });
-            columnDefs.push({ targets: 'TTL:name', className: "row-left-align" });
+            columnDefs.push({ targets: ['TTL:name'], className: "row-left-align" });
             columnDefs.push({ targets: ['REG_EMAIL:name','REG_DT:name', 'IMG_CNT:name'] , className: "row-center-align align-middle" });
           }
         },
@@ -348,7 +367,24 @@
               start: 4
             },        
             order: [[2, 'asc']],     
-            destroy: true,                           
+            destroy: true,     
+            buttons: [
+              {
+                extend: 'excel',
+                class: 'buttons-excel',
+                exportOptions: {
+                  // columns: ':visible:not(:first-child)'
+                  columns: exportColumns
+                },
+              }
+            ],
+            createdRow: function(row, data, dataIndex){
+              //위도,경도가 0인 경우
+              if(data.LAT == 0 || data.LNG == 0)
+              {
+                $(row).addClass('text-danger');
+              }
+            }                    
           });
           
           //Click Event
@@ -378,6 +414,7 @@
   function changeImageData(gridData){
     for(var i = 0; i< gridData.length; i++){
 
+      //이미지 갯수에 따른 IMG 표기
       if(gridData[i].IMG_CNT > 0){
         gridData[i].IMG_CNT = "<span><i class='fa fa-picture-o'></i></span>";
       }
@@ -385,9 +422,10 @@
         gridData[i].IMG_CNT = "";
       }
 
-      var htmlCode = "<div class='d-flex align-items-center'>";
-      htmlCode += "<span class='me-2'>" + gridData[i].ADDR + "</span>";
-      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='openDaumMap(this, event);'>주소 변경</span>";
+      //주소변경 버튼
+      var htmlCode = "<div class='d-flex align-items-center' data-address='" + gridData[i].ADDR + "'>";
+      htmlCode += "<span class='address me-2'>" + gridData[i].ADDR + "</span>";
+      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='updateAddress(this, event);'>주소 변경</span>";
       htmlCode += "</div>";
       gridData[i].ADDR = htmlCode;        
     }
@@ -724,8 +762,7 @@
   function saveTripDetail(eThis, e){
     //HTML5 기본 Validation
     if (!((document.getElementById("facilityName").validity.valid) &&
-      (document.getElementById("address").validity.valid) &&
-      (document.getElementById("addressDetail").validity.valid))) {
+      (document.getElementById("address").validity.valid))) {
       return false;
     }
 
@@ -985,16 +1022,85 @@
       filesArr[num].is_delete = true;
   }
 
+  //엑셀 내보내기
+  function exportExcel(eThis, e){    
+    table.buttons('.buttons-excel').trigger();
+  };
+
+  //이미지 내보내기
+  function exportImage(eThis, e){
+    e.preventDefault();
+
+    var data = {
+      tripGuid : $("#tripGuid").val(),
+    };
+    
+    confirmModal(e, 'modalConfirm', '모두의 출장 상세', '전체 이미지를 다운로드 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/business/trip/exportTripDetailImage',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("모두의 출장 상세 이미지");
+        },
+        success: function (data, status, xhr) {
+          if(data.success){
+            location.href = data.value.URL;
+          }
+
+          var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+          $("#modalAlert").modal('show');
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });         
+    });        
+  };
+
   //지도 보기
   function viewMap(){
 
   };
 
-  //다음 지도 팝업창 
-  function openDaumMap(eThis, e){
-    $("#modalAlert .modal-title").html("다음 주소");
-    $("#modalAlert .modal-body").html('개발중입니다.');
-    $("#modalAlert").modal('show');
+  //다음 지도 팝업창 후 주소,상세주소,위도,경도 즉각 갱신
+  function updateAddress(eThis, e){
+    e.preventDefault();
+
+    //주소,위도,경도 즉시 변경
+    const td = $(eThis).closest('td');
+    const rowData = table.row(td).data();
+    let tripDetailGuid = rowData.TRIP_DTL_GUID;
+    let address = $(rowData.ADDR).data('address');
+    execDaumPostcode('/business/trip/setCoordinateByAddress', tripDetailGuid, address, function(data, message)
+    {
+      $("#modalAlert .modal-title").html("모두의 출장 상세");
+      $("#modalAlert .modal-body").html(message);
+      $("#modalAlert").modal('show');
+
+      InitDataTableJS('tblMain', '/business/trip/getTripDetailList'); 
+    });
   };
 
+  //위도,경도 가져오기
+  function openDaumMap(eThis, e){
+    e.preventDefault();
+
+    let tripDetailGuid = $("#tripDetailGuid").val();
+    let address = $("#address").val();
+    execDaumPostcode('/business/trip/getCoordinateByAddress', tripDetailGuid, address, function(data, message)
+    {
+      $("#address").val(data.address);
+      $("#addressDetail").val(data.addressDetail);
+      $("#latitude").val(data.latitude);
+      $("#longitude").val(data.longitude);
+    });
+  };
 </script>

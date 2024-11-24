@@ -32,3 +32,16 @@
   table.dataTable tbody td.row {
     text-align: center;
   }
+
+  /*tr 아래 td Color변경 */
+  table.dataTable tbody tr.text-danger td  {
+    --bs-text-opacity: 1;
+    color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
+    font-weight: 800;
+  }
+
+  /*tr 아래 td Background-Color변경 */
+  table.dataTable tbody tr.bg-danger td  {
+    --bs-bg-opacity: 1;
+    background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
+  }  
