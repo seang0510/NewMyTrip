@@ -213,7 +213,7 @@
   };
   
   //저장
-  function saveTripDetail(eThis, e){
+  function saveTripDetail(eThis, e, url){
     //HTML5 기본 Validation
     if (!((document.getElementById("facilityName").validity.valid) &&
       (document.getElementById("address").validity.valid))) {
@@ -259,7 +259,8 @@
         },
         success: function (data, status, xhr) {
           if(data.success){
-            location.href = '/business/trip/detailmap?tripGuid=' + $("#tripGuid").val();
+            
+            location.href = url + '?tripGuid=' + $("#tripGuid").val();
           }
           else{
             var message = data.message;
