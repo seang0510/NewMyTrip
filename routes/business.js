@@ -7,6 +7,7 @@ const path = require('path');
 //########### 오늘의 출장 ########### 
 router.get('/trip', businessController.indexTrip);
 router.get('/trip/detail', businessController.indexTripDetail);
+router.get('/trip/detailmap', businessController.indexTripDetailMap);
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/getTripWithItems', businessController.getTripWithItems);
 router.post('/trip/setTrip', businessController.setTrip);
@@ -22,6 +23,7 @@ router.post('/trip/getTripDetailWaterMark', businessController.getTripDetailWate
 router.post('/trip/getTripDetailList', businessController.getTripDetailList);
 router.post('/trip/getTripDetailListForPin', businessController.getTripDetailListForPin);
 router.post('/trip/getTripDetailListForImage', businessController.getTripDetailListForImage);
+router.post('/trip/exportTripDetailImage', businessController.exportTripDetailImage);
 router.post('/trip/setTripDetail', businessController.setTripDetail);
 router.post('/trip/setTripDetailCompYN', businessController.setTripDetailCompYN);
 router.post('/trip/setTripDetailImages', upload(`business/trip`).array("files"), businessController.setTripDetailImages);
@@ -32,7 +34,8 @@ router.post('/trip/deleteTripDetailList', businessController.deleteTripDetailLis
 router.post('/trip/deleteTripDetailImages', businessController.deleteTripDetailImages);
 router.post('/trip/getItem', businessController.getItem);
 router.post('/trip/setTripStartDay', businessController.setTripStartDay);
-
+router.post('/trip/getCoordinateByAddress', businessController.getCoordinateByAddress); //주소 -> 위도,경도 변환
+router.post('/trip/setCoordinateByAddress', businessController.setCoordinateByAddress); //주소 -> 위도,경도 변환 바로 상세 테이블에 적용
 
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);

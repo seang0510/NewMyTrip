@@ -207,6 +207,7 @@ exports.getPasswordByEmail = async (req, res, next) => {
         return res.status(500).json(err);
     }
 };
+
 //일반,모바일 회원가입(POST)
 exports.setSignUp = async (req, res, next) => {
     let resModel;
@@ -476,7 +477,7 @@ exports.setMobileLogin = async (req, res, next) => {
     }
 }; 
 
-////////////////////////////////////////////////////원종동 283-17
+////////////////////////////////////////////////////
 ///////////////분석 후 위치 변경 필요////////////////
 ////////////////////////////////////////////////////
 
@@ -492,7 +493,7 @@ exports.getAddress2 = async (req, res, next) => {
             method: "GET",
             url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ latitude + '&x=' + longitude,
             headers: {
-              Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+              Authorization: process.env.KAKAO_FIND_ADDR,
             },
           });
           
@@ -531,7 +532,7 @@ exports.getAddress = async (req, res, next) => {
             method: "GET",
             url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
             headers: {
-              Authorization: `KakaoAK 7a4bd3c4549c64dcaa5835db39f72108`,
+              Authorization: process.env.KAKAO_FIND_ADDR,
             },
           });
           

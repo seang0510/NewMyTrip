@@ -46,6 +46,10 @@ div.loadingBar {
   display: block;
 }
 
+.page-main > div {
+  height: calc(100% - 80px);
+}
+
 /* sideBar Width: 230px */
 footer {
   position: fixed;

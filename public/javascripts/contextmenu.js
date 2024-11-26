@@ -116,3 +116,29 @@ function logout(eThis, e) {
     });
   });
 };
+
+//jQuery-ContextMenu (모두의 출장:엑셀 다운로드, 첨부파일 다운로드)
+$(function () {
+  $.contextMenu({
+    selector: '.context-menu-tripDetail',
+    trigger: 'left',
+    callback: function (key, opt, e) {
+      switch (key) {
+        case "exportExcel":
+          exportExcel(this, e);
+          break;
+        case "exportImage":
+          exportImage(this, e);
+          break;
+        default:
+          var m = "clicked: " + key;
+          window.console && console.log(m) || alert(m);
+          break;
+      }
+    },
+    items: {
+      exportExcel: { name: "엑셀 내보내기", icon: "fa-file-excel-o" },
+      exportImage: { name: "사진 내보내기", icon: "fa-file-image-o" },
+    }
+  });
+});

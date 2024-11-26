@@ -23,6 +23,13 @@ function getLanguage(){
         "aria":{
             "sortAscending": " : 오름차순 정렬",
             "sortDescending": " : 내림차순 정렬"
-        }};
+        },
+        "select": {
+            "rows": {
+                _: '%d개 레코드 선택',
+                0: '',             
+            }
+        }
+    };
     return language;
 };

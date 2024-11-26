@@ -724,6 +724,60 @@ exports.getTripDetailListForImage = async (tripGuid, regUserGuid) => {
     }
 }; 
 
+//오늘의 출장 상세 조회(리스트):이미지 전체 다운로드 + 오늘의 출장 제목 포함
+exports.getTripDetailListForImageWithTitle = async (tripGuid, regUserGuid) => {
+    let resModel = [];
+    let tripWithImages = [];
+    let title = '';
+    let tripDetailImages = [];
+    let res;
+    let isSuccess = false;
+
+    try {        
+        res = await pool.query('CALL BIZ_TRIP_MST_SELECT(?,?,?,?)', [tripGuid, null, regUserGuid, 'N']);
+        
+        if(res[0][0].length > 0){
+            console.log("오늘의 출장 조회 성공");
+            title = res[0][0][0].TTL;
+            isSuccess = true;
+        }
+        else{
+            console.log("오늘의 출장 조회 실패");
+            isSuccess = false;
+        }
+
+        if(isSuccess){
+            res = await pool.query('CALL BIZ_TRIP_DTL_SELECT_FOR_IMG(?,?,?)', [tripGuid, regUserGuid, 'N']);
+
+            if(res[0][0].length > 0){
+                console.log("오늘의 출장 상세 조회(이미지 다운로드) 성공");
+                tripDetailImages = res[0][0];
+            }
+            else{
+                console.log("오늘의 출장 상세 조회(이미지 다운로드) 실패");
+            }
+        }
+
+        tripWithImages = {
+            TTL: title,
+            tripDetailImages: tripDetailImages,
+        };
+
+        if(isSuccess){            
+            resModel = helper.createResponseModel(isSuccess, '오늘의 출장 이미지 다운로드 성공', tripWithImages);
+        }
+        else {            
+            resModel = helper.createResponseModel(isSuccess, '오늘의 출장에 등록된 이미지가 존재하지 않습니다.', tripWithImages);
+        }
+
+        return resModel;
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+}; 
+
 //오늘의 출장 상세 내보내기(리스트)
 exports.exportTrip = async (tripGuid, regUserGuid) => {
     let resModel = [];
@@ -890,6 +944,7 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
     }
 };
 
+//오늘의 출장 시작일자 수정
 exports.setTripStartDay = async (tripMstGuid , userGuid) => {
     let conn = await pool.getConnection();
     let res;
