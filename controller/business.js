@@ -221,7 +221,7 @@ exports.exportTrip = async (req, res, next) => {
     resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
   }
 
-  let fixedColumnCaptions = '순번,항목1,주소,상세주소,위도,경도';
+  let fixedColumnCaptions = '번호,명칭,주소,상세주소,위도,경도';
   let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG';
   let variableColumns = '';
   let fields = Object.keys(data.tripDetails[0]);
@@ -245,6 +245,7 @@ exports.exportTrip = async (req, res, next) => {
   let columns = fixedColumns + ',' + variableColumns;
   let captions =  fixedColumnCaptions + ',' + variableColumns;
 
+  
   var menu = data.title;
   exceljs.excelDownload(menu, data.tripDetails,data.title, captions, columns, res);
 };
@@ -259,12 +260,12 @@ exports.mobileExportTrip = async (req, res, next) => {
   //오늘의 출장 조회
   const data = await tripService.exportTrip(tripGuid, regUserGuid);
 
-  console.log(data.title);
+  //console.log("data :: " + JSON.stringify(data.tripDetails));
   if(data == null){
     resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
   }
 
-  let fixedColumnCaptions = '순번,항목1,주소,상세주소,위도,경도';
+  let fixedColumnCaptions = '번호,명칭,주소,상세주소,위도,경도';
   let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG';
   let variableColumns = '';
   let fields = Object.keys(data.tripDetails[0]);
@@ -287,7 +288,9 @@ exports.mobileExportTrip = async (req, res, next) => {
 
   let columns = fixedColumns + ',' + variableColumns;
   let captions =  fixedColumnCaptions + ',' + variableColumns;
-
+  console.log("columns :: " + columns);
+  console.log("captions :: " + columns);
+  console.log("data.tripDetails :: " + JSON.stringify(data.tripDetails));
   var menu = data.title;
   resExcelModel = exceljs.excelMobileDownload(menu, data.tripDetails,data.title, captions, columns, res);
 

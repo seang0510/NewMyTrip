@@ -750,9 +750,9 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                 console.log("오늘의 출장 상세 조회 성공");
 
                 //컬럼 제거
-                rows[0].forEach(function(obj){
+                for await (let obj of rows[0]) {
                     delete obj.TRIP_MST_GUID;
-                    delete obj.TRIP_DTL_GUID;
+                    //delete obj.TRIP_DTL_GUID;
                     delete obj.COMP_YN;
                     delete obj.IMG_CNT;
                     delete obj.TRIP_DTL_GUID_IN_ITM;
@@ -760,7 +760,23 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                     delete obj.REG_DT;
                     delete obj.UPDT_EMAIL;
                     delete obj.UPDT_DT;
-                });
+                    
+                    console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
+                    res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, obj.TRIP_DTL_GUID, 'N']);
+
+                    if(res[0][0].length > 0){
+                        console.log("오늘의 출장 상세 이미지 조회 성공");
+                        tripDetailImages = res[0][0];    
+                        console.log("tripDetailImages : " + tripDetailImages);
+                        obj.IMGS = tripDetailImages;
+                    }
+                    else{
+                        tripDetailImages = "";    
+                        obj.IMGS = tripDetailImages;
+                    }
+                    delete obj.TRIP_DTL_GUID;
+                }
+                
 
                 resModel.tripDetails = rows[0];
             }       
