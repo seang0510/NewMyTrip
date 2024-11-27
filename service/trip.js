@@ -815,18 +815,28 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                     delete obj.UPDT_EMAIL;
                     delete obj.UPDT_DT;
                     
-                    console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
+                    //console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
                     res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, obj.TRIP_DTL_GUID, 'N']);
 
                     if(res[0][0].length > 0){
                         console.log("오늘의 출장 상세 이미지 조회 성공");
-                        tripDetailImages = res[0][0];    
-                        console.log("tripDetailImages : " + tripDetailImages);
-                        obj.IMGS = tripDetailImages;
+                        tripDetailImages = res[0][0];
+                        var files = "";
+                        for await (let img of tripDetailImages) {
+                            //console.log("tripDetailImages : " + JSON.stringify(tripDetailImages));
+                            if(files == ""){
+                                files = decodeURI( img.FILE_NM );
+                            }else{
+                                files = files + "," + decodeURI( img.FILE_NM );
+                            }
+                            
+                        }
+                        //console.log("files :: " + files);
+                        obj.이미지 = files;
                     }
                     else{
                         tripDetailImages = "";    
-                        obj.IMGS = tripDetailImages;
+                        obj.이미지 = tripDetailImages;
                     }
                     delete obj.TRIP_DTL_GUID;
                 }
