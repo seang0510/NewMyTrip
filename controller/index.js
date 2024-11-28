@@ -503,7 +503,7 @@ exports.getAddress2 = async (req, res, next) => {
 
         var returnData = new Object();
         if(response.data.documents.length > 0){
-            returnData.address = response.data.documents[0].address.address_name;
+            returnData.address = response.data.documents[0].road_address.address_name;
             returnData.latitude = latitude;
             returnData.longitude = longitude;
             resModel = helper.createResponseModel(true, '주소 정상 조회되었습니다.', returnData);
