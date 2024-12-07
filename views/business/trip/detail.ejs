@@ -786,6 +786,7 @@
       $("#modalAlert .modal-body").html(message);
       $("#modalAlert").modal('show');
 
+      initTripDetailGuid = tripDetailGuid;
       InitDataTableJS('tblMain', '/business/trip/getTripDetailList'); 
     });
   };
