@@ -39,6 +39,8 @@ function execDaumPostcode(url, tripDetailGuid, address, callback) {
                 zoneCode: zoneCode,
               },
               beforeSend: function (xhr) {
+                //이전 모달 z-index 변경
+                $("#modalTripDetail").css('z-index', 1050);
                 setLoadingBar(true);
               },              
               success: function (data, status, xhr) {
@@ -46,6 +48,8 @@ function execDaumPostcode(url, tripDetailGuid, address, callback) {
                   if (callback !== undefined) {
                     callback(data.value, data.message);
                   }
+
+                  $("#modalTripDetail").css('z-index', 1055);
                 }
                 else {
                   $("#modalAlert .modal-title").html("모두의 출장 상세(주소,위도,경도) 갱신/조회 실패");
@@ -60,6 +64,12 @@ function execDaumPostcode(url, tripDetailGuid, address, callback) {
               },
               complete: function () {
                 setLoadingBar(false);
+
+                //이전 모달 z-index 변경
+                $('#modalAlert').on('hidden.bs.modal', function (e) {
+                  $("#modalTripDetail").css('z-index', 1055);
+                  $("#modalAlert").off('hidden.bs.modal');
+                });                       
               }
             });
       }

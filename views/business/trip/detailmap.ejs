@@ -8,6 +8,7 @@
 <link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
 <link href="/css/buttons.dataTables.min.css" rel="stylesheet" />
+<link href="/css/scroller.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
 <link href="/stylesheets/trip.css" rel="stylesheet" />
 
@@ -24,6 +25,8 @@
 <script src="/js/fixedHeader.dataTables.js"></script>
 <script src="/js/dataTables.buttons.min.js"></script>
 <script src="/js/buttons.dataTables.min.js"></script>
+<script src="/js/dataTables.scroller.min.js"></script>
+<script src="/js/scroller.dataTables.min.js"></script>
 <script src="/js/buttons.html5.min.js"></script>
 <script src="/jszip.min.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
@@ -63,7 +66,19 @@
 <div class="map-outer">
   <%# 지도 %>
   <%- include('../../ejs/loadingbar.ejs') %>
-  <div id="map">
+  <div class="map_wrap">
+    <div id="map"></div>
+    <!-- 지도타입 컨트롤 div 입니다 -->
+    <div class="map-btn-control">
+      <button id="btnSkyView" class="btn btn-sm btn-primary map-btn map-active" onclick="setMapType(this, event)">지도</button>
+      <button id="btnUseDistrict" class="btn btn-sm btn-warning overlay-btn" onclick="setOverlayMapTypeId(this, event, 'use_district')">지적도</button>
+      <button id="btnSpeechBubble" class="btn btn-sm btn-success bubble-btn" onclick="setSpeechBubble(this, event)">말풍선 OFF</button>
+    </div>
+    <!-- 지도 확대, 축소 컨트롤 div 입니다 -->
+    <div class="zoom-control radius_border"> 
+      <span onclick="zoomIn()"><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_plus.png" alt="확대"></span>  
+      <span onclick="zoomOut()"><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소"></span>
+    </div>      
   </div>
   <%# 그리드 테이블 %>
   <div class="table-outer ms-2">
@@ -194,27 +209,80 @@
   </div>
 </div>
 
+<%# 출장 상세 마커 선택창 %>
+<div class="modal fade" id="modalDuplicateMarker" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="lblModalDuplicateMarker" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- LoadingBar Modal of modalTripDetail -->
+      <%- include('../../ejs/loadingbar.ejs') %>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lblModalDuplicateMarker">중복 마커 선택</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <form class="needs-validation" novalidate>
+            <input type="hidden" id="tripDetailGuid" value="">
+            <button type="submit" id="btnDuplicateMarker" class="visually-hidden" onclick="selectDuplicateMarker(this, event)"></button>
+
+            <div id="item-line" class="mt-2">
+              <table id="tblMarkers" class="table table-striped">
+              </table>              
+            </div>   
+
+          </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary"
+          onclick="document.getElementById('btnDuplicateMarker').click();">선택</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
   var table = {};
   var tableItems = {};
   var fileNo = 0;
   var filesArr = [];
+  var initTripDetailGuid = '<%= tripDetailGuid %>';
   var map;
   var markerPos = [];
   var markerInfoList = [];
   var center;
+  var curMarkerInfo;
+  var currentOverlayTypeId; // 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+  var isOverlayOn = false; //지도타입(지적도 등) 버튼이 클릭된 상태 변수
+  var isSkyView = false; //지도 또는 스카이뷰 상태 변수
+  var isSpeechBubble = false; //말풍선 상태변수  
+  var tableMarkers = {};
 
   $(document).ready( function () {
     //모달 초기화
     InitModalTripDetail();
 
     //DataTable.js
-    InitDataTableJS('tblMain', '/business/trip/getTripDetailList');  
+    InitDataTableJS('tblMain', '/business/trip/getTripDetailList');     
 
     //scrollY + FixColumnHeader를 쓰고 Behind에서 Initial을 하게 되는 경우, Modal 열 때 Colunm 크기 재조정 필요
     $('#modalTripDetail').on('shown.bs.modal', function (e) {
       setLoadingBar(false, 'modalTripDetail');
       tableItems.columns.adjust();
+    });    
+
+    //scrollY + FixColumnHeader를 쓰고 Behind에서 Initial을 하게 되는 경우, Modal 열 때 Colunm 크기 재조정 필요
+    $('#modalDuplicateMarker').on('shown.bs.modal', function (e) {
+      setLoadingBar(false, 'modalDuplicateMarker');
+      tableMarkers.columns.adjust();
     });    
 
     //핀 목록 데이터 가져오기
@@ -240,22 +308,13 @@
     }
   };
 
-  //마커 선택
+  //레코드 선택:마커
   function ClickRecord(eThis){
     const rowData = table.row(eThis).data();
     let tripDetailGuid = rowData.TRIP_DTL_GUID;
-    
     if(!isEmpty(markerInfoList)){
-      var markerInfo = markerInfoList.find(x => x.tripDetailGuid == tripDetailGuid);
-
-      if(!isEmpty(markerInfo.marker)){
-        var position = markerInfo.marker.getPosition();
-        var infowindow = markerInfo.infowindow;
-        var moveLatLon = new kakao.maps.LatLng(position.Ma, position.La);
-        map.setCenter(moveLatLon);
-
-        infowindow.open(map, markerInfo.marker);
-      }
+      var markerInfo = markerInfoList.find(x => x.intgYn == 'N' && x.tripDetailGuid == tripDetailGuid);
+      MoveMarker(markerInfo, tripDetailGuid);     
     }
   };
 
@@ -328,20 +387,19 @@
             searching: false,
             ordering: true,
             info: false,            
-            scrollCollapse: false,
+            scrollCollapse: true,
             autoWidth: false,
             select: {
               style: 'single',
               items: 'row',
             },                     
             scrollX: true,
-            scrollY: true,
+            scrollY: 'calc(100vh - 252px)',
             // responsive: true,            
-            fixedColumns: {
-              start: 4
-            },        
+            fixedColumns: false,    
             order: [[2, 'asc']],     
             destroy: true,     
+            scroller: true,
             buttons: [
               {
                 extend: 'excel',
@@ -369,7 +427,17 @@
           //Click Event
           $('#tblMain tbody').on('click', 'tr', function(e) {
             ClickRecord($(this));
-          });           
+          });         
+          
+          //선택된 상세 GUID가 존재하는 경우, 선택 이벤트 발생
+          if(initTripDetailGuid != ''){
+            var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:initTripDetailGuid})).index();
+            table.row(rowIndex).scrollTo().select();            
+          }          
+          else{
+            //첫번째 레코드 선택
+            table.row(':eq(0)').select();
+          }          
         }   
     });
   };
@@ -492,7 +560,13 @@
 
   //리스트 보기
   function viewList(){
-    location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val();
+    var tripDetailGuid = curMarkerInfo.tripDetailGuid;
+    location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val() + '&tripDetailGuid=' + tripDetailGuid;
+  };
+
+  //닫기
+  function closeItem(){
+    location.href = '/business/trip';
   };
 
   //카카오 지도 초기화
@@ -506,17 +580,6 @@
     // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
     map = new kakao.maps.Map(mapContainer, mapOption);     
 
-    // 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
-    var mapTypeControl = new kakao.maps.MapTypeControl();
-
-    // 지도에 컨트롤을 추가해야 지도위에 표시됩니다
-    // kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
-    map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-
-    // 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
-    var zoomControl = new kakao.maps.ZoomControl();
-    map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-
     //map.relayout이 위에서 호출이 되지 않는 경우 아래 구문 호출 필요
     //최초 로드 시, display:flex로 인해 Width가 정해지지 않아서 지도 깨지는 문제가 존재함
     // setTimeout(() => {
@@ -524,33 +587,155 @@
     // }, 1000);    
   };
 
+  //지도타입 컨트롤의 지도 또는 스카이뷰 버튼을 클릭하면 호출되어 지도타입을 바꾸는 함수입니다
+  function setMapType(eThis, e) { 
+      isSkyView = !isSkyView;
+
+      //스카이뷰
+      if(isSkyView){
+        map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
+        $(eThis).text('스카이뷰');
+      }
+      //지도
+      else{
+        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);               
+        $(eThis).text('지도');
+      }
+  };
+
+  //오버레이 타입(ex.지적도)
+  function setOverlayMapTypeId(eThis, e, overlayType) {
+      var changeOverlayType;
+      
+      // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+      if (overlayType === 'traffic') {                        
+        // 교통정보 지도타입
+        changeOverlayType = kakao.maps.MapTypeId.TRAFFIC;            
+      } 
+      else if (overlayType === 'roadview') {                    
+        // 로드뷰 도로정보 지도타입
+        changeOverlayType = kakao.maps.MapTypeId.ROADVIEW;    
+      } 
+      else if (overlayType === 'terrain') {            
+        // 지형정보 지도타입
+        changeOverlayType = kakao.maps.MapTypeId.TERRAIN;    
+      } 
+      else if (overlayType === 'use_district') {            
+        // 지적편집도 지도타입
+        changeOverlayType = kakao.maps.MapTypeId.USE_DISTRICT;           
+      }
+
+      // 이미 등록된 지도 타입이 있으면 제거합니다
+      if (currentOverlayTypeId) {
+          map.removeOverlayMapTypeId(currentOverlayTypeId);    
+      }
+
+      //현재 타입과 동일한 버튼을 클릭했으며, ON인 상황인 경우 -> OFF
+      if(currentOverlayTypeId == changeOverlayType && isOverlayOn == true){
+        isOverlayOn = !isOverlayOn;
+        $(eThis).removeClass('overlay-active');
+      }
+      else{
+        isOverlayOn = true;
+        $(eThis).addClass('overlay-active');
+
+        // maptype에 해당하는 지도타입을 지도에 추가합니다
+        map.addOverlayMapTypeId(changeOverlayType);        
+
+        // 지도에 추가된 타입정보를 갱신합니다
+        currentOverlayTypeId = changeOverlayType;                
+      }
+  };
+
+  //말풍선 버튼
+  function setSpeechBubble(eThis, e){
+    isSpeechBubble = !isSpeechBubble;
+
+    // 지도의 현재 중심좌표를 얻어옵니다 
+    var center = map.getCenter();     
+    
+    //말풍선ON
+    if(isSpeechBubble){
+      $(eThis).addClass('bubble-active');
+      $(eThis).text('말풍선 ON');
+
+      markerInfoList.forEach(element => {
+        element.infowindow.open(map, element.marker); 
+      });
+
+      InitInfoWindow();
+    }
+    //말풍선OFF
+    else{
+      $(eThis).removeClass('bubble-active');  
+      $(eThis).text('말풍선 OFF');
+
+      markerInfoList.forEach(element => {
+        element.infowindow.close();   
+      });      
+    }    
+
+    //지도 중심을 이동 시킵니다
+    map.setCenter(center);    
+  };
+
+  //지도 중심을 이동 시킵니다
+  function setCenter(center) {            
+    // 이동할 위도 경도 위치를 생성합니다 
+    var moveLatLon = new kakao.maps.LatLng(center.LNG, center.LAT);
+    
+    // 지도 중심을 이동 시킵니다
+    map.setCenter(moveLatLon);
+}
+
+  //지도 확대, 축소 컨트롤에서 확대 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+  function zoomIn() {
+      map.setLevel(map.getLevel() - 1);
+  };
+
+  //지도 확대, 축소 컨트롤에서 축소 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+  function zoomOut() {
+      map.setLevel(map.getLevel() + 1);
+  };
+
   //마커 그리기
   function setMarker(map, markerPos){
-    // 마커 이미지의 이미지 주소입니다
-    var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; 
 
-    // 마커 이미지의 이미지 크기 입니다
-    var imageSize = new kakao.maps.Size(24, 35); 
     var initInfowindow;
 
     for (var i = 0; i < markerPos.length; i ++) {
-      // 마커 이미지를 생성합니다    
-      var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize); 
       
-      // 마커를 생성합니다
-      var marker = new kakao.maps.Marker({
-          map: map, // 마커를 표시할 지도
-          position: markerPos[i].latlng, // 마커를 표시할 위치
-          title : markerPos[i].title, // 마커의 타이틀, 마커에 마우스를 올리면 타이틀이 표시됩니다
-          image : markerImage, // 마커 이미지 
-          clickable: true // 마커를 클릭했을 때 지도의 클릭 이벤트가 발생하지 않도록 설정합니다
-      });
-
       // 마커에 표시할 인포윈도우를 생성합니다 
       var infowindow = new kakao.maps.InfoWindow({
           position: markerPos[i].latlng, // 마커를 표시할 위치
           content: markerPos[i].content, // 인포윈도우에 표시할 내용
+          clickable: true,
       });      
+
+      //마커 이미지를 생성
+      var markerImage;
+
+      //최초 infoWindow 등록
+      if(isEmpty(initInfowindow) && markerPos[i].latlng.La == center.La && markerPos[i].latlng.Ma == center.Ma){
+        //마커 색상변경
+        markerImage = createMarkerImage('Y', 'N');
+      }
+      else if(markerPos.compYn == 'Y'){
+        //마커 색상변경
+        markerImage = createMarkerImage('N', 'Y');
+      }
+      else{
+        markerImage = createMarkerImage('N', 'N');        
+      }
+
+      // 마커를 생성합니다
+      var marker = new kakao.maps.Marker({
+          map: map, // 마커를 표시할 지도
+          position: markerPos[i].latlng, // 마커를 표시할 위치
+          title : markerPos[i].title, // 마커의 타이틀, 마커에 마우스를 올리면 타이틀이 표시됩니다          
+          image : markerImage, // 마커 이미지 
+          clickable: true // 마커를 클릭했을 때 지도의 클릭 이벤트가 발생하지 않도록 설정합니다
+      });
 
       // 마커에 클릭이벤트를 등록합니다
       kakao.maps.event.addListener(marker, 'click', clickListener(map, marker, infowindow));
@@ -562,7 +747,10 @@
 
       //마커 정보 등록
       markerInfoList.push({
-        tripDetailGuid: markerPos[i].tripDetailGuid,
+        tripDetailGuid: (markerPos[i].intgYn == 'Y') ? markerPos[i].tripDetailDuplicateList[0].TRIP_DTL_GUID : markerPos[i].tripDetailGuid,
+        compYn: markerPos[i].compYn,
+        intgYn: markerPos[i].intgYn,
+        tripDetailDuplicateList: markerPos[i].tripDetailDuplicateList,
         marker: marker,
         infowindow: infowindow,
       });      
@@ -584,21 +772,59 @@
   function clickListener(map, marker, infowindow){
     // 마커 위에 인포윈도우를 표시합니다 
     return function() {
-      infowindow.open(map, marker); 
+      curMarkerInfo = markerInfoList.find(x => x.marker == marker);
+      markerInfoList.forEach(element => {
+        if(element.marker == curMarkerInfo.marker){
+
+          //통합인 경우 infoWindow
+          if(curMarkerInfo.intgYn == 'Y'){
+            openModalDuplicateMarker();
+          }
+
+          infowindow.open(map, curMarkerInfo.marker);          
+          
+          //그리드 Row 선택 및 이동
+          var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:curMarkerInfo.tripDetailGuid})).index();
+          table.row(rowIndex).scrollTo().select();
+
+          //지도 위치이동
+          var position = curMarkerInfo.marker.getPosition();
+          var moveLatLon = new kakao.maps.LatLng(position.Ma, position.La);
+          map.setCenter(moveLatLon);          
+
+          //마커 색상변경
+          var clickImage = createMarkerImage('Y', 'N', 'N');
+          curMarkerInfo.marker.setImage(clickImage);          
+        }
+        else{
+          if(!isSpeechBubble){
+            element.infowindow.close(); 
+          }          
+
+          //마커 색상변경
+          var selectImage = selectMarkerImage('N', element.intgYn, element.tripDetailDuplicateList);
+          element.marker.setImage(selectImage);                
+        }          
+      });        
+      
+      InitInfoWindow();      
     };    
   };
 
-  // 인포윈도우를 표시하는 클로저를 만드는 함수입니다 
+  //인포윈도우를 표시하는 클로저를 만드는 함수입니다 
   function makeOverListener(map, marker, infowindow) {
     return function() {
-        infowindow.open(map, marker);
+        infowindow.open(map, marker);        
+        InitInfoWindow();
     };
   }
 
-  // 인포윈도우를 닫는 클로저를 만드는 함수입니다 
+  //인포윈도우를 닫는 클로저를 만드는 함수입니다 
   function makeOutListener(infowindow) {
     return function() {
-        infowindow.close();
+        if(!isSpeechBubble && !(curMarkerInfo.infowindow == infowindow)){
+          infowindow.close();
+        }        
     };
   }
 
@@ -619,36 +845,282 @@
               var title = tripDetailList[i].FCLT_NM;
               var latitude = tripDetailList[i].LAT;
               var longitude = tripDetailList[i].LNG;
-              markerPos.push(createMarker(tripDetailGuid, title, latitude, longitude));
+              var compYn = tripDetailList[i].COMP_YN;
+              var intgYn = tripDetailList[i].INTG_YN;
+              var tripDetailDuplicateList = tripDetailList[i].TRIP_DTL_LIST;
+              markerPos.push(createMarker(tripDetailGuid, title, latitude, longitude, compYn, intgYn, tripDetailDuplicateList));
 
               //최초 마커 등록
-              if(isEmpty(center) && latitude != 0 && longitude != 0){
+              if(isEmpty(center) && latitude != 0 && longitude != 0){                
                 center = new kakao.maps.LatLng(latitude, longitude);
               }
             }
             InitMap(center);
             setMarker(map, markerPos);
+
+            if(initTripDetailGuid != '') {
+              var markerInfo = markerInfoList.find(x => x.tripDetailGuid == initTripDetailGuid);
+              MoveMarker(markerInfo, initTripDetailGuid);
+              curMarkerInfo = markerInfo;              
+            }
+            else{
+              curMarkerInfo = markerInfoList[0];
+            }            
           }    
+          else{
+            InitMap(new kakao.maps.LatLng(33.450701, 126.570667));
+            setMarker(map, markerPos);
+          }
         },
         beforeSend: function (xhr) {
           // setLoadingBar(true);
         },
         complete: function () {
-          // setLoadingBar(false);
+          // setLoadingBar(false);          
           map.relayout();
+          InitInfoWindow();
         }   
     });    
   };
 
   //마커 제작
-  function createMarker(tripDetailGuid, title, lat, lng){
+  function createMarker(tripDetailGuid, title, lat, lng, compYn, intgYn, tripDetailDuplicateList){
+    let content = '';
+    if(intgYn == 'Y'){      
+      var count = tripDetailDuplicateList.length;
+      title = tripDetailDuplicateList[0].FCLT_NM;
+      content = setInfowindowContent(title, count);;
+    }
+    else{
+      content = setInfowindowContent(title);
+    }
+
     let obj = {
       tripDetailGuid: tripDetailGuid,
       title: title,
-      content: "<div class='text-center' style='padding:5px;'>" + title + "</div>",
+      compYn: compYn,
+      intgYn: intgYn,
+      tripDetailDuplicateList: tripDetailDuplicateList,
+      content: content,
       latlng: new kakao.maps.LatLng(lat, lng)
     };
     return obj;
+  };
+
+  //중복 마커 선택창 열기
+  function openModalDuplicateMarker(){
+    //DataTable.js
+    tableMarkers = DataTableForMarkers('tblMarkers', curMarkerInfo.tripDetailDuplicateList);
+
+    //현재 출장 상세 ROW Select
+    var rowIndex = tableMarkers.row(searchFunction({TRIP_DTL_GUID:curMarkerInfo.tripDetailGuid})).index();
+    tableMarkers.row(rowIndex).select();    
+
+    $("#modalDuplicateMarker").modal('show');
+  };
+
+  //중복 마커 선택
+  function selectDuplicateMarker(eThis, e){
+    e.preventDefault();
+
+    let selectedRowData = tableMarkers.row({ selected: true }).data();
+    let facilityName = selectedRowData.FCLT_NM;
+    let tripDetailGuid = selectedRowData.TRIP_DTL_GUID;
+
+    //그리드 Row 이동 및 선택
+    var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:tripDetailGuid})).index();
+    table.row(rowIndex).scrollTo().select();
+
+    //지도 위치이동
+    var position = curMarkerInfo.marker.getPosition();
+    var moveLatLon = new kakao.maps.LatLng(position.Ma, position.La);
+    map.setCenter(moveLatLon);          
+
+    //infoWindow 변경
+    var text = setInfowindowContent(facilityName, curMarkerInfo.tripDetailDuplicateList.length);    
+    curMarkerInfo.infowindow.setContent(text);
+
+    //curMarkerInfo 변경
+    curMarkerInfo.tripDetailGuid = tripDetailGuid;
+
+    $("#modalDuplicateMarker").modal('hide');
+  };
+
+  //중목 마커 그리드
+  function DataTableForMarkers(tblId, data){
+    var table = new DataTable('#' + tblId, {
+      columns: [
+        {title: '', data : null, name: 'CHK', width: "50px", visible: true },
+        {title: '명칭', name: 'FCLT_NM', data : "FCLT_NM", width: '80px' },
+        {title: '주소', name: 'ADDR', data : "ADDR", width: 'auto'},   
+        {title: '상세 주소', name: 'ADDR_DTL', data : "ADDR_DTL", width: 'auto'},
+        {title: '', name: 'TRIP_DTL_GUID', data : "TRIP_DTL_GUID", width: '0px', visible: false},   
+      ],
+      columnDefs: [
+        { targets: "_all", className: "header" },
+        { targets: 0, orderable: false, render: DataTable.render.select(), },        
+        { targets: ['FCLT_NM:name', 'ADDR:name'], className: "row-left-align align-middle" },
+      ],
+      data: data,
+      language : getLanguage(),
+      paging: false,
+      lengthChange: true,
+      searching: false,
+      ordering: false,
+      info: false,   
+      fixedColumns: {
+        start: 2
+      },    
+      select: {
+        style: 'single',
+        items: 'row',
+      },                         
+      scrollX: false,
+      scrollY: '200px',
+      //responsive: false,
+      scrollCollapse: true,
+      autoWidth: true,
+      destroy: true,
+      layout: {
+        topStart: null,
+        topEnd: null,
+      },
+    });
+
+    return table;
+  };
+
+  //JS-InfoWindow CSS 강제변경 (지도 DATA 불러온 이후 실행필요)
+  function InitInfoWindow(){
+    var infoTitle = document.querySelectorAll('.info-title');
+    infoTitle.forEach(function(e) {
+        var w = e.offsetWidth;
+        var ml = w/2;
+        e.parentElement.style.top = "0px";
+        e.parentElement.style.left = "50%";
+        e.parentElement.style.marginLeft = -ml+"px";
+        e.parentElement.style.width = w+"px";
+        e.parentElement.previousSibling.style.display = "none";
+        e.parentElement.parentElement.style.border = "0px";
+        e.parentElement.parentElement.style.background = "unset";
+    });    
+  }
+
+  //중복 좌표인지 확인
+  function selectMarkerImage(compYn, intgYn, tripDetailDuplicateList){
+    if(intgYn == 'Y'){
+      var isComp = !(tripDetailDuplicateList.map(x => x.COMP_YN).includes('N'));
+
+      //통합:확정
+      if(isComp){
+        return createMarkerImage('N', 'Y', 'N');        
+      }
+      //통합:확정x
+      else{
+        return createMarkerImage('N', 'N', 'Y');        
+      }
+    }
+    //확정
+    else if(compYn == 'Y'){
+      return createMarkerImage('N', 'Y', 'N');
+    }
+    //기본
+    else{
+      return createMarkerImage('N', 'N', 'N');
+    }
+  };
+
+  // MakrerImage 객체를 생성하여 반환하는 함수입니다
+  function createMarkerImage(curMarkerYn, compYn, duplicatePosYn) {
+    var imageSrc = ""; // 마커 이미지의 이미지 주소
+    var imageSize = new kakao.maps.Size(42, 42);  //마커 이미지 크기
+
+    //현재 선택한 마커
+    if(curMarkerYn == 'Y'){
+      imageSrc = "/images/marker_blue.png";
+    }
+    //완료된 마커
+    else if(compYn == 'Y'){
+      imageSrc = "/images/marker_gray.png";
+    }
+    //중복주소 마커
+    else if(duplicatePosYn == 'Y'){
+      imageSrc = "/images/marker_red.png";
+    }    
+    //기본 마커
+    else {
+      imageSrc = "/images/marker_green.png";
+    }
+
+    var markerImage = new kakao.maps.MarkerImage(
+        imageSrc,     // 이미지 URL
+        imageSize, // 마커의 크기
+    );
+    
+    return markerImage;
+  };
+
+  //InfowWindow Content 제작
+  function setInfowindowContent(title, count){
+    if(count > 0){
+      return "<span class='info-title duplicate' onclick='openModalDuplicateMarker();'>" + title + " (" + (count) + "건)</span>";
+    }
+    else{
+      return "<span class='info-title'>" + title + "</span>";
+    }
+  };
+
+  //마커 이동(infowWindow 변경, 위치이동, 마커색상변경)
+  function MoveMarker(markerInfo, tripDetailGuid){
+      var tripDetailDuplicateList;
+
+      //중복인 경우
+      if(markerInfo === undefined){
+        markerInfo = markerInfoList.find(x => x.tripDetailDuplicateList != null && x.tripDetailDuplicateList.find(y => y.TRIP_DTL_GUID == tripDetailGuid))
+        tripDetailDuplicateList = markerInfo.tripDetailDuplicateList
+        //markerInfo.tripDetaiol = tripDetailDuplicateList.find(x => x.TRIP_DTL_GUID == tripDetailGuid);        
+      }
+
+      if(!isEmpty(markerInfo.marker)){
+        //위치이동
+        var position = markerInfo.marker.getPosition();
+        var infowindow = markerInfo.infowindow;
+        var moveLatLon = new kakao.maps.LatLng(position.Ma, position.La);
+        map.setCenter(moveLatLon);                
+
+        markerInfoList.forEach(element => {
+          //현재 선택한 Marker
+          if(element.marker == markerInfo.marker){
+
+            if(markerInfo.intgYn == 'Y'){
+              //InfoWindow Text변경
+              var text = markerInfo.tripDetailDuplicateList.find(x => x.TRIP_DTL_GUID == tripDetailGuid).FCLT_NM;
+              text = setInfowindowContent(text, markerInfo.tripDetailDuplicateList.length);
+              element.infowindow.setContent(text);
+            }
+            infowindow.open(map, markerInfo.marker);
+            curMarkerInfo = element;
+            
+            //마커 색상변경
+            var clickImage = createMarkerImage('Y', 'N', 'N');
+            element.marker.setImage(clickImage);
+          }
+          // 그 외
+          else{            
+            var selectImage = selectMarkerImage('N', element.intgYn, element.tripDetailDuplicateList);
+            element.marker.setImage(selectImage);
+
+            //말풍선 켜진 경우, InfoWindow 이벤트 발생하지 않음
+            if(isSpeechBubble){
+              return;
+            }
+            else{
+              element.infowindow.close();                 
+            }            
+          }          
+          InitInfoWindow();
+        });       
+      }
   };
 
 </script>

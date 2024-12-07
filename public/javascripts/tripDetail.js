@@ -258,9 +258,8 @@
           $("#modalAlert .modal-title").html("출장 상세");
         },
         success: function (data, status, xhr) {
-          if(data.success){
-            
-            location.href = url + '?tripGuid=' + $("#tripGuid").val();
+          if(data.success){            
+            location.href = url + '?tripGuid=' + $("#tripGuid").val() + '&tripDetailGuid=' + $("#tripDetailGuid").val();
           }
           else{
             var message = data.message;
@@ -276,11 +275,6 @@
           setLoadingBar(false, 'modalTripDetail');
         }
       }); 
-  };
-
-  //닫기
-  function closeItem(){
-    location.href = '/business/trip';
   };
 
   //엑셀 내보내기

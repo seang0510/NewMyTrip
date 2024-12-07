@@ -155,11 +155,11 @@ exports.setTripWithItems = async (tripGuid, title, tripDetailItems, userGuid) =>
             console.log(params);
             res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
-            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+            if (res[0][1][0]["@RET_VAL"] == 'C') {
                 console.log("오늘의 출장 상세 등록 성공");
                 isSuccess = true;    
             }
-            else if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U') {
+            else if (res[0][1][0]["@RET_VAL"] == 'U') {
                 console.log("오늘의 출장 상세 수정 성공");
                 isSuccess = true;
             }
@@ -270,7 +270,7 @@ exports.importTrip = async (file, userGuid) => {
             params = [tripDetailGuidForOrderZero, tripGuid, '기본', null, null, 0, 0, 'N', -1, userGuid, 'N'];
             res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
-            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+            if (res[0][1][0]["@RET_VAL"] == 'C') {
                 console.log("오늘의 출장 상세 등록 성공");
                 isSuccess = true;    
             }
@@ -680,8 +680,10 @@ exports.getTripDetailListForPin = async (tripGuid, regUserGuid) => {
                 tripDetailListForIntegrate = rows[0];
 
                 for (var i = 0; i < tripDetailListForIntegrate.length; i++) {
-                    let parentOrder = tripDetailListForIntegrate[i].PRNT_ODR;                    
-                    let index = tripDetailList.findIndex((item) => item.ODR === parentOrder);
+
+                    let parentLatitude = tripDetailListForIntegrate[i].LAT;                    
+                    let parentLogitude = tripDetailListForIntegrate[i].LNG;      
+                    let index = tripDetailList.findIndex((item) => item.LAT === parentLatitude && item.LNG === parentLogitude);
 
                     //Null인 경우 Obejct 선언
                     if(tripDetailList[index].TRIP_DTL_LIST == null){
@@ -900,12 +902,12 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
             console.log(params);
             res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
-            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+            if (res[0][1][0]["@RET_VAL"] == 'C') {
                 console.log("오늘의 출장 상세 등록 성공");
                 isSuccess = true;
                 returnCode = 1; //등록 성공          
             }
-            else if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U') {
+            else if (res[0][1][0]["@RET_VAL"] == 'U') {
                 console.log("오늘의 출장 상세 수정 성공");
                 isSuccess = true;
                 returnCode = 0; //수정 성공
@@ -1178,12 +1180,12 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
             console.log(params);
             res = await pool.query('CALL BIZ_TRIP_DTL_CREATE(?,?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
 
-            if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C') {
+            if (res[0][1][0]["@RET_VAL"] == 'C') {
                 console.log("오늘의 출장 상세 등록 성공");
                 isSuccess = true;
                 returnCode = 1; //등록 성공          
             }
-            else if (res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U') {
+            else if (res[0][1][0]["@RET_VAL"] == 'U') {
                 console.log("오늘의 출장 상세 수정 성공");
                 isSuccess = true;
                 returnCode = 0; //수정 성공

@@ -365,6 +365,7 @@ exports.indexTripDetail = async (req, res, next) => {
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
         var tripGuid = req.query.tripGuid;
+        var tripDetailGuid = req.query.tripDetailGuid;
         let itemList = await tripService.getItem(tripGuid);
         let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
@@ -373,7 +374,7 @@ exports.indexTripDetail = async (req, res, next) => {
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, itemNameList: JSON.stringify(itemNameList) });
         }        
       }        
   }
@@ -396,6 +397,7 @@ exports.indexTripDetailMap = async (req, res, next) => {
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
         var tripGuid = req.query.tripGuid;
+        var tripDetailGuid = req.query.tripDetailGuid;
         let itemList = await tripService.getItem(tripGuid);
         let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
@@ -404,7 +406,7 @@ exports.indexTripDetailMap = async (req, res, next) => {
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, itemNameList: JSON.stringify(itemNameList) });
         }        
       }        
   }

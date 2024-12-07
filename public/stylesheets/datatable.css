@@ -45,3 +45,8 @@
     --bs-bg-opacity: 1;
     background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
   }  
+
+  /*ScrollBar=true인 경우, 배경화면 색상*/
+  div.dts div.dt-scroll-body, div.dts div.dataTables_scrollBody {
+    background: #e9ecef;
+  }

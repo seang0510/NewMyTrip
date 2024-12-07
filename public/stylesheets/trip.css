@@ -41,13 +41,141 @@
   display: flex;
 }
 
-.map-outer #map {
+.map-outer .map_wrap {
   min-width: 350px;
   width: calc(100% - 350px);
+  height: 100%;
   margin-top: 1rem;
   /* width: 700px; */
 }
 
 .map-outer #tblMain {
   width: 350px;
+}
+
+#map {
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+}
+
+.map_wrap {
+  position:relative;
+  overflow:hidden;
+  width:100%;
+  height:350px;
+}
+
+.map-btn-control {
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:202px;
+  height:30px;
+  z-index:1;
+  box-sizing: unset;
+  border:1px solid #919191;
+  border-radius:5px;
+  background-color: rgb(255, 255, 255);
+  padding: 2px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 2px 0px;
+}
+
+.map-btn-control button {
+  font-family: 'Paperlogy';
+  font-size: 0.7rem;
+  width: 60px;
+  height: 100%;
+  background-color: white;
+  color: black;
+}
+
+.map-btn-control button.map-btn {
+  background-color: #3396FF;
+  color: white;
+}
+.map-btn-control button.map-btn:hover {
+  background-color: #286bb3;
+  color: white;
+}
+
+.map-btn-control button.overlay-btn {
+  color: black;
+  background-color: #fce9b2;
+}
+.map-btn-control button.overlay-btn:hover {
+  background-color: #ffd558;
+}
+.map-btn-control button.overlay-active {
+  background-color: #FBBC04;  
+  color: white;
+}
+
+.map-btn-control button.bubble-btn {  
+  width: 75px;
+  background-color: #81ce95;
+}
+.map-btn-control button.bubble-btn:hover {  
+  background-color: #39af59;
+}
+.map-btn-control button.bubble-active {
+  background-color: #34A853;  
+  color: white;
+}
+
+.zoom-control {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 36px;
+  height: 80px;
+  overflow: hidden;
+  z-index: 1;
+  box-sizing: unset;
+  border:1px solid #919191;
+  border-radius:5px;
+  background-color: rgb(255, 255, 255);
+  padding: 2px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 2px 0px;
+}
+
+.zoom-control span {
+  display: block;
+  width: 36px;
+  height: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.zoom-control span img {
+  width: 15px;
+  height: 15px;
+  padding: 12px 0;
+  border: none;
+  box-sizing: unset;
+}
+
+.zoom-control span:first-child {
+  border-bottom: 1px solid #bfbfbf;
+}
+
+.info-title {
+  display: block;
+  background: #50627F;
+  color: #fff;
+  text-align: center;
+  height: 24px;
+  line-height:22px;
+  border-radius:4px;
+  padding:0px 10px;
+  white-space: nowrap;
+}
+
+.info-title:not(:first-child) {
+  margin-top: 2px;
+}
+
+.info-title.duplicate {
+  cursor: pointer;
 }

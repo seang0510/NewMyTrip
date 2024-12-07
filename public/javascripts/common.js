@@ -182,3 +182,24 @@ function isEmpty(value){
     return false;
   }
 };
+
+//DataTable.js에서 특정 조건에 맞는 Row 찾기
+const searchFunction = function(dictSearch) {
+  return function( idx, data, node ) {
+      const keys = Object.keys( dictSearch );
+      const n = keys.length;
+      let k = 0;
+      for (let i = 0; i <= keys.length; i++) {
+          //intrinsically checks if the key exists
+          if ( data[keys[i]] === dictSearch[keys[i]] ) {
+              k++;
+          } else {
+              return false;
+          }
+          if (n === k) {
+              return true;
+          }
+      }
+      return false;
+  }
+};

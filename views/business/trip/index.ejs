@@ -7,6 +7,7 @@
 <link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
 <link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
+<link href="/css/scroller.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
 
 <%# JS %>
@@ -20,6 +21,8 @@
 <script src="/js/fixedColumns.dataTables.js"></script>
 <script src="/js/dataTables.fixedHeader.js"></script>
 <script src="/js/fixedHeader.dataTables.js"></script>
+<script src="/js/dataTables.scroller.min.js"></script>
+<script src="/js/scroller.dataTables.min.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
 
 <%# 본문 %>
@@ -275,6 +278,8 @@
         items: 'row',
       },         
       scrollX: true,
+      scrollY: 'calc(100vh - 282px)',      
+      scroller: true,    
       // responsive: true,
       fixedColumns: {
         start: 3
@@ -312,7 +317,7 @@
       fixedColumns: true,
       scrollCollapse: true,
       autoWidth: false,
-      destroy: true,
+      destroy: true,         
       layout: {
         topStart: null,
         topEnd: null,
