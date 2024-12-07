@@ -267,8 +267,8 @@ exports.mobileExportTrip = async (req, res, next) => {
     resModel = helper.createResponseModel(false, '등록된 오늘의 출장 상세내역이 존재하지 않습니다.', '');        
   }
 
-  let fixedColumnCaptions = '번호,명칭,주소,상세주소,위도,경도';
-  let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG';
+  let fixedColumnCaptions = '번호,명칭,주소,상세주소,위도,경도,확인';
+  let fixedColumns = 'ODR,FCLT_NM,ADDR,ADDR_DTL,LAT,LNG,UPDT_DT';
   let variableColumns = '';
   let fields = Object.keys(data.tripDetails[0]);
 
