@@ -273,7 +273,7 @@
       case 'ADDR':
         location.href = '/business/trip/detailmap?tripGuid=' + tripGuid + '&tripDetailGuid=' + tripDetailGuid;
         break;
-      case 'IMG_CNT':
+      case 'IMG_CNT':        
         $("#tripDetailGuid").val(tripDetailGuid);
         $("#modalTripDetailImage").modal('show');
         break;
@@ -381,7 +381,10 @@
                 class: 'buttons-excel',
                 exportOptions: {
                   // columns: ':visible:not(:first-child)'
-                  columns: exportColumns
+                  columns: exportColumns,
+                  modifier: {
+                      selected: false
+                  }                         
                 },
               }
             ],
@@ -770,6 +773,7 @@
   //다음 지도 팝업창 후 주소,상세주소,위도,경도 즉각 갱신
   function updateAddress(eThis, e){
     e.preventDefault();
+    e.stopPropagation();
 
     //주소,위도,경도 즉시 변경
     const td = $(eThis).closest('td');

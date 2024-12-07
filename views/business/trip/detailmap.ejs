@@ -406,7 +406,10 @@
                 class: 'buttons-excel',
                 exportOptions: {
                   // columns: ':visible:not(:first-child)'
-                  columns: exportColumns
+                  columns: exportColumns,
+                  modifier: {
+                      selected: false
+                  }                  
                 },
               }
             ],
