@@ -563,8 +563,13 @@
 
   //리스트 보기
   function viewList(){
-    var tripDetailGuid = curMarkerInfo.tripDetailGuid;
-    location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val() + '&tripDetailGuid=' + tripDetailGuid;
+    if(curMarkerInfo !== undefined){
+      var tripDetailGuid = curMarkerInfo.tripDetailGuid;
+      location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val() + '&tripDetailGuid=' + tripDetailGuid;
+    }
+    else{
+      location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val();
+    }    
   };
 
   //닫기
