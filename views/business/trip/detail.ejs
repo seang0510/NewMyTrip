@@ -122,7 +122,7 @@
               <div class="form-floating has-validation">
                 <input type="text" id="address" class="form-control" placeholder="주소"
                   onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
-                <button type="button" class="btn btn-sm btn-success" style="position: absolute; top:-10px; right:10px;" onclick="openDaumMap(this, event);">주소 변경</button>
+                <button type="button" class="btn btn-sm btn-success" style="position: absolute; top:-10px; right:10px;" onclick="openKakaoMap(this, event, 'Y');">주소 변경</button>
                 <label for="address">주소</label>
               </div>
               <div class="invalid-feedback">
@@ -426,7 +426,7 @@
       //주소변경 버튼
       var htmlCode = "<div class='d-flex align-items-center' data-address='" + gridData[i].ADDR + "'>";
       htmlCode += "<span class='address me-2'>" + gridData[i].ADDR + "</span>";
-      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='updateAddress(this, event);'>주소 변경</span>";
+      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='openKakaoMap(this, event)'';>주소 변경</span>";
       htmlCode += "</div>";
       gridData[i].ADDR = htmlCode;        
     }
@@ -789,6 +789,12 @@
       initTripDetailGuid = tripDetailGuid;
       InitDataTableJS('tblMain', '/business/trip/getTripDetailList'); 
     });
+  };
+
+  //주소변경 후 호출될 함수
+  function updateDataTableJS(){
+    initTripDetailGuid = tripDetailGuid;
+    InitDataTableJS('tblMain', '/business/trip/getTripDetailList');     
   };
 
 </script>

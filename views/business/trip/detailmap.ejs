@@ -74,6 +74,10 @@
       <button id="btnUseDistrict" class="btn btn-sm btn-warning overlay-btn" onclick="setOverlayMapTypeId(this, event, 'use_district')">지적도</button>
       <button id="btnSpeechBubble" class="btn btn-sm btn-success bubble-btn" onclick="setSpeechBubble(this, event)">말풍선 OFF</button>
     </div>
+    <!-- 현재 위치 버튼 -->
+    <div class="compass-btn-control">
+      <button id="btnSpeechBubble" class="btn btn-sm btn-light" onclick="setGeoLocation(this, event)"><i class="fa fa-2x fa-map-marker"></i></button>
+    </div>    
     <!-- 지도 확대, 축소 컨트롤 div 입니다 -->
     <div class="zoom-control radius_border"> 
       <span onclick="zoomIn()"><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_plus.png" alt="확대"></span>  
@@ -140,7 +144,7 @@
               <div class="form-floating has-validation">
                 <input type="text" id="address" class="form-control" placeholder="주소"
                   onkeypress="enterKey(event, 'btnSaveTripDetail')" required>
-                <button type="button" class="btn btn-sm btn-success" style="position: absolute; top:-10px; right:10px;" onclick="openDaumMap(this, event);">주소 변경</button>
+                <button type="button" class="btn btn-sm btn-success" style="position: absolute; top:-10px; right:10px;" onclick="openKakaoMap(this, event, 'Y');">주소 변경</button>
                 <label for="address">주소</label>
               </div>
               <div class="invalid-feedback">
@@ -1130,5 +1134,23 @@
         });       
       }
   };
+
+  //마커 이동하기
+  function moveMap(map, latitude, longitude){
+    // 이동할 위도 경도 위치를 생성합니다 
+    var moveLatLon = new kakao.maps.LatLng(latitude, longitude);
+    
+    // 지도 중심을 이동 시킵니다
+    map.setCenter(moveLatLon);
+  };
+
+  //HTML5 GeoLocation 이용해서 접속위치를 가져오기
+  function setGeoLocation(eThis, e){
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(function(position) {
+        moveMap(map, position.coords.latitude, position.coords.longitude);
+      });
+    }
+  }
 
 </script>

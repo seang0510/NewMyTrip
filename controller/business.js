@@ -603,7 +603,7 @@ exports.setTripDetail = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
   const address = helper.changeUndefiendToNull(req.body.address);
-  const addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
+  const addressDetail = helper.changeUndefiendToEmpty(req.body.addressDetail);
   const latitude = helper.changeUndefiendToNull(req.body.latitude);
   const longitude = helper.changeUndefiendToNull(req.body.longitude);
   const compYn = helper.changeUndefiendToNull(req.body.compYn);
@@ -727,7 +727,7 @@ exports.setTripDetailWithImages = async (req, res, next) => {
   const tripGuid = helper.changeUndefiendToNull(req.body.tripGuid);
   const facilityName = helper.changeUndefiendToNull(req.body.facilityName);
   const address = helper.changeUndefiendToNull(req.body.address);
-  const addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
+  const addressDetail = helper.changeUndefiendToEmpty(req.body.addressDetail);
   const latitude = helper.changeUndefiendToNull(req.body.latitude);
   const longitude = helper.changeUndefiendToNull(req.body.longitude);
   const compYn = helper.changeUndefiendToNull(req.body.compYn);
@@ -901,13 +901,120 @@ exports.exportTripDetailImage = async (req, res, next) => {
   }
 };
 
+//주소 찾기 화면(GET)
+exports.findAddress = async (req, res, next) => {
+
+  let tripDetailGuid = helper.changeUndefiendToNull(req.query.tripDetailGuid);
+  let hasParentModalYN = helper.changeUndefiendToNull(req.query.hasParentModalYN); //모달폼(상세 등록,수정창)에서 들어온 경우(Y), 바로 주소변경해야하는 경우(N)
+  let address = helper.changeUndefiendToNull(req.query.address);
+  let latitude = 0;
+  let longitude = 0;
+
+  try {
+      //로그인 되지 않은 경우
+      if(!(req.session.valid == true) || tripDetailGuid == null){
+          return res.render('error', { title: 'Express', layout: false });
+      }
+      //현재 로그인 되어 있는 경우    
+      else{
+          //주소가 존재하는 경우, 위도/경도 가져오기
+          if(address != null){
+            const encodedAddress = encodeURIComponent(address);
+            const response = await axios({
+              method: "GET",
+              url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+              headers: {
+                Authorization: process.env.KAKAO_FIND_ADDR,
+              },
+            });
+
+            if(response.data.documents.length > 0){
+              latitude = response.data.documents[0].y;
+              longitude = response.data.documents[0].x;
+            }       
+          }
+          return res.render('business/trip/findAddress', { title: '주소 찾기', layout: false, tripDetailGuid: tripDetailGuid, hasParentModalYN: hasParentModalYN, address: address, latitude: latitude, longitude: longitude });
+      }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//위도,경도 -> 주소 변환
+exports.getAddressByCoordinate = async (req, res, next) => {
+  let resModel;
+  let latitude = helper.changeUndefiendToNull(req.body.latitude);
+  let longitude = helper.changeUndefiendToNull(req.body.longitude);
+
+  try {        
+      const response = await axios({
+        method: "GET",
+        url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ latitude + '&x=' + longitude,
+        headers: {
+          Authorization: process.env.KAKAO_FIND_ADDR,
+        },
+      });
+
+      var returnData = new Object();
+
+      if(response.data.documents.length > 0){
+        if(response.data.documents[0].road_address == null){
+            returnData.address = response.data.documents[0].address.address_name;
+        }
+        //신주소
+        else{            
+            returnData.address = response.data.documents[0].road_address.address_name;
+        }
+        resModel = helper.createResponseModel(true, '주소가 정상 조회되었습니다.', returnData);
+      }
+      else{
+        resModel = helper.createResponseModel(false, '주소 조회에 실패하였습니다.', '');
+      }
+
+      return res.status(200).json(resModel);                      
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//주소,위도,경도 수정
+exports.setAddressAndCoordinate = async (req, res, next) => {
+  let resModel;
+  const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
+  const address = helper.changeUndefiendToNull(req.body.address);
+  const latitude = helper.changeUndefiendToNull(req.body.latitude);
+  const longitude = helper.changeUndefiendToNull(req.body.longitude);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+
+  try {        
+
+      let retVal = await tripService.setTripDetail(tripDetailGuid, null, null, address, '', latitude, longitude, null, 0, null, userGuid);
+
+      //등록(1),수정(0)
+      if (retVal == 0 || retVal == 1) {
+        resModel = helper.createResponseModel(true, '주소,위도,경도가 갱신되었습니다.', '');
+      }
+      //실패
+      else {
+        resModel = helper.createResponseModel(false, '주소,위도,경도가 갱신에 실패하였습니다.', '');
+      }
+
+      return res.status(200).json(resModel);                      
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
 //주소 -> 위도,경도 변환
 exports.getCoordinateByAddress = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   let address = helper.changeUndefiendToNull(req.body.address);
-  let addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
-  let zoneCode = helper.changeUndefiendToNull(req.body.addrzoneCodeess);
+  let addressDetail = helper.changeUndefiendToEmpty(req.body.addressDetail);
+  let zoneCode = helper.changeUndefiendToEmpty(req.body.addrzoneCodeess);
   let latitude = 0;
   let longitude = 0;
 
@@ -949,8 +1056,8 @@ exports.setCoordinateByAddress = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   let address = helper.changeUndefiendToNull(req.body.address);
-  let addressDetail = helper.changeUndefiendToNull(req.body.addressDetail);
-  const zoneCode = helper.changeUndefiendToNull(req.body.zoneCode);
+  let addressDetail = helper.changeUndefiendToEmpty(req.body.addressDetail);
+  const zoneCode = helper.changeUndefiendToEmpty(req.body.zoneCode);
   const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
   let latitude = 0;
   let longitude = 0;

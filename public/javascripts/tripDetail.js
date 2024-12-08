@@ -335,3 +335,35 @@
     });
   };
   
+  //위도,경도 가져오기
+  function openKakaoMap(eThis, e, hasParentModalYN){
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    let tripDetailGuid;
+    let address;
+
+    if(hasParentModalYN === undefined){
+      hasParentModalYN = 'N';
+      const td = $(eThis).closest('td');
+      const rowData = table.row(td).data();
+      tripDetailGuid = rowData.TRIP_DTL_GUID;
+      address = $(rowData.ADDR).data('address');      
+    }
+    else{
+      tripDetailGuid = $("#tripDetailGuid").val();
+      address = $("#address").val();
+    }
+
+    var width = '700';
+    var height ='800';
+    
+    //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+    var left = Math.ceil((window.screen.width - width) / 2);
+    var top = Math.ceil((window.screen.height - height) / 2);
+    var param = '?tripDetailGuid=' + tripDetailGuid + '&address=' + address + '&hasParentModalYN=' + hasParentModalYN;
+    var url = '/business/trip/findAddress' + param;
+
+    window.open(url, '주소 찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+  };  

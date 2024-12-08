@@ -52,6 +52,15 @@ function changeUndefiendToZero(value){
     }
 };
 
+function changeUndefiendToEmpty(value){
+    if(value == undefined || value == '' || value == null){
+        return '';
+    }
+    else{
+        return value;
+    }
+};
+
 //Session Value가 존재하는 경우, Session Value 설정, 없는 경우는 Request Value 설정
 function getsessionValueOrRequsetValue(sessionValue, requestValue){
     if (!(sessionValue == undefined || sessionValue == null || sessionValue == '')) {
@@ -114,6 +123,7 @@ module.exports = {
     setMessageForCookie,
     changeUndefiendToNull,
     changeUndefiendToZero,
+    changeUndefiendToEmpty,
     getsessionValueOrRequsetValue,
     dateFormat,
     dayFormat,

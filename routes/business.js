@@ -8,6 +8,7 @@ const path = require('path');
 router.get('/trip', businessController.indexTrip);
 router.get('/trip/detail', businessController.indexTripDetail);
 router.get('/trip/detailmap', businessController.indexTripDetailMap);
+router.get('/trip/findAddress', businessController.findAddress); //카카오 지도 열기
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/getTripWithItems', businessController.getTripWithItems);
 router.post('/trip/setTrip', businessController.setTrip);
@@ -34,6 +35,8 @@ router.post('/trip/deleteTripDetailList', businessController.deleteTripDetailLis
 router.post('/trip/deleteTripDetailImages', businessController.deleteTripDetailImages);
 router.post('/trip/getItem', businessController.getItem);
 router.post('/trip/setTripStartDay', businessController.setTripStartDay);
+router.post('/trip/getAddressByCoordinate', businessController.getAddressByCoordinate); //위도,경도 -> 주소 변환
+router.post('/trip/setAddressAndCoordinate', businessController.setAddressAndCoordinate); //주소,위도,경도 수정
 router.post('/trip/getCoordinateByAddress', businessController.getCoordinateByAddress); //주소 -> 위도,경도 변환
 router.post('/trip/setCoordinateByAddress', businessController.setCoordinateByAddress); //주소 -> 위도,경도 변환 바로 상세 테이블에 적용
 

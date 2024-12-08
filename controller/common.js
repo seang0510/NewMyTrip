@@ -197,7 +197,7 @@ exports.setNotice = async (req, res, next) => {
   let resModel;
   const boardGuid = helper.changeUndefiendToNull(req.body.boardGuid);
   const title = helper.changeUndefiendToNull(req.body.title);
-  const contents = helper.changeUndefiendToNull(req.body.contents);
+  const contents = helper.changeUndefiendToEmpty(req.body.contents);
   const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {
