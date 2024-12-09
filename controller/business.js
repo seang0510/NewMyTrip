@@ -37,15 +37,20 @@ exports.getTripList = async (req, res, next) => {
   let regUserGuid = helper.changeUndefiendToNull(req.body.regUserGuid);
 
   //시스템 관리자인 경우, 전체 조회
-  if(helper.existSessoin(req.session)){
-    const authGroupCode = req.session.authGroupCode;
-    if(authGroupCode == 'S'){
-      regUserGuid = null;
-    }
-    else{
-      regUserGuid = req.session.userGuid;
+  if(req.body.mobieYn == "Y"){
+    //regUserGuid = req.body.userGuid;
+  } else{
+    if(helper.existSessoin(req.session)){
+      const authGroupCode = req.session.authGroupCode;
+      if(authGroupCode == 'S'){
+        regUserGuid = null;
+      }
+      else{
+        regUserGuid = req.session.userGuid;
+      }
     }
   }
+  
 
   try {
     //오늘의 출장 조회
@@ -72,24 +77,34 @@ exports.getTripWithItems = async (req, res, next) => {
   let regUserGuid;
 
   //시스템 관리자인 경우, 전체 조회
-  if(helper.existSessoin(req.session)){
-    const authGroupCode = req.session.authGroupCode;
-    if(authGroupCode == 'S'){
-      regUserGuid = null;
-    }
-    else{
-      regUserGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);;
+  //시스템 관리자인 경우, 전체 조회
+  if(req.body.mobieYn == "Y"){
+    //regUserGuid = req.body.userGuid;
+  } else{
+    if(helper.existSessoin(req.session)){
+      const authGroupCode = req.session.authGroupCode;
+      if(authGroupCode == 'S'){
+        regUserGuid = null;
+      }
+      else{
+        regUserGuid = req.session.userGuid;
+      }
     }
   }
 
   //시스템 관리자인 경우, 전체 조회
-  if(helper.existSessoin(req.session)){
-    const authGroupCode = req.session.authGroupCode;
-    if(authGroupCode == 'S'){
-      regUserGuid = null;
-    }
-    else{
-      regUserGuid = req.session.userGuid;
+  //시스템 관리자인 경우, 전체 조회
+  if(req.body.mobieYn == "Y"){
+    //regUserGuid = req.body.userGuid;
+  } else{
+    if(helper.existSessoin(req.session)){
+      const authGroupCode = req.session.authGroupCode;
+      if(authGroupCode == 'S'){
+        regUserGuid = null;
+      }
+      else{
+        regUserGuid = req.session.userGuid;
+      }
     }
   }
 
@@ -845,10 +860,17 @@ exports.exportTripDetailImage = async (req, res, next) => {
   let userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   //시스템 관리자인 경우, 전체 조회
-  if(helper.existSessoin(req.session)){
-    const authGroupCode = req.session.authGroupCode;
-    if(authGroupCode == 'S'){
-      userGuid = null;
+  if(req.body.mobieYn == "Y"){
+    //regUserGuid = req.body.userGuid;
+  } else{
+    if(helper.existSessoin(req.session)){
+      const authGroupCode = req.session.authGroupCode;
+      if(authGroupCode == 'S'){
+        regUserGuid = null;
+      }
+      else{
+        regUserGuid = req.session.userGuid;
+      }
     }
   }
 
