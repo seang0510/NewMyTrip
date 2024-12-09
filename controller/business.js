@@ -135,6 +135,8 @@ exports.setTrip = async (req, res, next) => {
   const uuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
 
   try {
+    //디폴트 주소 Y
+    markAddressYn = markAddressYn == null ? "Y" : markAddressYn;
     //오늘의 출장 등록,수정
     let retVal = await tripService.setTrip(uuid, title, startDate,
            markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid);

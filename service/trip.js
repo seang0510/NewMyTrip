@@ -248,7 +248,7 @@ exports.importTrip = async (file, userGuid) => {
 
         //오늘의 출장 등록
         const trip = resModel.data.trip;
-        params = [trip.tripGuid, trip.title, trip.startDate, null, null, null, null, null, userGuid];        
+        params = [trip.tripGuid, trip.title, trip.startDate, null, "Y", null, null, null, userGuid];        
         res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
         if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
             console.log("오늘의 출장 등록 성공하였습니다.");
