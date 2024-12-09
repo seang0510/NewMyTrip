@@ -820,8 +820,9 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                     var tempUpdateDate = obj.UPDT_DT;
                     console.log("tempUpdateDate :: " + tempUpdateDate);
                     const tempUpdateDateArr = tempUpdateDate.split(" "); 
-                    obj.UPDT_DT = tempUpdateDateArr[0];
-                    
+                    obj.확인 = tempUpdateDateArr[0];
+                    delete obj.UPDT_DT;
+
                     //console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
                     res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, obj.TRIP_DTL_GUID, 'N']);
 
