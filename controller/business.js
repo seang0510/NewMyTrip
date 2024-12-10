@@ -381,17 +381,20 @@ exports.indexTripDetail = async (req, res, next) => {
       else{
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
-        var tripGuid = req.query.tripGuid;
-        var tripDetailGuid = req.query.tripDetailGuid;
+        var tripGuid = req.query.tripGuid;        
+        var tripDetailGuid = req.query.tripDetailGuid;        
         let itemList = await tripService.getItem(tripGuid);
         let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
+        const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+        const trip = await tripService.getTripList(tripGuid, null, userGuid);
+        let tripName = trip == null ? '모두의 출장 상세' : trip[0].TTL;
 
         if(tripGuid == null){
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList) });
         }        
       }        
   }
@@ -418,12 +421,15 @@ exports.indexTripDetailMap = async (req, res, next) => {
         let itemList = await tripService.getItem(tripGuid);
         let itemNameList = itemList.map(x => x.ITM_NM);
         let bannerList = await adService.getAdList('', ''); //광고 조회
+        const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+        const trip = await tripService.getTripList(tripGuid, null, userGuid);
+        let tripName = trip == null ? '모두의 출장 상세 지도보기' : trip[0].TTL;
 
         if(tripGuid == null){
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList) });
         }        
       }        
   }
@@ -936,7 +942,7 @@ exports.findAddress = async (req, res, next) => {
 
   try {
       //로그인 되지 않은 경우
-      if(!(req.session.valid == true) || tripDetailGuid == null){
+      if(!(req.session.valid == true)){
           return res.render('error', { title: 'Express', layout: false });
       }
       //현재 로그인 되어 있는 경우    

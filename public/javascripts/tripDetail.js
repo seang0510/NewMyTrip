@@ -212,6 +212,30 @@
     return defItem;
   };
   
+  //신규 등록
+  function createItem(){
+    InitModalTripDetail();
+
+    //이미지 슬라이드 초기화 및 기본 이미지 추가
+    $("#carouselOuter .carousel-inner").empty();
+
+    var imgHtmlCode = createCarouselItemCode('', '');
+    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
+    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
+
+    //아이템 리스트 설정
+    var itemNameList = JSON.parse($("#itemNameList").val());
+    var itemList = [];
+
+    for(var i = 0; i < itemNameList.length;i++){
+      var itemName = itemNameList[i];
+      itemList.push(getDefaultItem(itemName, ''));          
+    }
+
+    tableItems = DataTableForItems('tblItems', itemList);
+    $("#modalTripDetail").modal('show');
+  };
+
   //저장
   function saveTripDetail(eThis, e, url){
     //HTML5 기본 Validation
@@ -337,7 +361,6 @@
   
   //위도,경도 가져오기
   function openKakaoMap(eThis, e, hasParentModalYN){
-
     e.preventDefault();
     e.stopPropagation();
 
@@ -366,4 +389,4 @@
     var url = '/business/trip/findAddress' + param;
 
     window.open(url, '주소 찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
-  };  
+  };

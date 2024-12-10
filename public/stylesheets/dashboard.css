@@ -132,3 +132,13 @@ button.bg-dark:hover {
     display: none;
   }
 }
+
+.context-menu-icon-updated {
+  display: flex;
+  align-items: center;
+  padding-left: 5px;
+}
+.context-menu-icon-updated img {
+  width: 15px;
+  margin-right: 8px;
+}

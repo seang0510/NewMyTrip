@@ -45,12 +45,15 @@
 <%# 메뉴명 & 버튼 %>
 <div class="d-flex">
   <div class="ps-1">
-    <h2>모두의 출장 상세 지도보기</h2>
+    <h2><%=tripName%></h2>
   </div>
   <div class="d-flex ms-auto">
     <div>
       <button type="button" id="btnViewList" class="btn btn-success" onclick="viewList()">리스트 보기</button>
     </div>
+    <div class="ms-1">
+      <button type="button" id="btnCreate" class="btn btn-primary" onclick="createItem()">등록</button>      
+    </div>    
     <div class="ms-1">
       <button type="button" class="btn btn-secondary" onclick="closeItem()">닫기</button>
     </div>
@@ -70,9 +73,9 @@
     <div id="map"></div>
     <!-- 지도타입 컨트롤 div 입니다 -->
     <div class="map-btn-control">
-      <button id="btnSkyView" class="btn btn-sm btn-primary map-btn map-active" onclick="setMapType(this, event)">지도</button>
+      <button id="btnSkyView" class="btn btn-sm btn-primary map-btn map-active" onclick="setMapType(this, event)">스카이뷰</button>
       <button id="btnUseDistrict" class="btn btn-sm btn-warning overlay-btn" onclick="setOverlayMapTypeId(this, event, 'use_district')">지적도</button>
-      <button id="btnSpeechBubble" class="btn btn-sm btn-success bubble-btn" onclick="setSpeechBubble(this, event)">말풍선 OFF</button>
+      <button id="btnSpeechBubble" class="btn btn-sm btn-success bubble-btn" onclick="setSpeechBubble(this, event)">말풍선 ON</button>
     </div>
     <!-- 현재 위치 버튼 -->
     <div class="compass-btn-control">
@@ -299,8 +302,8 @@
     { targets: 1, orderable: false, render: false },    
   ];
 
-  //레코드 더블클릭
-  function dblClickRecord(eThis){
+  //상세보기 열기
+  function OpenTripDetailModal(eThis){
     const rowData = table.row(eThis).data();
     let tripDetailGuid = rowData.TRIP_DTL_GUID;
     let column = table.column(eThis).dataSrc();
@@ -365,7 +368,7 @@
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
 
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','COMP_DT','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -406,13 +409,15 @@
             scroller: true,
             buttons: [
               {
+                title: '',
                 extend: 'excel',
                 class: 'buttons-excel',
                 exportOptions: {
                   // columns: ':visible:not(:first-child)'
                   columns: exportColumns,
                   modifier: {
-                      selected: false
+                    selected: 'undefined',
+                    focused: 'undefined',
                   }                  
                 },
               }
@@ -427,8 +432,8 @@
           });
           
           //Double Click Event
-          $('#tblMain tbody').on('dblclick', 'tr', function(e) {
-            dblClickRecord($(this));
+          $('#tblMain tbody').on('click', 'tr.selected', function(e) {
+            OpenTripDetailModal($(this));
           }); 
 
           //Click Event
@@ -436,6 +441,13 @@
             ClickRecord($(this));
           });         
           
+          //재선택 시, De-Select 되지 않기
+          table.on('user-select', function (e, dt, type, cell, originalEvent) {
+            if ($(cell.node()).parent().hasClass('selected')) {
+                e.preventDefault();
+            }
+          });
+
           //선택된 상세 GUID가 존재하는 경우, 선택 이벤트 발생
           if(initTripDetailGuid != ''){
             var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:initTripDetailGuid})).index();
@@ -513,29 +525,14 @@
           width: '100px',
           visible: false,
         };
-        break;             
-      case 'REG_EMAIL':
-        info = {
-          title: '등록자',
-          name: colName,
-          data: colName,
-          width: '100px',
-          visible: false,
-        };
-        break;      
-      case 'REG_DT':
-        info = {
-          title: '등록일시',
-          name: colName,
-          data: colName,
-          width: '100px',
-          visible: false,
-        };
-        break;                         
+        break;                                   
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
       case 'COMP_YN':
+      case 'COMP_DT':
+      case 'REG_EMAIL':
+      case 'REG_DT':
       case 'UPDT_EMAIL':
       case 'UPDT_DT':
         info = {
@@ -606,12 +603,12 @@
       //스카이뷰
       if(isSkyView){
         map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
-        $(eThis).text('스카이뷰');
+        $(eThis).text('지도');
       }
       //지도
       else{
         map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);               
-        $(eThis).text('지도');
+        $(eThis).text('스카이뷰');
       }
   };
 
@@ -669,7 +666,7 @@
     //말풍선ON
     if(isSpeechBubble){
       $(eThis).addClass('bubble-active');
-      $(eThis).text('말풍선 ON');
+      $(eThis).text('말풍선 OFF');
 
       markerInfoList.forEach(element => {
         element.infowindow.open(map, element.marker); 
@@ -680,7 +677,7 @@
     //말풍선OFF
     else{
       $(eThis).removeClass('bubble-active');  
-      $(eThis).text('말풍선 OFF');
+      $(eThis).text('말풍선 ON');
 
       markerInfoList.forEach(element => {
         element.infowindow.close();   
@@ -784,29 +781,34 @@
   function clickListener(map, marker, infowindow){
     // 마커 위에 인포윈도우를 표시합니다 
     return function() {
-      curMarkerInfo = markerInfoList.find(x => x.marker == marker);
+      var tmpCurMarkerInfo = markerInfoList.find(x => x.marker == marker);
       markerInfoList.forEach(element => {
-        if(element.marker == curMarkerInfo.marker){
+        if(element.marker == tmpCurMarkerInfo.marker){
 
           //통합인 경우 infoWindow
-          if(curMarkerInfo.intgYn == 'Y'){
+          if(tmpCurMarkerInfo.intgYn == 'Y'){
+            curMarkerInfo = tmpCurMarkerInfo;
             openModalDuplicateMarker();
+          }         
+          //이전과 동일한 경우, 상세 페이지 오픈 
+          else if(curMarkerInfo.marker == tmpCurMarkerInfo.marker){
+            getItem(tmpCurMarkerInfo.tripDetailGuid);
           }
 
-          infowindow.open(map, curMarkerInfo.marker);          
+          infowindow.open(map, tmpCurMarkerInfo.marker);          
           
           //그리드 Row 선택 및 이동
-          var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:curMarkerInfo.tripDetailGuid})).index();
+          var rowIndex = table.row(searchFunction({TRIP_DTL_GUID:tmpCurMarkerInfo.tripDetailGuid})).index();
           table.row(rowIndex).scrollTo().select();
 
           //지도 위치이동
-          var position = curMarkerInfo.marker.getPosition();
+          var position = tmpCurMarkerInfo.marker.getPosition();
           var moveLatLon = new kakao.maps.LatLng(position.Ma, position.La);
           map.setCenter(moveLatLon);          
 
           //마커 색상변경
           var clickImage = createMarkerImage('Y', 'N', 'N');
-          curMarkerInfo.marker.setImage(clickImage);          
+          tmpCurMarkerInfo.marker.setImage(clickImage);       
         }
         else{
           if(!isSpeechBubble){
@@ -816,9 +818,10 @@
           //마커 색상변경
           var selectImage = selectMarkerImage('N', element.intgYn, element.tripDetailDuplicateList);
           element.marker.setImage(selectImage);                
-        }          
+        } 
       });        
       
+      curMarkerInfo = tmpCurMarkerInfo;
       InitInfoWindow();      
     };    
   };
@@ -956,6 +959,9 @@
     curMarkerInfo.tripDetailGuid = tripDetailGuid;
 
     $("#modalDuplicateMarker").modal('hide');
+
+    //해당 상세 열기
+    getItem(curMarkerInfo.tripDetailGuid);
   };
 
   //중목 마커 그리드
@@ -1075,7 +1081,7 @@
   //InfowWindow Content 제작
   function setInfowindowContent(title, count){
     if(count > 0){
-      return "<span class='info-title duplicate' onclick='openModalDuplicateMarker();'>" + title + " (" + (count) + "건)</span>";
+      return "<span class='info-title duplicate' onclick='openModalDuplicateMarker();'>" + title + "외 " + (count) + "개</span>";
     }
     else{
       return "<span class='info-title'>" + title + "</span>";

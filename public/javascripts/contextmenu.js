@@ -137,8 +137,20 @@ $(function () {
       }
     },
     items: {
-      exportExcel: { name: "엑셀 내보내기", icon: "fa-file-excel-o" },
-      exportImage: { name: "사진 내보내기", icon: "fa-file-image-o" },
+      exportExcel: {
+        name: '엑셀 내보내기',
+        icon: function(opt, $itemElement, itemKey, item){
+          $itemElement.html('<img src="/images/download.png"><span>' + item.name + '</span>');
+          return 'context-menu-icon-updated';
+        }
+      },
+      exportImage: {
+        name: "사진 내보내기",
+        icon: function(opt, $itemElement, itemKey, item){
+          $itemElement.html('<img src="/images/download.png"><span>' + item.name + '</span>');
+          return 'context-menu-icon-updated';
+        }
+      },
     }
   });
 });

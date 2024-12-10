@@ -73,7 +73,7 @@
           <div class="mt-3 text-white rounded desp-outer">
             <h4>모두의 출장</h1> 
             <p>출장 생성 후 7일간 사용할 수 있습니다.</p>
-            <p>단 모바일 앱에서 더보기 > 광고보기를 하면 7일의 기간을 갱신할 수 있습니다.</p>
+            <p>모바일 앱에서 해당 출장을 클릭하여 광고를 시청 하면 기간을 갱신 할 수 있습니다.</p>
           </div>
         </div>
 
@@ -196,10 +196,11 @@
   var table = {};
   var tableItems = {};
   let itemCount = 1;
+  let columns = [];
 
   $(document).ready( function () {
-    
     //DataTable.js
+    InitializeColumns();
     table = DataTableJS('tblMain', '/business/trip/getTripList');  
 
     //Click Event
@@ -223,7 +224,7 @@
         }
         else{
           $("#modalAlert .modal-title").html("만료된 출장");          
-          $("#modalAlert .modal-body").html('모바일 앱에서 더보기 -> 광고보기를 하여 7일의 기간을 갱신할 수 있습니다.');
+          $("#modalAlert .modal-body").html('모바일 앱에서 해당 출장을 클릭하여 광고를 시청 하면 기간을 갱신 할 수 있습니다.');
           $("#modalAlert").modal('show');
         }
       }
@@ -243,15 +244,23 @@
 
   });
 
-  const columns = [
-    {title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false },
-    {title: '', data : null, name: 'CHK', width: "50px", visible: false },    
-    {title: 'No.', data : "NO", name: "NO", width: "50px" },
-    {title: '이름', data : "TTL", name: 'TTL', width: "200px"},
-    {title: '만료일', data : "EXPIRE_DT", name: 'EXPIRE_DT', width: "200px"},
-    {title: '등록자', data : "REG_EMAIL", name: 'REG_EMAIL', width: "200px"},
-    {title: '등록일시', data : "REG_DT", name: 'REG_DT', width: "200px" },
-  ];
+  //컬럼 초기화
+  function InitializeColumns(){
+    columns.push({title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false });
+    columns.push({title: '', data : null, name: 'CHK', width: "50px", visible: false });
+    columns.push({title: 'No.', data : "NO", name: "NO", width: "50px" });
+    columns.push({title: '이름', data : "TTL", name: 'TTL', width: "100%"});
+    columns.push({title: '만료일', data : "EXPIRE_DT", name: 'EXPIRE_DT', width: "200px"});
+
+    if(authGroupCode == 'S'){
+      columns.push({title: '등록자', data : "REG_EMAIL", name: 'REG_EMAIL', width: "200px", visible: true });
+      columns.push({title: '등록일시', data : "REG_DT", name: 'REG_DT', width: "200px", visible: true });
+    }
+    else{
+      columns.push({title: '등록자', data : "REG_EMAIL", name: 'REG_EMAIL', width: "0px", visible: false });
+      columns.push({title: '등록일시', data : "REG_DT", name: 'REG_DT', width: "0px", visible: false });
+    }
+  };
 
   const columnDefs = [
     { targets: "_all", className: "header" },

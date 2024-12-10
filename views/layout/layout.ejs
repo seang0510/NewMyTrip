@@ -46,9 +46,6 @@
                 <a class="nav-link" href="/common/notice">공지사항 <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item d-sm-block d-md-none">
-                <a class="nav-link" href="/business/trip">오늘의 출장</a>
-            </li>
-            <li class="nav-item d-sm-block d-md-none">
                 <a class="nav-link" href="/business/tourLocation">관광 명소</a>
             </li>
 
@@ -64,7 +61,6 @@
     </div>
     <!-- 상단 버튼 -->
     <a id="aNotice" class="btn btn-light me-3 navbar-right-none top-menu" href="/common/notice">공지사항</a>
-    <a class="btn btn-light me-3 navbar-right-none top-menu" href="/business/trip">모두의 출장</a>
 
     <%- defineContent('menuBodyByAuth') %>
 
@@ -188,6 +184,7 @@
 
   <script>
     const userEmail = "<%= userEmail.trim() %>";
+    const authGroupCode = "<%= authCode.trim() %>";
 
     $(document).ready(function () {
 

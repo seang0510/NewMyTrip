@@ -44,7 +44,7 @@
 <%# 메뉴명 & 버튼 %>
 <div class="d-flex">
   <div class="ps-1">
-    <h2>모두의 출장 상세</h2>
+    <h2><%=tripName%></h2>
   </div>
   <div class="d-flex ms-auto">
     <div>
@@ -270,9 +270,6 @@
     let column = table.column(eThis).dataSrc();
 
     switch(column){
-      case 'ADDR':
-        location.href = '/business/trip/detailmap?tripGuid=' + tripGuid + '&tripDetailGuid=' + tripDetailGuid;
-        break;
       case 'IMG_CNT':        
         $("#tripDetailGuid").val(tripDetailGuid);
         $("#modalTripDetailImage").modal('show');
@@ -312,8 +309,6 @@
             columns.push(getDataInfoFromColName('LAT'));
             columns.push(getDataInfoFromColName('LNG'));
             columns.push(getDataInfoFromColName('IMG_CNT'));
-            columns.push(getDataInfoFromColName('REG_EMAIL'));
-            columns.push(getDataInfoFromColName('REG_DT'));
           }
           else{
             if(isEmpty(data.value)){
@@ -334,7 +329,7 @@
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
 
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','COMP_DT','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -357,7 +352,7 @@
             language : getLanguage(),
             paging: true,
             lengthChange: true,
-            searching: true,
+            searching: false,
             ordering: true,
             info: true,            
             scrollCollapse: true,
@@ -370,20 +365,22 @@
             scrollY: 'calc(100vh - 282px)',
             // responsive: true,            
             fixedColumns: {
-              start: 4
+              start: 3
             },        
             order: [[2, 'asc']],     
             destroy: true,     
             scroller: true,            
             buttons: [
               {
+                title: '',
                 extend: 'excel',
                 class: 'buttons-excel',
                 exportOptions: {
                   // columns: ':visible:not(:first-child)'
                   columns: exportColumns,
                   modifier: {
-                      selected: false
+                      selected: 'undefined',
+                      focused: 'undefined',
                   }                         
                 },
               }
@@ -493,27 +490,14 @@
           data: colName,
           width: '100px',
         };
-        break;             
-      case 'REG_EMAIL':
-        info = {
-          title: '등록자',
-          name: colName,
-          data: colName,
-          width: '100px',
-        };
-        break;      
-      case 'REG_DT':
-        info = {
-          title: '등록일시',
-          name: colName,
-          data: colName,
-          width: '100px',
-        };
-        break;                         
+        break;                                  
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
       case 'COMP_YN':
+      case 'COMP_DT':
+      case 'REG_EMAIL':
+      case 'REG_DT':
       case 'UPDT_EMAIL':
       case 'UPDT_DT':
         info = {
@@ -534,30 +518,6 @@
         break;
     }
     return info;
-  };
-
-  //신규 등록
-  function createItem(){
-    InitModalTripDetail();
-
-    //이미지 슬라이드 초기화 및 기본 이미지 추가
-    $("#carouselOuter .carousel-inner").empty();
-
-    var imgHtmlCode = createCarouselItemCode('', '');
-    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
-    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
-
-    //아이템 리스트 설정
-    var itemNameList = JSON.parse($("#itemNameList").val());
-    var itemList = [];
-
-    for(var i = 0; i < itemNameList.length;i++){
-      var itemName = itemNameList[i];
-      itemList.push(getDefaultItem(itemName, ''));          
-    }
-
-    tableItems = DataTableForItems('tblItems', itemList);
-    $("#modalTripDetail").modal('show');
   };
 
   //리스트 삭제

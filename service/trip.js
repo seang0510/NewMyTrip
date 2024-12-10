@@ -1012,7 +1012,7 @@ exports.setTripDetailCompYN = async (tripDetailGuid, compYn, userGuid) => {
         await conn.beginTransaction();
 
         //오늘의 출장 상세 아이템 확정
-        res = await pool.query("UPDATE BIZ_TRIP_DTL SET COMP_YN = ?, UPDT_USER_GUID = ?, UPDT_DT = NOW() WHERE DEL_YN = 'N' AND TRIP_DTL_GUID = ?",[compYn, userGuid, tripDetailGuid]);
+        res = await pool.query("UPDATE BIZ_TRIP_DTL SET COMP_YN = ?, COMP_DT = NOW(), UPDT_USER_GUID = ?, UPDT_DT = NOW() WHERE DEL_YN = 'N' AND TRIP_DTL_GUID = ?",[compYn, userGuid, tripDetailGuid]);
 
         if (res[0].affectedRows >= 1) {
             if(compYn == 'Y'){
