@@ -583,7 +583,7 @@ exports.getTripDetailListForImage = async (req, res, next) => {
     var checkFile = 0;
 
     for (var i = 0; i < resModel.value.length; i++) {
-      //console.log(resModel.value[i].FILE_NM);
+      console.log(resModel.value[i].FILE_NM);
       if(fs.existsSync('.' + resModel.value[i].FILE_PATH)){ // 파일이 존재한다면 true 그렇지 않은 경우 false 반환
 
         checkFile = 1;
@@ -602,6 +602,7 @@ exports.getTripDetailListForImage = async (req, res, next) => {
 
       var returnData = new Object();
       returnData.url = fileName + ".zip";
+      console.log(returnData);
       resModel = helper.createResponseModel(true, '이미지 파일이 존재 합니다.', returnData);
     }else{
       //이미지 파일 존재 하지 않음

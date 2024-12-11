@@ -51,6 +51,13 @@ router.get('/tour_images/:imageName', function(req, res){
   res.sendFile('/public/tour_images/'+imgName);    
 });
 
+router.get('/imageDown/:imageName', function(req, res){
+  var imgName = req.params.imageName;
+  console.log('이미지 요청: ' + imgName);
+  res.sendFile(path.join(__dirname, '..', 'public/download/' + imgName));    
+});
+
+
 //배너 이미지 get (샘플 : http://192.168.0.13:3030/banner/라면.jpg)
 router.get('/banner/:imageName', function(req, res){
   var imgName = req.params.imageName;
