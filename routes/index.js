@@ -28,6 +28,11 @@ router.get('/joinPerson', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/personalInformation.html'));
 });
 
+//구글광고 요청
+router.get('/app-ads.txt', function(req, res){
+    res.sendFile(path.join(__dirname, '..', 'public/html/app-ads.txt'));
+});
+
 router.get('/joinConditions', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/termsConditions.html'));
 });
