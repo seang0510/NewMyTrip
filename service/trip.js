@@ -816,12 +816,10 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                     delete obj.REG_DT;
                     delete obj.UPDT_EMAIL;
 
-                    //데이트 포멧 변경
-                    var tempUpdateDate = obj.UPDT_DT;
-                    console.log("tempUpdateDate :: " + tempUpdateDate);
-                    const tempUpdateDateArr = tempUpdateDate.split(" "); 
-                    obj.확인 = tempUpdateDateArr[0];
+                    
+                    obj.확인 = obj.COMP_DT;
                     delete obj.UPDT_DT;
+                    delete obj.COMP_DT;
 
                     //console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
                     res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, obj.TRIP_DTL_GUID, 'N']);
