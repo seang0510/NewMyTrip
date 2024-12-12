@@ -17,7 +17,6 @@
   <script src="/jquery-ui.min.js"></script>
   <script src="/jquery.cookie.js"></script>
   <script src="/javascripts/common.js"></script>
-  <script src="/javascripts/fixWidth.js"></script>
 </head>
 
 <body>
@@ -29,13 +28,13 @@
 
   <!-- Login Page -->
   <main class="container d-flex justify-content-center align-items-center h-100">
-    <div id="loginRow" class="row g-lg-5 py-5">
-      <div id="loginImage" class="col-lg-7 m-auto">
-        <img class="rounded img-fluid" src="/images/bg_login.jpg" alt="" width="100%" height="100%">
-      </div>
-      <div id="loginForm" class="col-md-10 col-lg-5 m-auto">
+    <div id="loginRow" class="row py-5">
+
+      <div id="loginForm" class="m-auto" style="width: 400px;">
         <form class="p-4 p-md-4 border rounded-3 bg-body-tertiary">
-          <h1 class="h3 mb-3 fw-normal">모두의 출장</h1>
+          <div id="loginImage" class="m-auto">
+            <img class="rounded img-fluid" src="/images/bg_login.png" alt="" width="100%" height="100%">
+          </div>
           <div class="form-floating mb-3">
             <input type="email" name="email" class="form-control" id="emailForLogin" placeholder="name@example.com"
               required>

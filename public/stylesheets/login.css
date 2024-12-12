@@ -16,9 +16,3 @@ body {
 a {
     color: #00B7FF;
 }
-
-@media (max-width: 991px) {
-  img {
-    width: 0%;
-  }
-}
