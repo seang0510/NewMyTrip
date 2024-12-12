@@ -88,7 +88,15 @@ function info(eThis, e){
 
 //카카오채널 연결
 function connectKakaoChaneel(eThis, e){
-  alert('개발중입니다');
+  var width = '700';
+  var height ='800';
+  
+  //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+  var left = Math.ceil((window.screen.width - width) / 2);
+  var top = Math.ceil((window.screen.height - height) / 2);
+  var url = 'https://pf.kakao.com/_QtYRn';
+
+  window.open(url, '카카오 채널 연결', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');  
 };
 
 //로그아웃
