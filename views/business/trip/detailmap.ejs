@@ -115,7 +115,9 @@
         <div class="modal-body">
           <form class="needs-validation" novalidate>
             <input type="hidden" id="tripDetailGuid" value="">
+            <input type="hidden" id="compYn" value="N">
             <button type="submit" id="btnSaveTripDetail" class="visually-hidden" onclick="saveTripDetail(this, event, '/business/trip/detailmap')"></button>
+            <button type="submit" id="btnConfirmTripDetail" class="visually-hidden" onclick="confirmTripDetail(this, event, '/business/trip/detailmap')"></button>
 
             <div id="carouselOuter" class="carousel slide">
               <div class="carousel-inner">           
@@ -207,8 +209,8 @@
 
         <!-- Modal footer -->
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary"
-          onclick="document.getElementById('btnSaveTripDetail').click();">저장</button>
+          <button type="button" id="btnConfirm" class="btn btn-secondary" onclick="document.getElementById('btnConfirmTripDetail').click();">확인</button>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('btnSaveTripDetail').click();">저장</button>
           <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
         </div>
 
@@ -262,6 +264,7 @@
   var fileNo = 0;
   var filesArr = [];
   var initTripDetailGuid = '<%= tripDetailGuid %>';
+  var tripName = '<%= tripName %>';
   var map;
   var markerPos = [];
   var markerInfoList = [];
@@ -357,6 +360,7 @@
             }
             else{
               gridData = data.value;
+              gridData = changeImageData(gridData);
               columnNames = Object.keys(gridData[0]);      
             }
 
@@ -368,7 +372,7 @@
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
 
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','COMP_DT','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -409,7 +413,8 @@
             scroller: true,
             buttons: [
               {
-                title: '',
+                filename: tripName,
+                title: null,
                 extend: 'excel',
                 class: 'buttons-excel',
                 exportOptions: {
@@ -461,13 +466,31 @@
     });
   };
 
+  //명칭에 확인 버튼추가, 주소 버튼, 사진 icon으로 변경
+  function changeImageData(gridData){
+    for(var i = 0; i< gridData.length; i++){
+
+      //명칭에 확인표시 추가
+      if(gridData[i].COMP_YN == 'Y'){
+        var confirmCode = "<div class='d-flex align-items-center'>";
+        confirmCode += "<span class='me-2'>" + gridData[i].FCLT_NM + "</span>";
+        confirmCode += "<span class='badge text-bg-secondary ms-auto'>확인완료</span>";
+        confirmCode += "</div>";
+        gridData[i].FCLT_NM = confirmCode;       
+      }
+  
+    }
+
+    return gridData;
+  };
+
   //컬럼에 따라 DataTable.js 컬럼 반환
   function getDataInfoFromColName(colName){
     let info = {};
     switch(colName){
       case 'ODR':
         info = {
-          title: 'No.',
+          title: '번호',
           name: colName,
           data: colName,
           width: '50px',
@@ -492,7 +515,7 @@
         break;      
       case 'ADDR_DTL':
         info = {
-          title: '상세 주소',
+          title: '상세주소',
           name: colName,
           data: colName,
           width: '200px',
@@ -525,12 +548,29 @@
           width: '100px',
           visible: false,
         };
-        break;                                   
+        break;      
+      case 'IMGS':
+        info = {
+          title: '이미지',
+          name: colName,
+          data: colName,
+          width: '100px',
+          visible: false,
+        };
+        break;                   
+      case 'COMP_DT':
+        info = {
+          title: '확정',
+          name: colName,
+          data: colName,
+          width: '100px',
+          visible: false,
+        };
+        break;                                      
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
       case 'COMP_YN':
-      case 'COMP_DT':
       case 'REG_EMAIL':
       case 'REG_DT':
       case 'UPDT_EMAIL':
@@ -791,7 +831,7 @@
             openModalDuplicateMarker();
           }         
           //이전과 동일한 경우, 상세 페이지 오픈 
-          else if(curMarkerInfo.marker == tmpCurMarkerInfo.marker){
+          else if(curMarkerInfo !== undefined && curMarkerInfo.marker == tmpCurMarkerInfo.marker){
             getItem(tmpCurMarkerInfo.tripDetailGuid);
           }
 
@@ -814,9 +854,9 @@
           if(!isSpeechBubble){
             element.infowindow.close(); 
           }          
-
+          
           //마커 색상변경
-          var selectImage = selectMarkerImage('N', element.intgYn, element.tripDetailDuplicateList);
+          var selectImage = selectMarkerImage(element.compYn, element.intgYn, element.tripDetailDuplicateList);
           element.marker.setImage(selectImage);                
         } 
       });        
@@ -837,7 +877,7 @@
   //인포윈도우를 닫는 클로저를 만드는 함수입니다 
   function makeOutListener(infowindow) {
     return function() {
-        if(!isSpeechBubble && !(curMarkerInfo.infowindow == infowindow)){
+        if(!isSpeechBubble && curMarkerInfo !== undefined && !(curMarkerInfo.infowindow == infowindow)){
           infowindow.close();
         }        
     };
@@ -1039,7 +1079,7 @@
       }
     }
     //확정
-    else if(compYn == 'Y'){
+    else if(compYn == 'Y'){      
       return createMarkerImage('N', 'Y', 'N');
     }
     //기본
@@ -1125,7 +1165,7 @@
           }
           // 그 외
           else{            
-            var selectImage = selectMarkerImage('N', element.intgYn, element.tripDetailDuplicateList);
+            var selectImage = selectMarkerImage(element.compYn, element.intgYn, element.tripDetailDuplicateList);
             element.marker.setImage(selectImage);
 
             //말풍선 켜진 경우, InfoWindow 이벤트 발생하지 않음

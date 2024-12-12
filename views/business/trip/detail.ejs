@@ -60,8 +60,8 @@
       <button type="button" class="btn btn-secondary" onclick="closeItem()">닫기</button>
     </div>
     <div class="ms-1">
-      <button class="context-menu-tripDetail btn btn-dark">
-        <span class="fa fa-sign-out fa-fw w-100"></span>
+      <button class="context-menu-tripDetail btn btn-light p-0">
+        <img src="/images/download.png" style="height: 37.8px;">
       </button>
     </div>
   </div>
@@ -90,7 +90,9 @@
         <div class="modal-body">
           <form class="needs-validation" novalidate>
             <input type="hidden" id="tripDetailGuid" value="">
+            <input type="hidden" id="compYn" value="N">
             <button type="submit" id="btnSaveTripDetail" class="visually-hidden" onclick="saveTripDetail(this, event, '/business/trip/detail')"></button>
+            <button type="submit" id="btnConfirmTripDetail" class="visually-hidden" onclick="confirmTripDetail(this, event, '/business/trip/detail')"></button>
 
             <div id="carouselOuter" class="carousel slide">
               <div class="carousel-inner">           
@@ -182,8 +184,8 @@
 
         <!-- Modal footer -->
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary"
-          onclick="document.getElementById('btnSaveTripDetail').click();">저장</button>
+          <button type="button" id="btnConfirm" class="btn btn-secondary visually-hidden" onclick="document.getElementById('btnConfirmTripDetail').click();">확인</button>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('btnSaveTripDetail').click();">저장</button>
           <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
         </div>
 
@@ -241,6 +243,7 @@
   var fileNo = 0;
   var filesArr = [];
   var initTripDetailGuid = '<%= tripDetailGuid %>';
+  var tripName = '<%= tripName %>';
 
   $(document).ready( function () {
     //모달 초기화
@@ -329,7 +332,7 @@
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
 
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','COMP_DT','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -372,7 +375,8 @@
             scroller: true,            
             buttons: [
               {
-                title: '',
+                filename: tripName,
+                title: null,
                 extend: 'excel',
                 class: 'buttons-excel',
                 exportOptions: {
@@ -408,9 +412,18 @@
     });
   };
 
-  //주소 버튼, 사진 icon으로 변경
+  //명칭에 확인 버튼추가, 주소 버튼, 사진 icon으로 변경
   function changeImageData(gridData){
     for(var i = 0; i< gridData.length; i++){
+
+      //명칭에 확인표시 추가
+      if(gridData[i].COMP_YN == 'Y'){
+        var confirmCode = "<div class='d-flex align-items-center'>";
+        confirmCode += "<span class='me-2'>" + gridData[i].FCLT_NM + "</span>";
+        confirmCode += "<span class='badge text-bg-secondary ms-auto'>확인완료</span>";
+        confirmCode += "</div>";
+        gridData[i].FCLT_NM = confirmCode;       
+      }
 
       //이미지 갯수에 따른 IMG 표기
       if(gridData[i].IMG_CNT > 0){
@@ -437,7 +450,7 @@
     switch(colName){
       case 'ODR':
         info = {
-          title: 'No.',
+          title: '번호',
           name: colName,
           data: colName,
           width: '50px',
@@ -461,7 +474,7 @@
         break;      
       case 'ADDR_DTL':
         info = {
-          title: '상세 주소',
+          title: '상세주소',
           name: colName,
           data: colName,
           width: '200px',
@@ -490,12 +503,29 @@
           data: colName,
           width: '100px',
         };
+        break;           
+      case 'IMGS':
+        info = {
+          title: '이미지',
+          name: colName,
+          data: colName,
+          width: '100px',
+          visible: false,
+        };
+        break;               
+      case 'COMP_DT':
+        info = {
+          title: '확정',
+          name: colName,
+          data: colName,
+          width: '100px',
+          visible: false,
+        };
         break;                                  
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
       case 'COMP_YN':
-      case 'COMP_DT':
       case 'REG_EMAIL':
       case 'REG_DT':
       case 'UPDT_EMAIL':

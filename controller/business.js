@@ -968,15 +968,15 @@ exports.findAddress = async (req, res, next) => {
       }        
   }
   catch (err) {
-      return res.status(500).json(err);
+      return res.render('business/trip/findAddress', { title: '주소 찾기', layout: false, tripDetailGuid: tripDetailGuid, hasParentModalYN: hasParentModalYN, address: address, latitude: latitude, longitude: longitude });
   }
 };
 
 //위도,경도 -> 주소 변환
 exports.getAddressByCoordinate = async (req, res, next) => {
   let resModel;
-  let latitude = helper.changeUndefiendToNull(req.body.latitude);
-  let longitude = helper.changeUndefiendToNull(req.body.longitude);
+  let latitude = helper.changeUndefiendToZero(req.body.latitude);
+  let longitude = helper.changeUndefiendToZero(req.body.longitude);
 
   try {        
       const response = await axios({
@@ -1015,8 +1015,8 @@ exports.setAddressAndCoordinate = async (req, res, next) => {
   let resModel;
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   const address = helper.changeUndefiendToNull(req.body.address);
-  const latitude = helper.changeUndefiendToNull(req.body.latitude);
-  const longitude = helper.changeUndefiendToNull(req.body.longitude);
+  const latitude = helper.changeUndefiendToZero(req.body.latitude);
+  const longitude = helper.changeUndefiendToZero(req.body.longitude);
   const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
 
   try {        

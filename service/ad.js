@@ -38,7 +38,7 @@ exports.setAd = async (adGuid, adName, file, urlLink, userGuid) => {
             const fileName = file.originalname; //Web에서 보는 파일명
             const orgFileName = file.filename; //실제 디스크에 저장되는 파일명
             const filePath = file.path.replace(process.cwd(),'');
-            const urlPath = file.path.replace(process.cwd() + '\\uploads','');
+            const urlPath = '/public/tour_images/' + orgFileName;
 
             //첨부파일 등록
             params = [fileGuid, fileType, fileName, orgFileName, filePath, urlPath, userGuid];

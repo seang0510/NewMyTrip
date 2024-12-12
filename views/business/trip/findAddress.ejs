@@ -75,8 +75,9 @@
       <!-- 주소검색 컨트롤 div 입니다 -->
       <div class="address-outer">
         <div class="address-inner">
-            <input type="text" id="address" class="form-control" value="<%-address %>" placeholder="마커를 클릭하세요." readonly>
-            <button id="btnUpdate" class="btn btn-sm btn-primary" onclick="updateLatLng(this, event)">확인</button>
+            <input type="text" id="address" class="form-control" value="<%-address %>" placeholder="마커를 클릭하세요." onkeypress="enterAddress(this, event);">
+            <button id="btnSearch" class="btn btn-sm btn-primary" onclick="searchLatLng(this, event)">검색</button>
+            <button id="btnUpdate" class="btn btn-sm btn-success" onclick="updateLatLng(this, event)">확인</button>
         </div>
       </div>        
     </div>
@@ -260,52 +261,122 @@
       map.setLevel(map.getLevel() + 1);
   };
 
-  //현재 마커의 위치로 주소,위도,경도 저장
-  function updateLatLng(eThis, e){
-    let address = $("#address").val();    
-    let tripDetailGuid = $("#tripDetailGuid").val();
-    let latitude = $("#latitude").val();
-    let longitude = $("#longitude").val();
-    let hasParentModalYN = $("#hasParentModalYN").val();
-
-    if(hasParentModalYN == 'Y'){
-      opener.document.getElementById("address").value = address;
-      opener.document.getElementById("addressDetail").value = ' ';
-      opener.document.getElementById("latitude").value = latitude;
-      opener.document.getElementById("longitude").value = longitude;
-
-      window.close();
+  //주소 입력창에서 엔터키 입력
+  function enterAddress(eThis, e){
+    if(e.keyCode == 13){
+      searchLatLng(eThis, e);
     }
-    else{
-      var data = {
-        tripDetailGuid : tripDetailGuid,
-        address : address,
-        latitude : latitude,
-        longitude : longitude,
-      }
+  };
+
+  //현재 입력된 주소로 위도,경도 가져오기
+  function searchLatLng(eThis, e){
+    var data = {
+        address: $("#address").val(),
+      };
 
       $.ajax({
-        url: '/business/trip/setAddressAndCoordinate',
+        url: '/business/trip/getCoordinateByAddress',
         method: 'POST',
         data: data,
         beforeSend: function (xhr) {
         },
         success: function (data, status, xhr) {
-          if(data.success){
-            opener.parent.updateDataTableJS();
-            window.close();
+          if(data.success){            
+            $("#latitude").val(data.value.latitude);
+            $("#longitude").val(data.value.longitude);
+            moveMap(map);
+            setMarker(map);
           }  
           else{
-            console.log(data.message);
+            $("#modalAlert .modal-title").html("주소 찾기");
+            $("#modalAlert .modal-body").html(data.message);
+            $("#modalAlert").modal('show');
           }  
         },
         error: function (data, status, err) {
-          console.log('getAddressByCoordinate API 오류');
+          console.log('getCoordinateByAddress API 오류');
         },
-        complete: function () {          
+        complete: function () {
         }
-      });          
-    }
+      });
+  };
+
+  //현재 입력된 주소로 위도,경도 가져온 후, 현재 마커의 위치로 주소,위도,경도 저장
+  function updateLatLng(eThis, e){
+    var data = {
+        address: $("#address").val(),
+      };
+
+      $.ajax({
+        url: '/business/trip/getCoordinateByAddress',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+        },
+        success: function (data, status, xhr) {
+          if(data.success){            
+            $("#latitude").val(data.value.latitude);
+            $("#longitude").val(data.value.longitude);
+            moveMap(map);
+            setMarker(map);
+
+            let address = $("#address").val();    
+            let tripDetailGuid = $("#tripDetailGuid").val();
+            let latitude = $("#latitude").val();
+            let longitude = $("#longitude").val();
+            let hasParentModalYN = $("#hasParentModalYN").val();
+
+            if(hasParentModalYN == 'Y'){
+              opener.document.getElementById("address").value = address;
+              opener.document.getElementById("addressDetail").value = ' ';
+              opener.document.getElementById("latitude").value = latitude;
+              opener.document.getElementById("longitude").value = longitude;
+
+              window.close();
+            }
+            else{
+              var data = {
+                tripDetailGuid : tripDetailGuid,
+                address : address,
+                latitude : latitude,
+                longitude : longitude,
+              }
+
+              $.ajax({
+                url: '/business/trip/setAddressAndCoordinate',
+                method: 'POST',
+                data: data,
+                beforeSend: function (xhr) {
+                },
+                success: function (data, status, xhr) {
+                  if(data.success){
+                    opener.parent.updateDataTableJS();
+                    window.close();
+                  }  
+                  else{
+                    console.log(data.message);
+                  }  
+                },
+                error: function (data, status, err) {
+                  console.log('getAddressByCoordinate API 오류');
+                },
+                complete: function () {          
+                }
+              });          
+            }
+          }  
+          else{
+            $("#modalAlert .modal-title").html("주소 찾기");
+            $("#modalAlert .modal-body").html(data.message);
+            $("#modalAlert").modal('show');
+          }  
+        },
+        error: function (data, status, err) {
+          console.log('getCoordinateByAddress API 오류');
+        },
+        complete: function () {
+        }
+      });    
   };
 
   //HTML5 GeoLocation 이용해서 접속위치를 가져오기

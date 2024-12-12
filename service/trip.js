@@ -820,6 +820,7 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
                     obj.확인 = obj.COMP_DT;
                     delete obj.UPDT_DT;
                     delete obj.COMP_DT;
+                    delete obj.IMGS;
 
                     //console.log("obj.TRIP_DTL_GUID :: " + obj.TRIP_DTL_GUID);
                     res = await pool.query('CALL BIZ_TRIP_DTL_IMG_SELECT(?,?,?)', [null, obj.TRIP_DTL_GUID, 'N']);
@@ -1073,7 +1074,7 @@ exports.setTripDetailImages = async (tripDetailGuid, files, userGuid) => {
                 const fileName = file.originalname; //Web에서 보는 파일명
                 const orgFileName = file.filename; //실제 디스크에 저장되는 파일명
                 const filePath = file.path.replace(process.cwd(), '');
-                const urlPath = file.path.replace(process.cwd() + '\\uploads', '');
+                const urlPath = '/business/trip/' + orgFileName;
 
                 //첨부파일 등록
                 params = [fileGuid, fileType, fileName, orgFileName, filePath, urlPath, userGuid];
@@ -1230,7 +1231,7 @@ exports.setTripDetailWithImages = async (tripDetailGuid, tripGuid, facilityName,
                 const fileName = file.originalname; //Web에서 보는 파일명
                 const orgFileName = file.filename; //실제 디스크에 저장되는 파일명
                 const filePath = file.path.replace(process.cwd(), '');
-                const urlPath = file.path.replace(process.cwd() + '\\uploads', '');
+                const urlPath = '/business/trip/' + orgFileName;
 
                 //첨부파일 등록
                 params = [fileGuid, fileType, fileName, orgFileName, filePath, urlPath, userGuid];

@@ -22,7 +22,7 @@
 }
 
 .carousel .carousel-inner .carousel-item img {
-  object-fit: cover;  
+  object-fit: contain;  
 }
 .carousel .carousel-inner .carousel-item img.no-img {
   object-fit: none;  

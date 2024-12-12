@@ -4,13 +4,15 @@
     $("#facilityName").val('');    
     $("#address").val('');    
     $("#addressDetail").val('');    
-    $("#latitude").val(0);    
-    $("#longitude").val(0);    
+    $("#latitude").val('');    
+    $("#longitude").val('');          
     $("#tblItems tr").each(function(){
       tableItems.row($(this).closest('tr'))
       .remove()
       .draw(false);
     });
+    //확인버튼 표시
+    $("#btnConfirm").addClass('visually-hidden');
   };
   
   //개별 조회
@@ -33,14 +35,13 @@
             if(!(isEmpty(data) || isEmpty(data.value))){
               //이미지 슬라이드 초기화
               $("#carouselOuter .carousel-inner").empty();
-
               //이미지 연결
               if(!isEmpty(data.value.IMGS)){
                 var tripDetailImages = data.value.IMGS;
 
                 for(var i = 0; i < tripDetailImages.length;i++){
                   var imgGuid = tripDetailImages[i].TRIP_DTL_IMG_GUID;
-                  var imgUrl = isEmpty(tripDetailImages[i].URL_PATH) ? '' : tripDetailImages[i].URL_PATH;  
+                  var imgUrl = tripDetailImages[i].URL_PATH;  
                   if(!isEmpty(imgGuid)){
                     var imgHtmlCode = createCarouselItemCode(imgGuid, imgUrl);
                     $("#carouselOuter .carousel-inner").append(imgHtmlCode);
@@ -61,6 +62,17 @@
               $("#addressDetail").val(data.value.ADDR_DTL);
               $("#latitude").val(data.value.LAT);
               $("#longitude").val(data.value.LNG); 
+              $("#compYn").val(data.value.COMP_YN); 
+
+              //확인버튼 표시
+              $("#btnConfirm").removeClass('visually-hidden');
+
+              if(data.value.COMP_YN == 'Y'){
+                $("#btnConfirm").text('확인취소');
+              }
+              else{
+                $("#btnConfirm").text('확인');
+              }             
               
               //항목 연결
               var itemList = [];
@@ -263,10 +275,10 @@
       tripDetailGuid: $("#tripDetailGuid").val(),
       tripGuid: $("#tripGuid").val(),
       facilityName: $("#facilityName").val(),
-      address: $("#address").val(),
-      addressDetail: $("#addressDetail").val(),
-      latitude: $("#latitude").val(),
-      longitude: $("#longitude").val(),
+      address: $("#address").val().trim(),
+      addressDetail: $("#address").val().trim() == '' ? '' : $("#addressDetail").val().trim(),
+      latitude: $("#address").val().trim() == '' ? '' : $("#latitude").val(),
+      longitude: $("#address").val().trim() == '' ? '' : $("#longitude").val(),
       tripDetailItems: tripDetailItems,
     };
 
@@ -299,6 +311,53 @@
           setLoadingBar(false, 'modalTripDetail');
         }
       }); 
+  };
+
+  //완료 및 완료취소
+  function confirmTripDetail(eThis, e, url){
+    //HTML5 기본 Validation
+    if (!((document.getElementById("facilityName").validity.valid) &&
+      (document.getElementById("address").validity.valid))) {
+      return false;
+    }
+
+    e.preventDefault();    
+
+    var compYn = $("#btnConfirm").text() == '확인' ? 'Y' : 'N';
+    var data = {
+      tripDetailGuid: $("#tripDetailGuid").val(),
+      compYn: compYn,
+    };
+
+    $.ajax({
+        url: '/business/trip/setTripDetailCompYN',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true, 'modalTripDetail');
+          $("#modalTripDetail").modal('hide');
+          $("#modalAlert .modal-title").html("출장 상세 확인");
+        },
+        success: function (data, status, xhr) {
+          if(data.success){            
+            location.href = url + '?tripGuid=' + $("#tripGuid").val() + '&tripDetailGuid=' + $("#tripDetailGuid").val();
+          }
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
+          }
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false, 'modalTripDetail');
+        }
+      });     
   };
 
   //엑셀 내보내기
