@@ -320,6 +320,7 @@
             }
             else{
               gridData = data.value;
+              gridData = addoriginalAddress(gridData);
               gridData = changeImageData(gridData);
               columnNames = Object.keys(gridData[0]);         
             }
@@ -331,8 +332,7 @@
             for(var col = 0; col < columnNames.length; col++) {
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
-
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','ADDR_ORG','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -385,14 +385,36 @@
                   modifier: {
                       selected: 'undefined',
                       focused: 'undefined',
-                  }                         
+                  },
+                  format: {
+                    body: function(data, row, column, node) {
+                      //명칭인 경우
+                      if(column == 5){
+                        data = data.replace(/<div class='d-flex align-items-center'><span class='me-2'>/g, '' );                        
+                        data = data.replace(/<\/span>/g, '');
+                        data = data.replace(/<span class='badge text-bg-secondary ms-auto'>확인완료/g, '' );
+                        data = data.replace(/<span class='badge text-bg-secondary ms-auto'>/g, '' );
+                        data = data.replace(/<\/div>/g, '' );
+                      }
+                      //주소인 경우
+                      else if(column == 6){                        
+                        data = data.replace(/<div class='d-flex align-items-center'>/g, '' );
+                        data = data.replace(/<span class='address me-2'>/g, '' );
+                        data = data.replace(/<\/span>/g, '' );
+                        data = data.replace(/<span class='badge text-bg-success ms-auto' onclick='openKakaoMap\(this, event\)';>주소 변경/g, '' );
+                        data = data.replace(/<\/div>/g, '' );
+                      } 
+
+                      return data;
+                    }
+                  },
                 },
               }
             ],
             createdRow: function(row, data, dataIndex){
-              //위도,경도가 0인 경우
-              if(data.LAT == 0 || data.LNG == 0)
-              {
+              //위도,경도가 0인 경우 또는 주소가 빈칸인 경우
+              if(data.LAT == 0 || data.LNG == 0 || data.ADDR_ORG.trim() == '')
+              {                
                 $(row).addClass('text-danger');
               }
             }                    
@@ -410,6 +432,15 @@
           }          
         }   
     });
+  };
+
+  //원본 주소 값 컬럼 추가
+  function addoriginalAddress(dataList){
+    for(var i = 0; i < dataList.length;i++){
+      dataList[i].ADDR_ORG = dataList[i].ADDR;
+    }
+
+    return dataList;
   };
 
   //명칭에 확인 버튼추가, 주소 버튼, 사진 icon으로 변경
@@ -434,9 +465,9 @@
       }
 
       //주소변경 버튼
-      var htmlCode = "<div class='d-flex align-items-center' data-address='" + gridData[i].ADDR + "'>";
+      var htmlCode = "<div class='d-flex align-items-center'>";
       htmlCode += "<span class='address me-2'>" + gridData[i].ADDR + "</span>";
-      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='openKakaoMap(this, event)'';>주소 변경</span>";
+      htmlCode += "<span class='badge text-bg-success ms-auto' onclick='openKakaoMap(this, event)';>주소 변경</span>";
       htmlCode += "</div>";
       gridData[i].ADDR = htmlCode;        
     }
@@ -525,6 +556,7 @@
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
+      case 'ADDR_ORG':
       case 'COMP_YN':
       case 'REG_EMAIL':
       case 'REG_DT':
@@ -769,7 +801,7 @@
     const td = $(eThis).closest('td');
     const rowData = table.row(td).data();
     let tripDetailGuid = rowData.TRIP_DTL_GUID;
-    let address = $(rowData.ADDR).data('address');
+    let address = rowData.ADDR_ORG;    
     execDaumPostcode('/business/trip/setCoordinateByAddress', tripDetailGuid, address, function(data, message)
     {
       $("#modalAlert .modal-title").html("모두의 출장 상세");

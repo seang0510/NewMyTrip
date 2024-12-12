@@ -275,7 +275,7 @@
       tripDetailGuid: $("#tripDetailGuid").val(),
       tripGuid: $("#tripGuid").val(),
       facilityName: $("#facilityName").val(),
-      address: $("#address").val().trim(),
+      address: $("#address").val(),
       addressDetail: $("#address").val().trim() == '' ? '' : $("#addressDetail").val().trim(),
       latitude: $("#address").val().trim() == '' ? '' : $("#latitude").val(),
       longitude: $("#address").val().trim() == '' ? '' : $("#longitude").val(),
@@ -431,7 +431,7 @@
       const td = $(eThis).closest('td');
       const rowData = table.row(td).data();
       tripDetailGuid = rowData.TRIP_DTL_GUID;
-      address = $(rowData.ADDR).data('address');      
+      address = rowData.ADDR_ORG;      
     }
     else{
       tripDetailGuid = $("#tripDetailGuid").val();

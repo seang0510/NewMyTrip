@@ -58,8 +58,8 @@
       <button type="button" class="btn btn-secondary" onclick="closeItem()">닫기</button>
     </div>
     <div class="ms-1">
-      <button class="context-menu-tripDetail btn btn-dark">
-        <span class="fa fa-sign-out fa-fw w-100"></span>
+      <button class="context-menu-tripDetail btn btn-light p-0">
+        <img src="/images/download.png" style="height: 37.8px;">
       </button>
     </div>
   </div>
@@ -360,6 +360,7 @@
             }
             else{
               gridData = data.value;
+              gridData = addoriginalAddress(gridData);
               gridData = changeImageData(gridData);
               columnNames = Object.keys(gridData[0]);      
             }
@@ -372,7 +373,7 @@
               var data = getDataInfoFromColName(columnNames[col]);
               columns.push(data);
 
-              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
+              if(!['TRIP_MST_GUID','TRIP_DTL_GUID','ADDR_ORG','COMP_YN','IMG_CNT','TRIP_DTL_GUID_IN_ITM','REG_EMAIL','REG_DT','UPDT_EMAIL','UPDT_DT'].includes(columnNames[col])){
                 exportColumns.push(columnNames[col] + ':name');
               }              
             }
@@ -423,13 +424,27 @@
                   modifier: {
                     selected: 'undefined',
                     focused: 'undefined',
-                  }                  
+                  },
+                  format: {
+                    body: function(data, row, column, node) {
+                      //명칭인 경우
+                      if(column == 5){
+                        data = data.replace(/<div class='d-flex align-items-center'><span class='me-2'>/g, '' );                        
+                        data = data.replace(/<\/span>/g, '');
+                        data = data.replace(/<span class='badge text-bg-secondary ms-auto'>확인완료/g, '' );
+                        data = data.replace(/<span class='badge text-bg-secondary ms-auto'>/g, '' );
+                        data = data.replace(/<\/div>/g, '' );
+                      }
+
+                      return data;
+                    }
+                  },               
                 },
               }
             ],
             createdRow: function(row, data, dataIndex){
-              //위도,경도가 0인 경우
-              if(data.LAT == 0 || data.LNG == 0)
+              //위도,경도가 0인 경우 또는 주소가 빈칸인 경우
+              if(data.LAT == 0 || data.LNG == 0 || data.ADDR_ORG.trim() == '')
               {
                 $(row).addClass('text-danger');
               }
@@ -464,6 +479,15 @@
           }          
         }   
     });
+  };
+
+  //원본 주소 값 컬럼 추가
+  function addoriginalAddress(dataList){
+    for(var i = 0; i < dataList.length;i++){
+      dataList[i].ADDR_ORG = dataList[i].ADDR;
+    }
+
+    return dataList;
   };
 
   //명칭에 확인 버튼추가, 주소 버튼, 사진 icon으로 변경
@@ -570,6 +594,7 @@
       case 'TRIP_MST_GUID':
       case 'TRIP_DTL_GUID':
       case 'TRIP_DTL_GUID_IN_ITM':
+      case 'ADDR_ORG':        
       case 'COMP_YN':
       case 'REG_EMAIL':
       case 'REG_DT':
