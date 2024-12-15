@@ -117,6 +117,25 @@ function getColumnNames(fields){
     return arrColNames;
 };
 
+//SHA512 암호화
+function createHashPassword(password, type){
+    const crypto = require('crypto');
+    var hashPassword = crypto.createHash(type).update(password).digest("base64");
+    return hashPassword;
+};
+
+//임시 비밀번호 제작
+function createRandomPassword(lenth) {
+    let text = '';
+    const possible =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`{}[]:;<>?,./|';
+    for (let i = 0; i < lenth; i++)
+        text += possible.charAt(
+            Math.floor(Math.random() * possible.length),
+        );
+    return text;
+};
+
 module.exports = {
     createResponseModel,
     generateUUID,
@@ -129,4 +148,6 @@ module.exports = {
     dayFormat,
     existSessoin,
     getColumnNames,
+    createHashPassword,
+    createRandomPassword,
 };

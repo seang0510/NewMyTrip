@@ -31,6 +31,10 @@ exports.getUserForLogin = async (email, password, deviceTypeCode, pushToken) => 
     let res;
     let isSuccess;
     let userGuid;
+
+    //패스워드 암호화(SHA512)
+    password = helper.createHashPassword(password, "sha512");
+
     try {        
         //로그인^
         res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?)', [email, 'N', password, 'N']);
@@ -110,6 +114,9 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
     let returnCode = -1;
     let isSuccess = false;
     let returnModel;
+
+    //패스워드 암호화(SHA512)
+    password = helper.createHashPassword(password, "sha512");
 
     try {
         await conn.beginTransaction();
@@ -311,15 +318,39 @@ exports.setLoginWithSignUp= async (email, joinTypeCode, joinToken) => {
 
 //비밀번호 조회
 exports.getPasswordByEmail = async (userEmail) => {
-    var sql = 'CALL SYS_USER_MST_SELECT_PASSWORD(?)';
+    let conn = await pool.getConnection();    
+    let changePassword = helper.createRandomPassword(12);
+    let res;
+    let isSuccess = false;
+
     try {        
+        await conn.beginTransaction();
+
+        var sql = 'CALL SYS_USER_MST_SELECT_PASSWORD(?)';
         const [rows, fields] = await pool.query(sql, userEmail);
         let password = null;
 
         if(!(rows[0].length == 0 || rows[0][0].PASSWORD == null || rows[0][0].PASSWORD == '')){
+            //기존 비밀번호 확인이 된 경우
             password = rows[0][0].PASSWORD;
+
+            //비밀번호 변경
+            password = helper.createHashPassword(changePassword, "sha512");
+            res = await pool.query("UPDATE SYS_USER_MST SET PWD=?, UPDT_DT=NOW() WHERE EMAIL=? AND DEL_YN='N'", [password, userEmail]);
+
+            if (res[0].affectedRows >= 1) {          
+                isSuccess = true;
+            }            
         }
-        return password;
+
+        if (isSuccess == false) {
+            conn.rollback();
+        }
+        else {
+            await conn.commit();
+        }
+
+        return changePassword;
     } catch (err) {
         console.log(err);
         throw Error(err);
@@ -332,6 +363,9 @@ exports.setPassword= async (userGuid, password) => {
     let res;
     let returnCode = -1;
     let isSuccess = false;
+
+    //패스워드 암호화(SHA512)
+    password = helper.createHashPassword(password, "sha512");
 
     try {
         await conn.beginTransaction();
@@ -396,6 +430,12 @@ exports.changePassword= async (userGuid, passwordBefore, passwordNew) => {
     let res;
     let returnCode = -1;
     let isSuccess = false;
+
+    //패스워드 암호화(SHA512)
+    passwordBefore = helper.createHashPassword(passwordBefore, "sha512");
+
+    //패스워드 암호화(SHA512)
+    passwordNew = helper.createHashPassword(passwordNew, "sha512");
 
     try {
         await conn.beginTransaction();
