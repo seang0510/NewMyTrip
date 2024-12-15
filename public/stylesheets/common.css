@@ -70,3 +70,20 @@ img {
 span.input-group-text {
   width: 42px;
 }
+
+.hide {
+  display: none;
+}
+
+.read-label {
+  transform: initial !important;
+  position: relative !important;
+  padding: 1rem .75rem !important;
+  padding-top: 1.625rem !important;
+  padding-bottom: .625rem !important;
+  border: var(--bs-border-width) solid var(--bs-border-color) !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: var(--bs-body-color) !important;
+  white-space: break-spaces !important;
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%-title %></title>
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/font-awesome.min.css" rel="stylesheet">
+  <link href="/stylesheets/common.css" rel="stylesheet">
+  <link href="/stylesheets/trip.css" rel="stylesheet" />
+  <style>    
+    .address-outer {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      z-index: 1;      
+    }
+    .address-inner {
+      display: flex;
+      margin: 0 auto;
+      width: 80%;
+      max-width: 600px;
+    }
+    .address-outer button {
+      width: 60px;
+      height: 40px;
+      margin-left: 5px;
+      font-family: 'Paperlogy';
+      font-size: 0.9rem;
+    }
+  </style>
+  <script src="/jquery.min.js"></script>
+  <script src="/umd/popper.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/jquery-ui.min.js"></script>
+  <script src="/jquery.cookie.js"></script>
+  <script src="/javascripts/common.js"></script>
+  <script src="/javascripts/tripDetail.js"></script>
+  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=84f0433de152103dd787295b55352a78"></script>
+</head>
+
+<body>
+
+  <!-- LoadingBar Main  -->
+  <%- include('../../ejs/loadingbar.ejs') %>
+  <!-- Alert Modal -->
+  <%- include('../../ejs/modalConfirm.ejs', {id: 'modalAlert' , title: '제목' , body: '내용', isConfirm: 'N' }) %>
+
+  <input type="hidden" id="longitude" value="<%= longitude %>">
+  <input type="hidden" id="latitude" value="<%= latitude %>">
+  <input type="hidden" id="longitude" value="<%= longitude %>">
+
+  <%# 지도 %>
+  <div class="map-outer" style="flex-direction:column;">      
+    <%- include('../../ejs/loadingbar.ejs') %>
+    <div class="map_wrap mt-0" style="width: 100% !important; height: 50%;">
+      <div id="map" class=""></div>
+      <!-- 지도타입 컨트롤 div 입니다 -->
+      <div class="map-btn-control" style="width: 62px;">
+        <button id="btnSkyView" class="btn btn-sm btn-primary map-btn map-active" onclick="setMapType(this, event)">지도</button>
+      </div>
+      <!-- 현재 위치 버튼 -->
+      <div class="compass-btn-control">
+        <button id="btnSpeechBubble" class="btn btn-sm btn-light" onclick="setGeoLocation(this, event)"><i class="fa fa-2x fa-map-marker"></i></button>
+      </div>          
+      <!-- 지도 확대, 축소 컨트롤 div 입니다 -->
+      <div class="zoom-control radius_border"> 
+        <span onclick="zoomIn()"><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_plus.png" alt="확대"></span>  
+        <span onclick="zoomOut()"><img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소"></span>
+      </div>            
+    </div>
+    <div id="rvWrapper" style="width:100%;height:50%;">
+      <div id="roadview" style="width:100%;height:100%"></div> <!-- 로드뷰를 표시할 div 입니다 -->
+    </div>
+  </div>
+
+  <script>
+    var map;
+    var marker;
+    var isOverlayOn = false; //지도타입(지적도 등) 버튼이 클릭된 상태 변수
+    var isSkyView = false; //지도 또는 스카이뷰 상태 변수
+    var currentOverlayTypeId; // 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+
+    var rvContainer; //로드뷰를 표시할 div
+    var rvContainer; //로드뷰 객체
+    var rvContainer; //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
+
+    $(document).ready(function () {
+      InitMap();
+      InitRoadView();
+      setMarker(map);
+    });
+
+  //카카오 지도 초기화
+  function InitMap(){
+    var latitude = 33.450701;
+    var longitude = 126.570667;
+
+    //좌표가 존재하지 않는 경우 -> HTML5 GeoLocation 활용
+    if($("#latitude").val() == 0 || $("#longitude").val() == 0){
+      setGeoLocation();
+    }
+    else{
+      latitude = $("#latitude").val();
+      longitude = $("#longitude").val();
+    }
+
+    var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(latitude, longitude), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+    // 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
+    map = new kakao.maps.Map(mapContainer, mapOption);     
+    map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); //지도 위에 로드뷰 도로 올리기
+
+    //map.relayout이 위에서 호출이 되지 않는 경우 아래 구문 호출 필요
+    //최초 로드 시, display:flex로 인해 Width가 정해지지 않아서 지도 깨지는 문제가 존재함
+    // setTimeout(() => {
+    //   map.relayout();    // 지도의 크기가 변동이 있을 경우 함수 호출
+    // }, 1000);    
+  };    
+  
+  //마커 그리기
+  function setMarker(map){
+    var latitude = $("#latitude").val();
+    var longitude = $("#longitude").val();
+
+    var markerPosition  = new kakao.maps.LatLng(latitude, longitude); 
+    marker = new kakao.maps.Marker({
+        position: markerPosition
+    });
+
+    marker.setMap(map);
+    toggleRoadview(markerPosition); //로드뷰를 토글합니다
+
+    // 마커에 클릭이벤트를 등록합니다
+    kakao.maps.event.addListener(map, 'click', clickListener(map, marker));
+  }
+
+  //마커 이동하기
+  function moveMap(map){
+    var latitude = $("#latitude").val();
+    var longitude = $("#longitude").val();
+
+    // 이동할 위도 경도 위치를 생성합니다 
+    var moveLatLon = new kakao.maps.LatLng(latitude, longitude);
+    
+    // 지도 중심을 이동 시킵니다
+    map.setCenter(moveLatLon);
+  };
+
+  //마커 클릭 이벤트
+  function clickListener(map, marker){
+    return function(mouseEvent) {
+        //마커 이동
+        var latlng = mouseEvent.latLng; 
+        marker.setPosition(latlng);         
+
+        $("#latitude").val(latlng.Ma);
+        $("#longitude").val(latlng.La);
+
+        var data = {
+          latitude: $("#latitude").val(),
+          longitude: $("#longitude").val(),
+        };  
+
+        toggleRoadview(latlng); //로드뷰를 토글합니다
+    };
+  };
+
+  //지도타입 컨트롤의 지도 또는 스카이뷰 버튼을 클릭하면 호출되어 지도타입을 바꾸는 함수입니다
+  function setMapType(eThis, e) { 
+      isSkyView = !isSkyView;
+
+      //스카이뷰
+      if(isSkyView){
+        map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
+        $(eThis).text('스카이뷰');
+      }
+      //지도
+      else{
+        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);               
+        $(eThis).text('지도');
+      }
+  };
+  
+  //지도 확대, 축소 컨트롤에서 확대 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+  function zoomIn() {
+      map.setLevel(map.getLevel() - 1);
+  };
+
+  //지도 확대, 축소 컨트롤에서 축소 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+  function zoomOut() {
+      map.setLevel(map.getLevel() + 1);
+  };
+
+  //HTML5 GeoLocation 이용해서 접속위치를 가져오기
+  function setGeoLocation(eThis, e){
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(function(position) {
+        $("#latitude").val(position.coords.latitude);
+        $("#longitude").val(position.coords.longitude);
+        
+        setMarker(map);
+        moveMap(map);
+      });
+    }
+  }
+
+  //로드뷰 초기화
+  function InitRoadView(){
+    rvContainer = document.getElementById('roadview'); 
+    rv = new kakao.maps.Roadview(rvContainer); 
+    rvClient = new kakao.maps.RoadviewClient(); 
+  };
+
+  //로드뷰 toggle함수
+  function toggleRoadview(position){
+      //전달받은 좌표(position)에 가까운 로드뷰의 panoId를 추출하여 로드뷰를 띄웁니다
+      rvClient.getNearestPanoId(position, 50, function(panoId) {
+          if (panoId === null) {
+            rvContainer.style.display = 'none'; //로드뷰를 넣은 컨테이너를 숨깁니다
+            $(".map_wrap").css('height','100%');
+            $("#rvWrapper").css('height','0%');
+            map.relayout();
+          } 
+          else {
+            $(".map_wrap").css('height','50%');
+            $("#rvWrapper").css('height','50%');
+            map.relayout(); //지도를 감싸고 있는 영역이 변경됨에 따라, 지도를 재배열합니다
+            rvContainer.style.display = 'block'; //로드뷰를 넣은 컨테이너를 보이게합니다
+            rv.setPanoId(panoId, position); //panoId를 통한 로드뷰 실행
+            rv.relayout(); //로드뷰를 감싸고 있는 영역이 변경됨에 따라, 로드뷰를 재배열합니다
+          }
+      });
+  };
+
+  </script>
+</body>
+</html>

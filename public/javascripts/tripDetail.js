@@ -6,18 +6,53 @@
     $("#addressDetail").val('');    
     $("#latitude").val('');    
     $("#longitude").val('');          
-    $("#tblItems tr").each(function(){
-      tableItems.row($(this).closest('tr'))
-      .remove()
-      .draw(false);
-    });
+
+    //가변항목 제거
+    $("#tripDetailForm").find(".dynamic-item").remove();
     //확인버튼 표시
     $("#btnConfirm").addClass('visually-hidden');
+
+    //편집모드 제거 및 저장버튼 표시
+    isReadStatus = true;
+    editModalTripDetail(null, null);
+    $("#btnEdit").addClass('visually-hidden');
+    $("#btnSave").removeClass('visually-hidden');
   };
   
+  //수정/보기 화면 변경
+  function editModalTripDetail(eThis, e){
+    isReadStatus = !isReadStatus;
+
+    //읽기 모드
+    if(isReadStatus){
+      $("#btnEdit").text('편집');
+      $("#btnEdit").removeClass('visually-hidden');
+      $("#btnConfirm").removeClass('visually-hidden');
+      $("#btnSave").addClass('visually-hidden');
+
+      $('.edit-mode').addClass('hide');
+      $('.read-mode').removeClass('hide');
+
+      //등록,수정의 Input 값을 Label에 넣기
+      $("#tripDetailForm").find('input[type="text"]').each(function(idx, el){        
+        var value = $(el).val();
+        $(el).siblings('label.form-control').text(value);        
+      });
+    }
+    //편집 모드
+    else{
+      $("#btnEdit").text('보기');
+      $("#btnEdit").removeClass('visually-hidden');
+      $("#btnConfirm").addClass('visually-hidden');
+      $("#btnSave").removeClass('visually-hidden');
+
+      $('.edit-mode').removeClass('hide');
+      $('.read-mode').addClass('hide');
+    }
+  };
+
   //개별 조회
   function getItem(tripDetailGuid){      
-
     $.ajax({
         url: '/business/trip/getTripDetail',
         method: 'post',
@@ -75,20 +110,22 @@
               }             
               
               //항목 연결
-              var itemList = [];
               if(data.value.ITMS != null){
                 var tripDetailItems = data.value.ITMS;
                 for(var i = 0; i < tripDetailItems.length;i++){
                   var itemName = tripDetailItems[i].ITM_NM;
                   var itemValue = isEmpty(tripDetailItems[i].ITM_VAL) ? '' : tripDetailItems[i].ITM_VAL;
 
-                  if(itemName != null){
-                    itemList.push(getDefaultItem(itemName, itemValue));
-                  }                
+                  //가변컬럼 HTML 그리기
+                  var htmlCode = getItemHtmlCode(itemName, itemValue);                  
+                  $("#tripDetailForm").append(htmlCode);
                 }
               }          
 
-              tableItems = DataTableForItems('tblItems', itemList);
+              //편집모드 및 저장버튼 미표시
+              isReadStatus = false;
+              editModalTripDetail(null, null);        
+
               $("#modalTripDetail").modal('show');
             }
           }  
@@ -103,6 +140,20 @@
       });    
   };
   
+  //가변 항목 바인딩
+  function getItemHtmlCode(itemName, itemValue){
+    var htmlCode = '';
+    htmlCode += '<div class="input-group mb-3 dynamic-item">';
+    htmlCode += '<span class="input-group-text"><i class="fa fa-cog"></i></span>';
+    htmlCode += '<div class="form-floating has-validation">';
+    htmlCode += '<input type="text" id="' + itemName + '" class="form-control edit-mode" placeholder="' + itemName + '" value="' + itemValue + '">';
+    htmlCode += '<label class="form-control read-label read-mode hide"></label>';
+    htmlCode += '<label for="' + itemName + '">' + itemName + '</label>';
+    htmlCode += '</div>';
+    htmlCode += '</div>';
+    return htmlCode;
+  };
+
   //이미지 바인딩
   function createCarouselItemCode(imgGuid, imgUrl){
     var htmlCode = "";
@@ -237,14 +288,14 @@
 
     //아이템 리스트 설정
     var itemNameList = JSON.parse($("#itemNameList").val());
-    var itemList = [];
 
     for(var i = 0; i < itemNameList.length;i++){
+      //가변컬럼 HTML 그리기
       var itemName = itemNameList[i];
-      itemList.push(getDefaultItem(itemName, ''));          
+      var htmlCode = getItemHtmlCode(itemName, '');                  
+      $("#tripDetailForm").append(htmlCode);       
     }
 
-    tableItems = DataTableForItems('tblItems', itemList);
     $("#modalTripDetail").modal('show');
   };
 
@@ -258,18 +309,16 @@
 
     e.preventDefault();
 
-    var rows = tableItems.rows().data();
     var tripDetailItems = [];
-
-    for(var i=0; i< rows.length; i++){
-      var itemName = $($('.item-name')[i]).text();
-      var itemValue = $($('.item-value')[i]).val();
+    $("#tripDetailForm").find('.dynamic-item').each(function (idx, el){
+      var itemName = $(el).find('input').attr('id');
+      var itemValue = $(el).find('input').val();
 
       tripDetailItems.push({
         itemName: itemName,
         itemValue: itemValue,
-      });
-    }  
+      });      
+    });
 
     var data = {
       tripDetailGuid: $("#tripDetailGuid").val(),
@@ -448,4 +497,40 @@
     var url = '/business/trip/findAddress' + param;
 
     window.open(url, '주소 찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+  };
+
+  //로드맵
+  function openKakaoRoadMap(eThis, e, hasParentModalYN){
+    e.preventDefault();
+    e.stopPropagation();
+
+    let address;
+
+    if(hasParentModalYN === undefined){
+      hasParentModalYN = 'N';
+      const td = $(eThis).closest('td');
+      const rowData = table.row(td).data();
+      address = rowData.ADDR_ORG;      
+    }
+    else{
+      address = $("#address").val();
+    }
+
+    if(address.trim() == ''){
+      $("#modalAlert .modal-title").html("카카오 로드맵");
+      $("#modalAlert .modal-body").html('주소가 없습니다.');
+      $("#modalAlert").modal('show');      
+      return;
+    }
+
+    var width = '700';
+    var height ='800';
+    
+    //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+    var left = Math.ceil((window.screen.width - width) / 2);
+    var top = Math.ceil((window.screen.height - height) / 2);
+    var param = '?address=' + address;
+    var url = '/business/trip/roadMap' + param;
+
+    window.open(url, '카카오 로드맵', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
   };

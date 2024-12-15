@@ -972,6 +972,43 @@ exports.findAddress = async (req, res, next) => {
   }
 };
 
+//로드맵 화면(GET)
+exports.roadMap = async (req, res, next) => {
+  let address = helper.changeUndefiendToNull(req.query.address);
+  let latitude = 0;
+  let longitude = 0;
+
+  try {
+      //로그인 되지 않은 경우
+      if(!(req.session.valid == true)){
+          return res.render('error', { title: 'Express', layout: false });
+      }
+      //현재 로그인 되어 있는 경우    
+      else{
+          //주소가 존재하는 경우, 위도/경도 가져오기
+          if(address != null){
+            const encodedAddress = encodeURIComponent(address);
+            const response = await axios({
+              method: "GET",
+              url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
+              headers: {
+                Authorization: process.env.KAKAO_FIND_ADDR,
+              },
+            });
+
+            if(response.data.documents.length > 0){
+              latitude = response.data.documents[0].y;
+              longitude = response.data.documents[0].x;
+            }       
+          }
+          return res.render('business/trip/roadMap', { title: '로드맵', layout: false, address: address, latitude: latitude, longitude: longitude });
+      }        
+  }
+  catch (err) {
+      return res.render('business/trip/roadMap', { title: '로드맵', layout: false, address: address, latitude: latitude, longitude: longitude });
+  }
+};
+
 //위도,경도 -> 주소 변환
 exports.getAddressByCoordinate = async (req, res, next) => {
   let resModel;

@@ -9,6 +9,7 @@ router.get('/trip', businessController.indexTrip);
 router.get('/trip/detail', businessController.indexTripDetail);
 router.get('/trip/detailmap', businessController.indexTripDetailMap);
 router.get('/trip/findAddress', businessController.findAddress); //카카오 지도 열기
+router.get('/trip/roadMap', businessController.roadMap); //카카오 로드맵 열기
 router.post('/trip/getTripList', businessController.getTripList);
 router.post('/trip/getTripWithItems', businessController.getTripWithItems);
 router.post('/trip/setTrip', businessController.setTrip);
