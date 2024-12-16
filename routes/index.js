@@ -33,6 +33,12 @@ router.get('/app-ads.txt', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/app-ads.txt'));
 });
 
+
+//구글광고 요청
+router.get('/app.txt', function(req, res){
+    res.sendFile(path.join(__dirname, '..', 'public/html/app.txt'));
+});
+
 router.get('/joinConditions', function(req, res){
     res.sendFile(path.join(__dirname, '..', 'public/html/termsConditions.html'));
 });
