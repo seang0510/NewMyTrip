@@ -534,3 +534,96 @@
 
     window.open(url, '카카오 로드맵', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
   };
+
+  //길찾기
+  function openFindLocation(eThis, e, hasParentModalYN)  {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let srcAddress;
+    let destAddress;
+    let latitude;
+    let longitude;
+
+    if(hasParentModalYN === undefined){
+      hasParentModalYN = 'N';
+      const td = $(eThis).closest('td');
+      const rowData = table.row(td).data();
+      destAddress = rowData.ADDR_ORG;      
+    }
+    else{
+      destAddress = $("#address").val();
+    }
+
+    //목적지 주소가 없는 경우
+    if(destAddress.trim() == ''){
+      $("#modalAlert .modal-title").html("카카오 길찾기");
+      $("#modalAlert .modal-body").html('목적지 주소가 없습니다.');
+      $("#modalAlert").modal('show');      
+      return;
+    }
+
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(function(position) {
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+        
+        var width = '1400';
+        var height ='800';
+        
+        //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+        var left = Math.ceil((window.screen.width - width) / 2);
+        var top = Math.ceil((window.screen.height - height) / 2);
+
+        var data = {
+          latitude: latitude,
+          longitude: longitude,
+        };
+
+        $.ajax({
+          url: '/business/trip/getAddressByCoordinate',
+          method: 'POST',
+          data: data,
+          beforeSend: function (xhr) {
+          },
+          success: function (data, status, xhr) {
+            if(data.success){
+              srcAddress = data.value.address;
+              var param = '?sName=' + srcAddress + '&eName=' + destAddress;
+              var url = 'https://map.kakao.com/' + param;
+              window.open(url, '카카오 길찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+            }  
+            else{
+              console.log(data.message);
+            }  
+          },
+          error: function (data, status, err) {            
+            console.log('getAddressByCoordinate API 오류');
+          },
+          complete: function () {
+          }
+        });         
+      }, function(error){
+        if (error.code == error.PERMISSION_DENIED)
+
+          //이전 모달 z-index 변경
+          $("#modalTripDetail").css('z-index', 1050);
+
+          //이전 모달 z-index 변경(복구)
+          $('#modalAlert').on('hidden.bs.modal', function (e) {
+            $("#modalTripDetail").css('z-index', 1055);
+            $("#modalAlert").off('hidden.bs.modal');
+          });
+
+          $("#modalAlert .modal-title").html("카카오 길찾기");
+          $("#modalAlert .modal-body").html('위치 엑세스가 거부되었습니다. 해당 기능을 사용하시려면 주소표시줄 우측에서 위치 엑세스 버튼을 클릭해서 동의하시기 바랍니다.');
+          $("#modalAlert").modal('show');
+      });
+    }    
+    else{
+      $("#modalAlert .modal-title").html("카카오 길찾기");
+      $("#modalAlert .modal-body").html('HTML5를 사용하지 않는 브라우저는 GeoLocation 기능을 사용할 수 없습니다.');
+      $("#modalAlert").modal('show');            
+      return;
+    }
+  };

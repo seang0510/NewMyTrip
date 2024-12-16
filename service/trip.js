@@ -231,7 +231,7 @@ exports.importTrip = async (file, userGuid) => {
 
     //엑셀 파일 읽기
     let resModel = await exceljs.getTripDataFromExcel(file, userGuid);
-    if(resModel.isSuccess == false){
+    if(resModel.success == false){
         return resModel;
     }
 
@@ -246,20 +246,83 @@ exports.importTrip = async (file, userGuid) => {
     try {
         await conn.beginTransaction();
 
-        //오늘의 출장 등록
-        const trip = resModel.data.trip;
-        params = [trip.tripGuid, trip.title, trip.startDate, null, "Y", null, null, null, userGuid];        
-        res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
-        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
-            console.log("오늘의 출장 등록 성공하였습니다.");
+        let recordCount = 0;
+        let columnCount = 0;
+    
+        params = [null, 'TRIP_LIMIT_CNT', "N"];
+        res = await pool.query('CALL SYS_CMN_COD_DTL_SELECT(?,?,?); select @RET_VAL;', params);        
+
+        if(res[0][0].length > 0){
+            console.log("공통코드 조회 성공");
+            recordCount = res[0][0].find(x => x.DTL_COD == 'RECORD_CNT').REMARK;
+            columnCount = res[0][0].find(x => x.DTL_COD == 'COLUMN_CNT').REMARK;
             isSuccess = true;
         }
         else{
-            message = "오늘의 출장 등록에 실패하였습니다.";
-            console.log(message);
+            console.log("공통코드 조회 실패");
             isSuccess = false;
-            resModel.isSuccess = isSuccess;
-            resModel.message = message;
+            resModel.success = isSuccess;
+            resModel.message = '레코드 갯수, 컬럼 갯수 공통코드가 등록되지 않았습니다.';     
+        }
+
+        if(isSuccess == true){
+            //레코드가 100개가 넘는 경우
+            if(resModel.data.tripDetails.length > recordCount){
+                isSuccess = false;
+                resModel.success = isSuccess;
+                resModel.message = '등록 가능한 레코드 최대 갯수는 ' + recordCount + '개 입니다.';
+            }
+            //가변컬럼이 50개가 넘는 경우
+            else if(resModel.data.tripDetails.length > 0 && resModel.data.tripDetailItems.length / resModel.data.tripDetails.length > columnCount){
+                isSuccess = false;
+                resModel.success = isSuccess;
+                resModel.message = '등록 가능한 컬럼 최대 갯수는 ' + columnCount + '개 입니다.';            
+            }
+        }
+
+        //출장 등록이 더 가능한지 확인
+        if(isSuccess == true){
+            let isPossibleCreateYN = 10;
+            let maxCount = 10;
+            params = [userGuid];
+            res = await pool.query('CALL BIZ_TRIP_MST_CREATE_CHECK(?);', params);
+
+            if(res[0][0].length > 0){
+                console.log("출장 추가 가능");
+                isPossibleCreateYN = res[0][0][0].IS_POSSIBLE_CREATE_YN;
+                maxCount = res[0][0][0].TRIP_MAX_CNT;
+
+                //등록된 출장이 최대 카운트를 넘긴 경우
+                if(isPossibleCreateYN == 'N'){
+                    isSuccess = false;
+                    resModel.success = isSuccess;
+                    resModel.message = '오늘의 출장은 최대 ' + maxCount + '개까지 등록할 수 있습니다.'; 
+                }
+            }
+            else{
+                console.log("출장 추가 불가능");
+                isSuccess = false;
+                resModel.success = isSuccess;
+                resModel.message = '오늘의 출장은 최대 10개까지 등록할 수 있습니다.';     
+            }            
+        }
+
+        //오늘의 출장 등록
+        if(isSuccess == true){
+            const trip = resModel.data.trip;
+            params = [trip.tripGuid, trip.title, trip.startDate, null, "Y", null, null, null, userGuid];        
+            res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                console.log("오늘의 출장 등록 성공하였습니다.");
+                isSuccess = true;
+            }
+            else{
+                message = "오늘의 출장 등록에 실패하였습니다.";
+                console.log(message);
+                isSuccess = false;
+                resModel.success = isSuccess;
+                resModel.message = message;
+            }
         }
 
         //오늘의 출장 상세 등록(ODR=0)
@@ -277,7 +340,7 @@ exports.importTrip = async (file, userGuid) => {
             else {
                 console.log("오늘의 출장 상세 등록 실패");
                 isSuccess = false;
-                resModel.isSuccess = isSuccess;
+                resModel.success = isSuccess;
                 resModel.message = message;
             }
         }
@@ -371,7 +434,7 @@ exports.importTrip = async (file, userGuid) => {
                 message = "오늘의 출장 상세 등록 실패하였습니다.";
                 console.log(message);
                 isSuccess = false;
-                resModel.isSuccess = isSuccess;
+                resModel.success = isSuccess;
                 resModel.message = message;
             }        
         }
@@ -396,7 +459,7 @@ exports.importTrip = async (file, userGuid) => {
                 else {
                     console.log("오늘의 출장 상세 아이템 등록 실패");
                     isSuccess = false;
-                    resModel.isSuccess = isSuccess;
+                    resModel.success = isSuccess;
                     resModel.message = message;
                     break;
                 }
@@ -418,28 +481,28 @@ exports.importTrip = async (file, userGuid) => {
                 message = "오늘의 출장 상세 아이템 등록 실패하였습니다.";
                 console.log(message);
                 isSuccess = false;
-                resModel.isSuccess = isSuccess;
+                resModel.success = isSuccess;
                 resModel.message = message;
             }            
         }
 
         if (isSuccess == false) {
-            conn.rollback();
+            conn.rollback();             
         }
         else {
             await conn.commit();
+            resModel.success = true;
+            resModel.message = "업로드 완료!!!!";            
         }        
         
     } catch (err) {
         conn.rollback();
         console.log(err);
-        resModel.isSuccess = false;
+        resModel.success = false;
         resModel.message = err;
         throw Error(err);
     } finally {
         conn.release();
-        resModel.isSuccess = true;
-        resModel.message = "업로드 완료!!!!";
         console.log("업로드 완료!!!!");
         return resModel;
     }

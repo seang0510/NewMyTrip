@@ -166,17 +166,15 @@
               <div class="ps-1">
                 <h5 class="d-table-cell">항목 이름 설정</h5>
               </div>
-              <div class="d-flex ms-auto">
-                <div>
-                  <button type="button" id="btnAddItem" class="btn btn-sm btn-primary rounded-circle" onclick="addNewItem()">
-                    <i class="fa fa-plus"></i>
-                  </button>      
-                </div>
-              </div>
             </div>
             <div id="item-line" class="mt-2">
               <table id="tblItems" class="table table-striped">
-              </table>              
+              </table>   
+              <div class="d-flex me-auto justify-content-end">
+                <button type="button" id="btnAddItem" class="btn btn-sm btn-primary rounded-circle" onclick="addNewItem()">
+                  <i class="fa fa-plus"></i>
+                </button>      
+              </div>                         
             </div>        
           </form>
         </div>
@@ -415,15 +413,16 @@
         {
           var message = data.message;
           $("#modalAlert .modal-body").html(message);
+          $("#modalAlert").modal('show');
         }        
       },
       error: function (data, status, err) {
         $("#modalAlert .modal-body").html(err);
+        $("#modalAlert").modal('show');
       },
       complete: function () {
         setLoadingBar(false, 'modalImportTrip');
-        $("#modalImportTrip").modal('hide');
-        $("#modalAlert").modal('show');
+        $("#modalImportTrip").modal('hide');        
       }
     });
   };
