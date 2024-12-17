@@ -588,10 +588,18 @@
           },
           success: function (data, status, xhr) {
             if(data.success){
-              srcAddress = data.value.address;
-              var param = '?sName=' + srcAddress + '&eName=' + destAddress;
-              var url = 'https://map.kakao.com/' + param;
-              window.open(url, '카카오 길찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+
+              const kakaoMapUrl = `kakaomap://route?ep=${latitude},${longitude}&by=car`;
+              // 앱 실행 시도
+              window.location.href = kakaoMapUrl;
+
+              // 일정 시간 후에도 반응이 없으면 웹으로 연결
+              setTimeout(() => {
+                  srcAddress = data.value.address;
+                  var param = '?sName=' + srcAddress + '&eName=' + destAddress;
+                  var url = 'https://map.kakao.com/' + param;
+                  window.open(url, "_blank");
+              }, 500);
             }  
             else{
               console.log(data.message);
