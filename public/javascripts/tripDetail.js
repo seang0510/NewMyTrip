@@ -550,15 +550,21 @@
     let destAddress;
     let latitude;
     let longitude;
+    let destLatitude;
+    let destLongitude;
 
     if(hasParentModalYN === undefined){
       hasParentModalYN = 'N';
       const td = $(eThis).closest('td');
       const rowData = table.row(td).data();
       destAddress = rowData.ADDR_ORG;      
+      destLatitude = rowData.LAT;      
+      destLongitude = rowData.LNG;
     }
     else{
       destAddress = $("#address").val();
+      destLatitude = $("#latitude").val();
+      destLongitude = $("#longitude").val();
     }
 
     //목적지 주소가 없는 경우
@@ -598,10 +604,10 @@
             },
             success: function (data, status, xhr) {
               if (data.success) {
-                srcAddress = data.value.address;
-    
+                srcAddress  = data.value.address;
+
                 // 카카오맵 앱 URL
-                const kakaoMapUrl = `kakaomap://route?sp=${srcAddress.latitude},${srcAddress.longitude}&ep=${latitude},${longitude}&by=car`;
+                const kakaoMapUrl = `kakaomap://route?sp=${latitude},${longitude}&ep=${destLatitude},${destLongitude}&by=car`;
     
                 // 앱 실행 시도
                 window.location.href = kakaoMapUrl;

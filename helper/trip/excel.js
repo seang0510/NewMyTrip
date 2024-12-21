@@ -1,6 +1,8 @@
 const exceljs = require("exceljs");
 const path = require('path');
 const helper = require('../helper');
+const moment = require('moment-timezone');
+const momentMsDate = require('moment-msdate');
 const { data } = require("jquery");
 
 //엑셀 업로드
@@ -119,13 +121,24 @@ async function getTripDataFromExcel(file, userGuid) {
                 arrTripDetailItem.push(tripDetailItem);
               }
               */
-              //상세 아이템 레코드
+              //상세 아이템 레코드              
+              let cellValue = cell.value;
               console.log("cell.value :: " + cell.value);
+
+              //특정 포맷이 존재하는 경우
+              if(cell.style.numFmt !== undefined){
+                console.log("========== today ==========");
+
+                let momentToOADate = momentMsDate(cell.value).toOADate();
+                let dateFormat = cell.style.numFmt.toString().replace('yyyy-mm-dd', 'YYYY-MM-DD');
+                cellValue = moment.fromOADate(momentToOADate, 'Asia/Seoul').format(dateFormat);
+              }
+              
               let tripDetailItem = [];
               tripDetailItem.push(helper.generateUUID());
               tripDetailItem.push(tripDetailGuid);
               tripDetailItem.push(variableColumns[colNumber - fixedColumns.length - 1]);
-              tripDetailItem.push(cell.value.toString().trim());
+              tripDetailItem.push(cellValue);
               tripDetailItem.push(colNumber - fixedColumns.length);
 
               //배열에 추가
@@ -307,7 +320,7 @@ function setResponseModel(isSuccess, message, data){
     success : isSuccess,
     message : message,
     data : data,
-  };  
+  };  m
 
   return resModel;
 };

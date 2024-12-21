@@ -1051,6 +1051,7 @@ exports.getAddressByCoordinate = async (req, res, next) => {
         //신주소
         else{            
             returnData.address = response.data.documents[0].road_address.address_name;
+            
         }
         resModel = helper.createResponseModel(true, '주소가 정상 조회되었습니다.', returnData);
       }
