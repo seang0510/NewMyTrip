@@ -44,7 +44,7 @@
 .map-outer .map_wrap {
   min-width: 350px;
   width: calc(100% - 350px);
-  height: calc(100% - 62.4px);
+  height: auto;
   margin-top: 1rem;
   /* width: 700px; */
 }
