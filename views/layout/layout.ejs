@@ -235,11 +235,11 @@
         //사이드 바 크기 조절 이벤트
         $(window).resize(function() {          
           if ($("body").width() < 768) {
-            $('#footer').css("width", "100%");
+            //$('#footer').css("width", "100%");
           }
           else{
             var sideBarWidth = $("#sidebar-container").css('width');
-            $('#footer').css("width", "calc(100% - " + sideBarWidth + ")");
+            //$('#footer').css("width", "calc(100% - " + sideBarWidth + ")");
           }
         });
     });
