@@ -949,9 +949,11 @@
           // setLoadingBar(true);
         },
         complete: function () {
-          // setLoadingBar(false);          
-          map.relayout();
-          InitInfoWindow();
+          // setLoadingBar(false);   
+          setTimeout(() => {
+            map.relayout();
+            InitInfoWindow();            
+          }, 500);
         }   
     });    
   };
