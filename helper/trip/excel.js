@@ -320,7 +320,7 @@ function setResponseModel(isSuccess, message, data){
     success : isSuccess,
     message : message,
     data : data,
-  };  m
+  };
 
   return resModel;
 };
