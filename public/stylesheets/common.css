@@ -47,18 +47,18 @@ div.loadingBar {
 }
 
 .page-main > div {
-  height: calc(100% - 80px);
+  height: calc(100% - 280px);
 }
 
 /* sideBar Width: 230px */
 footer {
-  position: fixed;
-  bottom: 0;
-  width: calc(100% - 230px);
-  height: 5rem;
+  width: 100%;
+  height: 280px;
   margin-left: calc(var(--bs-gutter-x)* -.5);
-  background-color: white;
+  background-color: transparent;
   z-index: 999;
+  padding: 0;
+  margin: 0;
 }
 
 img {
@@ -91,7 +91,7 @@ span.input-group-text {
 ins.adsbygoogle {
   display:block;
   width: 100%;
-  height:100%;
+  height:280px;
   background-image: url(/images/bg_googleads.png);
   background-size: contain;
   background-repeat: no-repeat;

@@ -84,6 +84,13 @@ a {
 
 .page-main {
   min-width: 0px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.page-main > div {
+  padding-right: calc(var(--bs-gutter-x)* .5);
+  padding-left: calc(var(--bs-gutter-x)* .5);
 }
 
 .bg-light-bule {

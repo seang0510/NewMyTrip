@@ -44,9 +44,13 @@
 .map-outer .map_wrap {
   min-width: 350px;
   width: calc(100% - 350px);
-  height: 100%;
+  height: calc(100% - 62.4px);
   margin-top: 1rem;
   /* width: 700px; */
+}
+
+.map-outer .table-outer {
+  height: calc(100% - 32px);
 }
 
 .map-outer #tblMain {
