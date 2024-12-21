@@ -134,7 +134,7 @@
     marker = new kakao.maps.Marker({
         position: markerPosition
     });
-
+    
     marker.setMap(map);
 
     // 마커에 클릭이벤트를 등록합니다
@@ -270,6 +270,13 @@
 
   //현재 입력된 주소로 위도,경도 가져오기
   function searchLatLng(eThis, e){
+    if($("#address").val().trim() == ''){
+      $("#modalAlert .modal-title").html("주소 찾기");
+      $("#modalAlert .modal-body").html('주소를 입력하시고 검색을 눌러주시거나 마커를 클릭하세요');
+      $("#modalAlert").modal('show');      
+      return;
+    }
+
     var data = {
         address: $("#address").val(),
       };
@@ -284,6 +291,7 @@
           if(data.success){            
             $("#latitude").val(data.value.latitude);
             $("#longitude").val(data.value.longitude);
+            marker.setMap(null);
             moveMap(map);
             setMarker(map);
           }  
@@ -302,81 +310,91 @@
   };
 
   //현재 입력된 주소로 위도,경도 가져온 후, 현재 마커의 위치로 주소,위도,경도 저장
-  function updateLatLng(eThis, e){
+  function updateLatLng(eThis, e){    
+    if($("#address").val().trim() == ''){
+      $("#modalAlert .modal-title").html("주소 찾기");
+      $("#modalAlert .modal-body").html('주소를 입력하시고 검색을 눌러주시거나 마커를 클릭하세요');
+      $("#modalAlert").modal('show');      
+      return;
+    }
+
     var data = {
         address: $("#address").val(),
+        latitude: $("#latitude").val(),
+        longitude: $("#longitude").val(),
       };
+      
+    $.ajax({
+      url: '/business/trip/getCoordinateByAddress',
+      method: 'POST',
+      data: data,
+      beforeSend: function (xhr) {
+      },
+      success: function (data, status, xhr) {
+        if(data.success){            
+          $("#address").val(data.value.address);
+          $("#latitude").val(data.value.latitude);
+          $("#longitude").val(data.value.longitude);
+          moveMap(map);
+          setMarker(map);
 
-      $.ajax({
-        url: '/business/trip/getCoordinateByAddress',
-        method: 'POST',
-        data: data,
-        beforeSend: function (xhr) {
-        },
-        success: function (data, status, xhr) {
-          if(data.success){            
-            $("#latitude").val(data.value.latitude);
-            $("#longitude").val(data.value.longitude);
-            moveMap(map);
-            setMarker(map);
+          let address = $("#address").val();    
+          let tripDetailGuid = $("#tripDetailGuid").val();
+          let latitude = $("#latitude").val();
+          let longitude = $("#longitude").val();
+          let hasParentModalYN = $("#hasParentModalYN").val();
 
-            let address = $("#address").val();    
-            let tripDetailGuid = $("#tripDetailGuid").val();
-            let latitude = $("#latitude").val();
-            let longitude = $("#longitude").val();
-            let hasParentModalYN = $("#hasParentModalYN").val();
+          if(hasParentModalYN == 'Y'){
+            opener.document.getElementById("address").value = address;
+            opener.document.getElementById("addressDetail").value = ' ';
+            opener.document.getElementById("latitude").value = latitude;
+            opener.document.getElementById("longitude").value = longitude;
 
-            if(hasParentModalYN == 'Y'){
-              opener.document.getElementById("address").value = address;
-              opener.document.getElementById("addressDetail").value = ' ';
-              opener.document.getElementById("latitude").value = latitude;
-              opener.document.getElementById("longitude").value = longitude;
-
-              window.close();
-            }
-            else{
-              var data = {
-                tripDetailGuid : tripDetailGuid,
-                address : address,
-                latitude : latitude,
-                longitude : longitude,
-              }
-
-              $.ajax({
-                url: '/business/trip/setAddressAndCoordinate',
-                method: 'POST',
-                data: data,
-                beforeSend: function (xhr) {
-                },
-                success: function (data, status, xhr) {
-                  if(data.success){
-                    opener.parent.updateDataTableJS();
-                    window.close();
-                  }  
-                  else{
-                    console.log(data.message);
-                  }  
-                },
-                error: function (data, status, err) {
-                  console.log('getAddressByCoordinate API 오류');
-                },
-                complete: function () {          
-                }
-              });          
-            }
-          }  
+            window.close();
+          }
           else{
-            $("#modalAlert .modal-title").html("주소 찾기");
-            $("#modalAlert .modal-body").html(data.message);
-            $("#modalAlert").modal('show');
-          }  
-        },
-        error: function (data, status, err) {
-          console.log('getCoordinateByAddress API 오류');
-        },
-        complete: function () {
-        }
-      });    
+            var data = {
+              tripDetailGuid : tripDetailGuid,
+              address : address,
+              latitude : latitude,
+              longitude : longitude,
+            }
+
+            $.ajax({
+              url: '/business/trip/setAddressAndCoordinate',
+              method: 'POST',
+              data: data,
+              beforeSend: function (xhr) {
+              },
+              success: function (data, status, xhr) {
+                if(data.success){
+                  opener.parent.updateDataTableJS();
+                  window.close();
+                }  
+                else{
+                  console.log(data.message);
+                }  
+              },
+              error: function (data, status, err) {
+                console.log('getAddressByCoordinate API 오류');
+              },
+              complete: function () {          
+              }
+            });          
+          }
+        }  
+        else{
+          $("#modalAlert .modal-title").html("주소 찾기");
+          $("#modalAlert .modal-body").html(data.message);
+          $("#modalAlert").modal('show');
+        }  
+      },
+      error: function (data, status, err) {
+        console.log('getCoordinateByAddress API 오류');
+      },
+      complete: function () {
+      }
+    });    
   };
 
   //HTML5 GeoLocation 이용해서 접속위치를 가져오기

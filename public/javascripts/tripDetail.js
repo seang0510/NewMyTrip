@@ -474,17 +474,23 @@
 
     let tripDetailGuid;
     let address;
+    let latitude;
+    let longitude;
 
     if(hasParentModalYN === undefined){
       hasParentModalYN = 'N';
       const td = $(eThis).closest('td');
       const rowData = table.row(td).data();
       tripDetailGuid = rowData.TRIP_DTL_GUID;
-      address = rowData.ADDR_ORG;      
+      address = rowData.ADDR_ORG;
+      latitude = rowData.LAT;
+      longitude = rowData.LNG;
     }
     else{
       tripDetailGuid = $("#tripDetailGuid").val();
       address = $("#address").val();
+      latitude = $("#latitude").val();
+      longitude = $("#longitude").val();
     }
 
     var width = '700';
@@ -493,7 +499,7 @@
     //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
     var left = Math.ceil((window.screen.width - width) / 2);
     var top = Math.ceil((window.screen.height - height) / 2);
-    var param = '?tripDetailGuid=' + tripDetailGuid + '&address=' + address + '&hasParentModalYN=' + hasParentModalYN;
+    var param = '?tripDetailGuid=' + tripDetailGuid + '&address=' + address + '&hasParentModalYN=' + hasParentModalYN + '&latitude=' + latitude + '&longitude=' + longitude;
     var url = '/business/trip/findAddress' + param;
 
     window.open(url, '주소 찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
@@ -567,8 +573,8 @@
       navigator.geolocation.getCurrentPosition(
         function (position) {
           // 현재 위치 좌표
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
     
           const width = 1400;
           const height = 800;
@@ -592,11 +598,10 @@
             },
             success: function (data, status, xhr) {
               if (data.success) {
-                const srcAddress = data.value.address;
-                const destAddress = '목적지'; // 필요에 따라 수정
+                srcAddress = data.value.address;
     
                 // 카카오맵 앱 URL
-                const kakaoMapUrl = `kakaomap://route?ep=${latitude},${longitude}&by=car`;
+                const kakaoMapUrl = `kakaomap://route?sp=${srcAddress.latitude},${srcAddress.longitude}&ep=${latitude},${longitude}&by=car`;
     
                 // 앱 실행 시도
                 window.location.href = kakaoMapUrl;
@@ -605,7 +610,7 @@
                 setTimeout(() => {
                   const param = `?sName=${srcAddress}&eName=${destAddress}`;
                   const url = 'https://map.kakao.com/' + param;
-                  window.open(url, '_blank');
+                  window.open(url, '카카오 길찾기', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
                 }, 500);
               } else {
                 console.error(data.message);

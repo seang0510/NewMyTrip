@@ -934,12 +934,11 @@ exports.exportTripDetailImage = async (req, res, next) => {
 
 //주소 찾기 화면(GET)
 exports.findAddress = async (req, res, next) => {
-
   let tripDetailGuid = helper.changeUndefiendToNull(req.query.tripDetailGuid);
   let hasParentModalYN = helper.changeUndefiendToNull(req.query.hasParentModalYN); //모달폼(상세 등록,수정창)에서 들어온 경우(Y), 바로 주소변경해야하는 경우(N)
   let address = helper.changeUndefiendToNull(req.query.address);
-  let latitude = 0;
-  let longitude = 0;
+  let latitude = helper.changeUndefiendToZero(req.query.latitude);
+  let longitude = helper.changeUndefiendToZero(req.query.longitude);
 
   try {
       //로그인 되지 않은 경우
@@ -948,8 +947,22 @@ exports.findAddress = async (req, res, next) => {
       }
       //현재 로그인 되어 있는 경우    
       else{
+          //위도,경도가 존재하는 경우, 주소 가져오기
+          if(latitude != 0 && longitude != 0){
+            const response = await axios({
+              method: "GET",
+              url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ latitude + '&x=' + longitude,
+              headers: {
+                Authorization: process.env.KAKAO_FIND_ADDR,
+              },
+            });
+
+            if(response.data.documents.length > 0 && (address == null && address.trim() == '')){
+              address = response.data.documents[0].address.address_name;
+            }                
+          }
           //주소가 존재하는 경우, 위도/경도 가져오기
-          if(address != null){
+          else if(address != null && address.trim() != ''){
             const encodedAddress = encodeURIComponent(address);
             const response = await axios({
               method: "GET",
@@ -963,6 +976,11 @@ exports.findAddress = async (req, res, next) => {
               latitude = response.data.documents[0].y;
               longitude = response.data.documents[0].x;
             }       
+          }
+          else{
+            address = '';
+            latitude = 0;
+            longitude = 0;
           }
           return res.render('business/trip/findAddress', { title: '주소 찾기', layout: false, tripDetailGuid: tripDetailGuid, hasParentModalYN: hasParentModalYN, address: address, latitude: latitude, longitude: longitude });
       }        
@@ -1082,13 +1100,30 @@ exports.getCoordinateByAddress = async (req, res, next) => {
   const tripDetailGuid = helper.changeUndefiendToNull(req.body.tripDetailGuid);
   let address = helper.changeUndefiendToNull(req.body.address);
   let addressDetail = helper.changeUndefiendToEmpty(req.body.addressDetail);
-  let zoneCode = helper.changeUndefiendToEmpty(req.body.addrzoneCodeess);
-  let latitude = 0;
-  let longitude = 0;
+  let zoneCode = helper.changeUndefiendToEmpty(req.body.zoneCode);
+  let latitude = helper.changeUndefiendToZero(req.body.latitude);
+  let longitude = helper.changeUndefiendToZero(req.body.longitude);
+  let response;
 
   try {        
-    const encodedAddress = encodeURIComponent(address);      
-    const response = await axios({
+    //위도,경도가 존재하는 경우, 주소 가져오기
+    if(latitude != 0 && longitude != 0){
+      response = await axios({
+        method: "GET",
+        url: `https://dapi.kakao.com/v2/local/geo/coord2address.json?y=`+ latitude + '&x=' + longitude,
+        headers: {
+          Authorization: process.env.KAKAO_FIND_ADDR,
+        },
+      });
+
+      if(response.data.documents.length > 0 && (address == null && address.trim() == '')){
+        address = response.data.documents[0].address.address_name;
+      }                
+    }
+    //주소가 존재하는 경우, 위도/경도 가져오기
+    else if(address != null && address.trim() != ''){
+      const encodedAddress = encodeURIComponent(address);
+      response = await axios({
         method: "GET",
         url: `https://dapi.kakao.com/v2/local/search/address.json?analyze_type=similar&query=${encodedAddress}`,
         headers: {
@@ -1096,23 +1131,26 @@ exports.getCoordinateByAddress = async (req, res, next) => {
         },
       });
 
-      var returnData = new Object();
       if(response.data.documents.length > 0){
         latitude = response.data.documents[0].y;
         longitude = response.data.documents[0].x;
+      }        
+    }    
+      
+    var returnData = new Object();
+    if(response.data.documents.length > 0){
+      returnData.address = address;
+      returnData.addressDetail = addressDetail;
+      returnData.latitude = latitude;
+      returnData.longitude = longitude;
 
-        returnData.address = address;
-        returnData.addressDetail = addressDetail;
-        returnData.latitude = latitude;
-        returnData.longitude = longitude;
+      resModel = helper.createResponseModel(true, '주소와 위도,경도가 조회되었습니다.', returnData);
+    }       
+    else{
+      resModel = helper.createResponseModel(false, '주소와 위도,경도 조회에 실패하였습니다.', '');
+    }
 
-        resModel = helper.createResponseModel(true, '주소와 위도,경도가 조회되었습니다.', returnData);
-      }
-      else{
-        resModel = helper.createResponseModel(false, '주소와 위도,경도 조회에 실패하였습니다.', '');
-      }
-
-      return res.status(200).json(resModel);                      
+    return res.status(200).json(resModel);                      
   }
   catch (err) {
       return res.status(500).json(err);
