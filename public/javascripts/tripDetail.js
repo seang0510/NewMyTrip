@@ -200,11 +200,15 @@
         },
         success: function (data, status, xhr) {
           if(data.success){
+            $("#modalAlert .modal-body").html('삭제되었습니다.');
+            $("#modalAlert").modal('show');
+
             getItem(tripDetailGuid);
           }  
           else{
             var message = data.message;
             $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
           }  
         },
         error: function (data, status, err) {
@@ -215,9 +219,9 @@
           setLoadingBar(false);
 
           //이전 모달 z-index 변경
-          $('#modalConfirm').on('hidden.bs.modal', function (e) {
+          $('#modalAlert').on('hidden.bs.modal', function (e) {
             $("#modalTripDetail").css('z-index', 1055);
-            $("#modalConfirm").off('hidden.bs.modal');
+            $("#modalAlert").off('hidden.bs.modal');
           });       
 
           InitDataTableJS('tblMain', '/business/trip/getTripDetailList');  

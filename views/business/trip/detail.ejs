@@ -686,21 +686,23 @@
       },
       success: function (data, status, xhr) {
         if(data.success){
+          $("#modalAlert .modal-body").html('업로드 되었습니다.');
           location.href = '/business/trip/detail?tripGuid=' + $("#tripGuid").val();
         }
         else
-        {
-          var message = data.message;
+        {         
+          $("#modalTripDetailImage").modal('hide'); var message = data.message;
           $("#modalAlert .modal-body").html(message);
+          $("#modalAlert").modal('show');          
         }        
       },
       error: function (data, status, err) {
+        $("#modalTripDetailImage").modal('hide');
         $("#modalAlert .modal-body").html(err);
+        $("#modalAlert").modal('show');
       },
       complete: function () {
         setLoadingBar(false, 'modalTripDetailImage');
-        $("#modalTripDetailImage").modal('hide');
-        $("#modalAlert").modal('show');
       }
     });    
   };
@@ -776,6 +778,7 @@
 
   //첨부파일 삭제
   function deleteFile(num) {
+      debugger;
       document.querySelector("#file" + num).remove();
       filesArr[num].is_delete = true;
   }
