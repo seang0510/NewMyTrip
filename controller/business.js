@@ -126,7 +126,7 @@ exports.setTrip = async (req, res, next) => {
   const startDate = helper.changeUndefiendToNull(req.body.startDate);
 
   const markFacilityNameYn = helper.changeUndefiendToNull(req.body.markFacilityNameYn);
-  const markAddressYn = helper.changeUndefiendToNull(req.body.markAddressYn);
+  let markAddressYn = helper.changeUndefiendToNull(req.body.markAddressYn);
   const markItemYn = helper.changeUndefiendToNull(req.body.markItemYn);
   const markItemName = helper.changeUndefiendToNull(req.body.markItemName);
   const markColor = helper.changeUndefiendToNull(req.body.markColor);
