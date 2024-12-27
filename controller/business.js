@@ -6,7 +6,7 @@ const exceljs = require('../helper/trip/excel');
 const path = require('path');
 const axios = require("axios");
 
-//오늘의 출장 화면(GET)
+//오늘의 출장 화면(GET)123ßß
 exports.indexTrip = async (req, res, next) => {
   try {
       //로그인 되지 않은 경우
