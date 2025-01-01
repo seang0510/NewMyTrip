@@ -77,26 +77,57 @@ exports.getTripWithItems = async (tripGuid, regUserGuid) => {
 
 //오늘의 출장 등록,수정
 exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid) => {
+    let isNew = (tripGuid == null || tripGuid == '') ? true : false;
+    tripGuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
+    let res;
+    let isSuccess = true;
+    let returnCode = -1;
     let conn = await pool.getConnection();    
-    try {        
-        let params = [tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid];
+    try {                
 
         await conn.beginTransaction();
-        const res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
-        await conn.commit();
 
-        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
-            console.log("오늘의 출장 등록 성공");
-            return 1; //등록 성공
+        //오늘의 출장 등록할 수 있는지 여부 조사
+        res = await pool.query('CALL BIZ_TRIP_MST_CREATE_CHECK(?);', userGuid);
+        if(res[0][0].length > 0){
+            let tripPossibleCreateYN = res[0][0][0].IS_POSSIBLE_CREATE_YN;
+            if(isNew == true && tripPossibleCreateYN == 'N'){
+                isSuccess = false;
+                returnCode = -1;
+            }
         }
-        else if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U'){
-            console.log("오늘의 출장 수정 성공");
-            return 0; //수정 성공
+
+        if(isSuccess == true){
+            let params = [tripGuid, title, startDate, markFacilityNameYn, markAddressYn, markItemYn, markItemName, markColor, userGuid];
+            res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
+                console.log("오늘의 출장 등록 성공");
+                isSuccess = true;
+                returnCode = 1; //등록 성공
+            }
+            else if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U'){
+                console.log("오늘의 출장 수정 성공");
+                isSuccess = true;
+                returnCode = 0; //수정 성공
+            }
+            else{
+                console.log("오늘의 출장 등록 실패");
+                isSuccess = false;
+                returnCode = -1; //등록 실패
+            }            
         }
-        else{
-            console.log("오늘의 출장 등록 실패");
-            return -1; //등록 실패
+        
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
         }
+        else {
+            await conn.commit();
+        }
+
+        return returnCode;
+
     } catch (err) {
         conn.rollback();
         console.log(err);
@@ -108,36 +139,59 @@ exports.setTrip = async (tripGuid, title, startDate, markFacilityNameYn, markAdd
 
 //오늘의 출장 등록/수정 + 오늘의 출장 상세 아이템(POST)
 exports.setTripWithItems = async (tripGuid, title, tripDetailItems, userGuid) => {
+    let isNew = (tripGuid == null || tripGuid == '') ? true : false;
     tripGuid = (tripGuid == null || tripGuid == '') ? helper.generateUUID() : tripGuid;
     let tripDetailGuid;    
     let conn = await pool.getConnection();
     let params;
     let res;
     let returnCode = -1;
-    let isSuccess = false;
+    let isSuccess = true;
     let nowDay = helper.dayFormat(new Date());
 
     try {        
         await conn.beginTransaction();
 
-        //오늘의 출장 등록
-        params = [tripGuid, title, nowDay, null, null, null, null, null, userGuid];
-        res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+        //오늘의 출장 제한항목 갯수를 넘겼는지 확인
+        res = await pool.query('CALL SYS_CMN_COD_DTL_SELECT(?,?,?)', ['', 'TRIP_LIMIT_CNT', 'N']);
+        if(res[0][0].length > 0){
+            let tripDetailItemMaxCount = Number(res[0][0].find(x => x.DTL_COD == 'COLUMN_CNT').REMARK);
+            if(tripDetailItems != null && tripDetailItems.length > tripDetailItemMaxCount){
+                isSuccess = false;
+                returnCode = -1;                
+            }
+        }
 
-        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
-            console.log("오늘의 출장 등록 성공");
-            isSuccess = true;
-            returnCode = 1; //등록 성공
+        //오늘의 출장 등록할 수 있는지 여부 조사
+        res = await pool.query('CALL BIZ_TRIP_MST_CREATE_CHECK(?);', userGuid);
+        if(res[0][0].length > 0){
+            let tripPossibleCreateYN = res[0][0][0].IS_POSSIBLE_CREATE_YN;
+            if(isNew == true && tripPossibleCreateYN == 'N'){
+                isSuccess = false;
+                returnCode = -1;
+            }
         }
-        else if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U'){
-            console.log("오늘의 출장 수정 성공");
-            isSuccess = true;
-            returnCode = 0; //수정 성공
-        }
-        else{
-            console.log("오늘의 출장 등록 실패");
-            isSuccess = false;
-            returnCode = -1; //등록 실패
+
+        //오늘의 출장 등록
+        if(isSuccess == true){            
+            params = [tripGuid, title, nowDay, null, null, null, null, null, userGuid];
+            res = await pool.query('CALL BIZ_TRIP_MST_CREATE(?,?,?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'C'){
+                console.log("오늘의 출장 등록 성공");
+                isSuccess = true;
+                returnCode = 1; //등록 성공
+            }
+            else if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] == 'U'){
+                console.log("오늘의 출장 수정 성공");
+                isSuccess = true;
+                returnCode = 0; //수정 성공
+            }
+            else{
+                console.log("오늘의 출장 등록 실패");
+                isSuccess = false;
+                returnCode = -1; //등록 실패
+            }
         }
 
         //오늘의 출장 상세 등록,수정
@@ -929,6 +983,7 @@ exports.exportTrip = async (tripGuid, regUserGuid) => {
 
 //오늘의 출장 상세 등록,수정
 exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, addressDetail, latitude, longitude, compYn, order, tripDetailItems, userGuid) => {
+    let isNew = (tripDetailGuid == null || tripDetailGuid == '') ? true : false;
     order = (tripDetailGuid == null || tripDetailGuid == '') ? 0 : order; //DetailGUID가 없으면 등록
     tripDetailGuid = (tripDetailGuid == null || tripDetailGuid == '') ? helper.generateUUID() : tripDetailGuid;
     compYn = compYn == null ? 'N' : compYn;
@@ -941,22 +996,33 @@ exports.setTripDetail = async (tripDetailGuid, tripGuid, facilityName, address, 
     try {
         await conn.beginTransaction();
 
-        //오늘의 출장 상세 아이템 삭제
-        if(tripDetailItems != null && tripDetailItems.length > 0){
-            
-            res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
-
-            if (res[0][1][0]["@RET_VAL"] == 'D') {
-                console.log("오늘의 출장 상세 아이템 삭제 성공");
-                isSuccess = true;
-            }
-            else {
-                console.log("오늘의 출장 상세 아이템 삭제 실패");
+        //오늘의 출장 상세 등록할 수 있는지 여부 조사
+        params = [tripGuid, tripDetailGuid];
+        res = await pool.query('CALL BIZ_TRIP_DTL_CREATE_CHECK(?,?);', params);
+        if(res[0][0].length > 0){
+            let tripDetailPossibleCreateYN = res[0][0][0].IS_POSSIBLE_CREATE_YN;
+            if(isNew == true && tripDetailPossibleCreateYN == 'N'){
                 isSuccess = false;
+                returnCode = -1;
             }
         }
-        else{
-            isSuccess = true;
+
+        if(isSuccess == true){
+            //오늘의 출장 상세 아이템 삭제
+            if(tripDetailItems != null && tripDetailItems.length > 0){            
+                res = await pool.query('CALL BIZ_TRIP_DTL_ITM_DELETE(?,@RET_VAL); select @RET_VAL;', tripDetailGuid);
+                if (res[0][1][0]["@RET_VAL"] == 'D') {
+                    console.log("오늘의 출장 상세 아이템 삭제 성공");
+                    isSuccess = true;
+                }
+                else {
+                    console.log("오늘의 출장 상세 아이템 삭제 실패");
+                    isSuccess = false;
+                }
+            }
+            else{
+                isSuccess = true;
+            }
         }
 
         //오늘의 출장 상세 등록,수정
@@ -1477,3 +1543,44 @@ exports.deleteTripDetailImages = async (tripDetailImageGuid, tripDetailGuid, use
         conn.release();
     }
 };
+
+//오늘의 출장 등록할 수 있는지 여부 조사
+exports.validatePossibleCreateYN = async (userGuid) => {    
+    try {        
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_MST_CREATE_CHECK(?);', userGuid);
+
+        if(rows[0].length > 0){
+            console.log("등록 가능");
+            return rows[0][0];     
+        }
+        else{
+            console.log("등록 불가");
+            return null;
+        }
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }    
+}; 
+
+//오늘의 출장 상세 등록할 수 있는지 여부 조사
+exports.detailValidatePossibleCreateYN = async (tripGuid) => {    
+    try {        
+        let params = [tripGuid, ''];
+        const [rows, fields] = await pool.query('CALL BIZ_TRIP_DTL_CREATE_CHECK(?,?);', params);
+
+        if(rows[0].length > 0){
+            console.log("등록 가능");
+            return rows[0][0];     
+        }
+        else{
+            console.log("등록 불가");
+            return null;
+        }
+
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }    
+}; 

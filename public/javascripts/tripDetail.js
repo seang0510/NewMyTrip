@@ -281,6 +281,15 @@
   
   //신규 등록
   function createItem(){
+    var tripDetailPossibleCreateYN = $("#tripDetailPossibleCreateYN").val();
+    var tripDetailMaxCount = $("#tripDetailMaxCount").val();
+    if(tripDetailPossibleCreateYN == 'N'){      
+      $("#modalAlert .modal-title").html("출장 상세");
+      $("#modalAlert .modal-body").html('출장 상세는 최대 ' + tripDetailMaxCount + '개 까지 등록할 수 있습니다.');
+      $("#modalAlert").modal('show');     
+      return; 
+    }
+
     InitModalTripDetail();
 
     //이미지 슬라이드 초기화 및 기본 이미지 추가

@@ -2,11 +2,12 @@ const helper = require('../helper/helper');
 const tourLocationService = require('../service/tourLocation');
 const tripService = require('../service/trip');
 const adService = require('../service/ad');
+const commonCodeService = require('../service/commonCode');
 const exceljs = require('../helper/trip/excel');
 const path = require('path');
 const axios = require("axios");
 
-//오늘의 출장 화면(GET)123ßß
+//오늘의 출장 화면(GET)
 exports.indexTrip = async (req, res, next) => {
   try {
       //로그인 되지 않은 경우
@@ -20,8 +21,24 @@ exports.indexTrip = async (req, res, next) => {
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
         let bannerList = await adService.getAdList('', ''); //광고 조회
+        let commonCodeList = await commonCodeService.getCommonCodeDetailList('', 'TRIP_LIMIT_CNT');
+        let userGuid = req.session.userGuid;
+        let tripPossibleCreate = await tripService.validatePossibleCreateYN(userGuid);
 
-        return res.render('business/trip/index', { title: '모두의 출장', userEmail: email, authCode: authGroupCode, bannerList: bannerList });
+        let tripMaxCount = 10;
+        let tripDetailItemMaxCount = 50;
+        let tripPossibleCreateYN = 'N';
+
+        if(commonCodeList != null){
+          tripMaxCount = commonCodeList.find(x => x.DTL_COD == 'MST_CNT').REMARK;
+          tripDetailItemMaxCount = commonCodeList.find(x => x.DTL_COD == 'COLUMN_CNT').REMARK;
+        }
+
+        if(tripPossibleCreateYN != null){
+          tripPossibleCreateYN = tripPossibleCreate.IS_POSSIBLE_CREATE_YN;
+        }
+
+        return res.render('business/trip/index', { title: '모두의 출장', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripMaxCount: tripMaxCount, tripDetailItemMaxCount: tripDetailItemMaxCount, tripPossibleCreateYN: tripPossibleCreateYN });
       }        
   }
   catch (err) {
@@ -389,12 +406,25 @@ exports.indexTripDetail = async (req, res, next) => {
         const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
         const trip = await tripService.getTripList(tripGuid, null, userGuid);
         let tripName = trip == null ? '모두의 출장 상세' : trip[0].TTL;
+        
+        let commonCodeList = await commonCodeService.getCommonCodeDetailList('', 'TRIP_LIMIT_CNT');
+        let tripDetailMaxCount = 100;    
+        if(commonCodeList != null){
+          tripDetailMaxCount = commonCodeList.find(x => x.DTL_COD == 'RECORD_CNT').REMARK;
+        }
+
+        let tripDetailPossibleCreate = await tripService.detailValidatePossibleCreateYN(tripGuid);
+        let tripDetailPossibleCreateYN = 'N';        
+
+        if(tripDetailPossibleCreateYN != null){
+          tripDetailPossibleCreateYN = tripDetailPossibleCreate.IS_POSSIBLE_CREATE_YN;
+        }
 
         if(tripGuid == null){
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detail', { title: '모두의 출장 상세', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList), tripDetailPossibleCreateYN: tripDetailPossibleCreateYN, tripDetailMaxCount: tripDetailMaxCount });
         }        
       }        
   }
@@ -425,11 +455,24 @@ exports.indexTripDetailMap = async (req, res, next) => {
         const trip = await tripService.getTripList(tripGuid, null, userGuid);
         let tripName = trip == null ? '모두의 출장 상세 지도보기' : trip[0].TTL;
 
+        let commonCodeList = await commonCodeService.getCommonCodeDetailList('', 'TRIP_LIMIT_CNT');
+        let tripDetailMaxCount = 100;    
+        if(commonCodeList != null){
+          tripDetailMaxCount = commonCodeList.find(x => x.DTL_COD == 'RECORD_CNT').REMARK;
+        }
+
+        let tripDetailPossibleCreate = await tripService.detailValidatePossibleCreateYN(tripGuid);
+        let tripDetailPossibleCreateYN = 'N';        
+
+        if(tripDetailPossibleCreateYN != null){
+          tripDetailPossibleCreateYN = tripDetailPossibleCreate.IS_POSSIBLE_CREATE_YN;
+        }
+
         if(tripGuid == null){
           return res.redirect('/business/trip');
         }
         else{
-          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList) });
+          return res.render('business/trip/detailmap', { title: '모두의 출장 상세 지도보기', userEmail: email, authCode: authGroupCode, bannerList: bannerList, tripGuid: tripGuid, tripDetailGuid: tripDetailGuid, tripName: tripName, itemNameList: JSON.stringify(itemNameList), tripDetailPossibleCreateYN: tripDetailPossibleCreateYN, tripDetailMaxCount: tripDetailMaxCount });
         }        
       }        
   }

@@ -28,6 +28,11 @@
 <%# 본문 %>
 <%- contentFor('body') %>
 
+<%# 제한 항목 %>
+<input type="hidden" id="tripMaxCount" value='<%= tripMaxCount %>'>
+<input type="hidden" id="tripDetailItemMaxCount" value='<%= tripDetailItemMaxCount %>'>
+<input type="hidden" id="tripPossibleCreateYN" value='<%= tripPossibleCreateYN %>'>
+
 <%# 메뉴명 & 버튼 %>
 <div class="d-flex">
   <div class="ps-1">
@@ -336,7 +341,23 @@
 
   //아이템 등록
   function addNewItem(){
+    var maxColumnCount = Number($("#tripDetailItemMaxCount").val());
     var count = tableItems.rows().count() + 1;
+
+    if(count > maxColumnCount){
+      //이전 모달 z-index 변경
+      $("#modalNewTrip").css('z-index', 1050);
+      $('#modalAlert').on('hidden.bs.modal', function (e) {
+        $("#modalNewTrip").css('z-index', 1055);
+        $("#modalAlert").off('hidden.bs.modal');
+      });        
+
+      $("#modalAlert .modal-title").html("출장 생성");
+      $("#modalAlert .modal-body").html('출장 항목은 최대 ' + maxColumnCount + '개 까지 등록할 수 있습니다.');
+      $("#modalAlert").modal('show');
+      return;
+    }
+
     tableItems.row
         .add(getDefaultItem(count, '', ''))
         .draw(false); 
@@ -429,6 +450,15 @@
 
   //개별 등록
   function openModalNewTip(){
+    var tripPossibleCreateYN = $("#tripPossibleCreateYN").val();
+    var tripMaxCount = $("#tripMaxCount").val();
+    if(tripPossibleCreateYN == 'N'){      
+      $("#modalAlert .modal-title").html("출장 생성");
+      $("#modalAlert .modal-body").html('출장은 최대 ' + tripMaxCount + '개 까지 등록할 수 있습니다.');
+      $("#modalAlert").modal('show');     
+      return; 
+    }
+
     var itemList = [];
     itemList.push(getDefaultItem(1, '명칭','Y'));
     itemList.push(getDefaultItem(2, '주소','Y'));
@@ -436,6 +466,9 @@
     itemList.push(getDefaultItem(4, '위도','Y'));
     itemList.push(getDefaultItem(5, '경도','Y'));
     tableItems = DataTableForItems('tblItems', itemList);
+
+    //등록 버튼 표시
+    $("#btnAddItem").show();
 
     $("#modalNewTrip").modal('show');
   };
@@ -467,7 +500,9 @@
             if(data.value.tripDetailItems != null){
               for(var i = 0; i < data.value.tripDetailItems.length;i++){
                 var itemName = data.value.tripDetailItems[i].ITM_NM;
-                var dataYn = data.value.tripDetailItems[i].DATA_YN;
+                //편집하는 경우, 항목을 변경할 수 없도록 수정(2025-01-01)
+                //var dataYn = data.value.tripDetailItems[i].DATA_YN;
+                var dataYn = 'Y';
 
                 if(itemName != null){
                   itemList.push(getDefaultItem(itemList.length + 1, itemName, dataYn));
@@ -476,6 +511,9 @@
             }
           }
           tableItems = DataTableForItems('tblItems', itemList);
+
+          //등록 버튼 숨김
+          $("#btnAddItem").hide();
         },
         complete: function(data){
           setLoadingBar(false, 'modalNewTrip');
