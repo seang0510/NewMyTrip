@@ -70,15 +70,7 @@
   $(document).ready( function () {
     //DataTable.js
     InitializeColumns();
-    InitDataTableJS('tblMain', '/system/user/getUserList');  
-
-    //Click Event
-    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {
-      var isOn = table.column('CHK:name').visible();
-      const rowData = table.row(this).data();
-      let tripGuid = rowData.TRIP_MST_GUID;
-    });     
-    
+    InitDataTableJS('tblMain', '/system/user/getUserList');     
   });
 
   //컬럼 초기화

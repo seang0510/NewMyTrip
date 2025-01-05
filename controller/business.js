@@ -1267,7 +1267,8 @@ exports.indexTourLocation = async (req, res, next) => {
       else{
         var email = req.session.email;
         var authGroupCode = req.session.authGroupCode;
-        return res.render('business/tourLocation/index', { title: 'Express', userEmail: email, authCode: authGroupCode });
+        let bannerList = await adService.getAdList('', ''); //광고 조회
+        return res.render('business/tourLocation/index', { title: '관광명소', userEmail: email, authCode: authGroupCode, bannerList: bannerList });
       }        
   }
   catch (err) {

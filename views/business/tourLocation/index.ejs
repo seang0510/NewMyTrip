@@ -1,6 +1,158 @@
 <%# 공통 부분 %>
 <%- include('../../layout/common.ejs') %>
 
+<%# CSS & JS %>
+<link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="/css/select.dataTables.min.css" rel="stylesheet" />
+<link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
+<link href="/css/scroller.dataTables.min.css" rel="stylesheet" />
+<link href="/stylesheets/datatable.css" rel="stylesheet" />
+
+<%# JS %>
+<script src="/js/dataTables.min.js"></script>
+<script src="/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/dataTables.select.js"></script>
+<script src="/js/select.dataTables.js"></script>
+<script src="/js/dataTables.responsive.js"></script>
+<script src="/js/responsive.dataTables.js"></script>
+<script src="/js/dataTables.fixedColumns.js"></script>
+<script src="/js/fixedColumns.dataTables.js"></script>
+<script src="/js/dataTables.fixedHeader.js"></script>
+<script src="/js/fixedHeader.dataTables.js"></script>
+<script src="/js/dataTables.scroller.min.js"></script>
+<script src="/js/scroller.dataTables.min.js"></script>
+<script src="/javascripts/datatableOption.js"></script>
+
 <%# 본문 %>
 <%- contentFor('body') %>
-관광 명소
+
+<%# 메뉴명 & 버튼 %>
+<div class="d-flex">
+  <div class="ps-1">
+    <h2>관광명소 관리</h2>
+  </div>
+  <div class="d-flex ms-auto">
+    <div>
+      <button type="button" id="btnCreate" class="btn btn-primary" onclick="createItem()" disabled>등록</button>      
+    </div>
+    <div class="ms-1">
+      <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteItemList(event)" disabled>삭제</button>
+    </div>
+  </div>
+</div>
+
+<%# 그리드 %>
+<table id="tblMain" class="table table-striped">
+</table>
+
+<script>
+  var table = {};
+  let columns = [];
+
+  $(document).ready( function () {
+    //DataTable.js
+    InitializeColumns();
+    InitDataTableJS('tblMain', '/business/tourLocation/getTourLocationList');
+  });
+
+  //컬럼 초기화
+  function InitializeColumns(){
+    columns.push({title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false });
+    columns.push({title: '', data : null, name: 'CHK', width: "50px", visible: true });
+    columns.push({title: 'No.', data : "ODR", name: "ODR", width: "50px" });
+    columns.push({title: '종류', data : "LOC_TYP_NM", name: 'LOC_TYP_NM', width: "100px"});
+    columns.push({title: '장소명', data : "LOC_NM", name: 'LOC_NM', width: "100px"});
+    columns.push({title: '주소', data : "ADDR", name: 'ADDR', width: "100px%"});
+    columns.push({title: '위도', data : "LAT", name: 'LAT', width: "100px"});
+    columns.push({title: '경도', data : "LNG", name: 'LNG', width: "100px"});
+    columns.push({title: 'URL', data : "URL_LINK", name: 'URL_LINK', width: "100px"});
+    columns.push({title: '연락처', data : "TEL", name: 'TEL', width: "100px"});
+    columns.push({title: '제목', data : "TTL", name: 'TTL', width: "100px"});
+    columns.push({title: '내용', data : "CNTS", name: 'CNTS', width: "100px"});
+    columns.push({title: '파일명', data : "FILE_NM", name: 'FILE_NM', width: "100px"});
+  };
+
+  const columnDefs = [
+    { targets: "_all", className: "header" },
+    { targets: 0, orderable: false, searchable: false, className: 'control', render: false, },
+    { targets: 1, orderable: false, render: DataTable.render.select() },    
+    { targets: ['ODR:name'], className: "row-right-align" },    
+    { targets: ['LOC_NM:name', 'ADDR:name', 'URL:name', 'TTL:name', 'CNTS:name', 'FILE_NM:name'], className: "row-left-align" },    
+     { targets: ['LOC_TYP_NM:name', 'LAT:name', 'LNG:name', 'TEL:name', 'REG_DT:name', 'UPDT_DT:name'] , className: "row-center-align" },
+  ];
+
+  function InitDataTableJS(tblId, url){
+    var gridDate = [];
+
+    $.ajax({
+      url: url,
+      method: 'post',
+      success: function(data){
+        if(isEmpty(data) || (isEmpty(data.value))){
+          gridData = null;
+        }
+        else{          
+          gridData = data.value;
+          gridData = changeColumnData(gridData);
+        }        
+      },
+      beforeSend: function (xhr) {
+        setLoadingBar(true);
+      },
+      complete: function () {
+        setLoadingBar(false);
+
+        table = new DataTable('#' + tblId, {
+          data: gridData,
+          columns: columns,
+          columnDefs: columnDefs, 
+          language : getLanguage(),
+          paging: true,
+          lengthChange: true,
+          searching: false,
+          ordering: true,
+          info: true,         
+          select: {
+            style: 'multi',
+            selector: 'td.dt-select',
+            items: 'row',
+          },         
+          scrollX: true,
+          scrollY: 'calc(100vh - 222px)',
+          scroller: true,    
+          // responsive: true,
+          fixedColumns: {
+            start: 4
+          },
+          order: [['NO', 'asc']],    
+        });
+      }
+    });
+  };
+
+  function changeColumnData(gridData){
+    for(var i = 0; i< gridData.length; i++){
+      //명칭에 확인표시 추가
+      if(!(isEmpty(gridData[i].URL_LINK))) {
+        var htmlCode = "<span class='badge text-bg-success ms-auto' onclick=popupUrlLink('" + gridData[i].URL_LINK + "');>";
+        htmlCode += "<i class='fa fa-external-link-square'></i></span>";
+        gridData[i].URL_LINK = htmlCode;
+      }
+    }
+    return gridData;
+  };
+
+  function popupUrlLink(urlLink){
+    var width = '1000';
+    var height ='800';
+    
+    //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+    var left = Math.ceil((window.screen.width - width) / 2);
+    var top = Math.ceil((window.screen.height - height) / 2);
+
+    window.open(urlLink, '관광명소 링크', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+  };
+
+</script>
