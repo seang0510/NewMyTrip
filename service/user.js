@@ -1,7 +1,7 @@
 const pool = require('../db/pool');
 const helper = require('../helper/helper');
 
-//사용자 조회
+//사용자 조회(개별)
 exports.getUser = async(userGuid, email, joinTypeCode, deviceTypeCode) => {
     let user = null;
 
@@ -22,6 +22,24 @@ exports.getUser = async(userGuid, email, joinTypeCode, deviceTypeCode) => {
     }
 };
 
+//사용자 조회(리스트)
+exports.getUserList = async(userGuid, email, joinTypeCode, deviceTypeCode) => {
+    try {        
+        const [rows, fields] = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [userGuid, email, joinTypeCode, deviceTypeCode, 'N']);
+        
+        if(rows[0].length > 0){
+            return rows[0];
+        }
+        else{
+            console.log("조회 실패");
+            return null;
+        }
+    } catch (err) {
+        console.log(err);
+        throw Error(err);
+    }
+};
+
 //사용자 등록,수정 --> 회원가입과 따로 만들어야한다 (회원가입 할 때는 이미 등록된 경우 비밀번호가 수정되면 안됨)
 
 //사용자 로그인[일반]
@@ -36,7 +54,7 @@ exports.getUserForLogin = async (email, password, deviceTypeCode, pushToken) => 
     password = helper.createHashPassword(password, "sha512");
 
     try {        
-        //로그인^
+        //로그인
         res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?)', [email, 'N', password, 'N']);
         if(res[0][0].length > 0){
             console.log('로그인 성공');            
@@ -527,13 +545,113 @@ exports.deleteUser= async (delUserGuid, updtUserGuid) => {
         await conn.commit();
 
         if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){            
-            console.log("사용자 삭제 성공");            
+            console.log("계정 삭제 성공");            
             return 1; //삭제 성공
         }
         else{
-            console.log("사용자 삭제 실패");
+            console.log("계정 삭제 실패");
             return -1; //삭제 실패
         }
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
+//사용자 삭제(리스트)
+exports.deleteUserList = async (userGuidList, delYn, regUserGuid) => {
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {        
+
+        await conn.beginTransaction();
+
+        for (var i = 0; i < userGuidList.length; i++) {
+            let userGuid = userGuidList[i];
+            params = [userGuid, delYn, regUserGuid];
+            
+            res = await pool.query('CALL SP_ALL_UPDATE_YN(?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][1][0]["@RET_VAL"] == 'Y'){
+                if (i == userGuidList.length - 1) {
+                    console.log("계정 삭제 성공");
+                    isSuccess = true;
+                }
+            }
+            else{
+                console.log("계정 삭제 실패");
+                isSuccess = false;
+                break;
+            }
+        }
+    
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
+    } catch (err) {
+        conn.rollback();
+        console.log(err);
+        throw Error(err);
+    } finally {
+        conn.release();
+    }
+};
+
+//사용자 정지(리스트)
+exports.stopUserList = async (userGuidList, useYn, regUserGuid) => {
+    let conn = await pool.getConnection();    
+    let params;
+    let res;
+    let returnCode = -1;
+    let isSuccess = false;
+
+    try {        
+
+        await conn.beginTransaction();
+
+        for (var i = 0; i < userGuidList.length; i++) {
+            let userGuid = userGuidList[i];
+            params = [userGuid, useYn, regUserGuid];
+            
+            res = await pool.query('CALL SYS_USER_MST_UPDATE_USE_YN(?,?,?,@RET_VAL); select @RET_VAL;', params);
+
+            if(res[0][1][0]["@RET_VAL"] == 'Y'){
+                if (i == userGuidList.length - 1) {
+                    console.log("계정 사용유무 변경 성공");
+                    isSuccess = true;
+                }
+            }
+            else{
+                console.log("계정 사용유무 변경 실패");
+                isSuccess = false;
+                break;
+            }
+        }
+    
+        if (isSuccess == false) {
+            conn.rollback();
+            returnCode = -1;
+        }
+        else {
+            await conn.commit();
+            returnCode = 1;
+        }
+
+        return returnCode;
     } catch (err) {
         conn.rollback();
         console.log(err);

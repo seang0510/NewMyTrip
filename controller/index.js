@@ -66,6 +66,11 @@ exports.setLogin = async (req, res, next) => {
         if (user == null) {
             resModel = helper.createResponseModel(false, '올바르지 않은 이메일 및 비밀번호입니다.', "");
             return res.status(200).json(resModel);
+        }        
+        //계정 비활성화된 경우
+        else if(user.USE_YN == 'N'){
+            resModel = helper.createResponseModel(false, '해당 계정은 비활성화 되었습니다. 관리자에게 문의바랍니다.', "");
+            return res.status(200).json(resModel);            
         }
         //로그인 성공한 경우
         else {
@@ -148,21 +153,27 @@ exports.getLoginKakaoCallback = async (req, res, next) => {
 
     try {
         //사용자 조회
-        let user = await userService.getUser(null, email, null);
+        let user = await userService.getUser(null, email, null, null);
         
         if (user != null) {
-            //세션 스토어가 이루어진 후 redirect를 해야함.
-            req.session.save(function(){ 
-                req.session.email = user.EMAIL;
-                req.session.joinTypeCode = user.JOIN_TYP_COD;
-                req.session.authGroupCode = user.AUTH_GRP_COD;
-                req.session.userGuid = user.USER_GUID;
-                req.session.isLogined = true;
-                req.session.valid = true;
-
-                console.log("로그인 성공");
+            //계정 정지된 경우
+            if(user.USE_YN == 'N'){
                 return res.redirect('/');
-            });
+            }
+            else{
+                //세션 스토어가 이루어진 후 redirect를 해야함.
+                req.session.save(function(){ 
+                    req.session.email = user.EMAIL;
+                    req.session.joinTypeCode = user.JOIN_TYP_COD;
+                    req.session.authGroupCode = user.AUTH_GRP_COD;
+                    req.session.userGuid = user.USER_GUID;
+                    req.session.isLogined = true;
+                    req.session.valid = true;
+
+                    console.log("로그인 성공");
+                    return res.redirect('/');
+                });
+            }
         } 
         else {
             return res.render('main/signup', { title: 'Express', layout: false, email: email, joinTypeCode: 'K', joinToken: token });
@@ -389,7 +400,7 @@ exports.getUserCheck = async (req, res, next) => {
     
     try {
         //사용자 조회
-        let user = await userService.getUser(null, email, null);
+        let user = await userService.getUser(null, email, null, null);
         
         if (user != null) {
             resModel = helper.createResponseModel(true, '아이디 존재 합니다.', user);
@@ -426,7 +437,7 @@ exports.setMobileLogin = async (req, res, next) => {
     
     try {
         //사용자 조회
-        let user = await userService.getUser(null, email, null);
+        let user = await userService.getUser(null, email, null, null);
         
         //로그인 실패한 경우
         if (user == null) {

@@ -1,6 +1,265 @@
-<!-- 공통 부분 -->
+<%# 공통 부분 %>
 <%- include('../../layout/common.ejs') %>
 
-<!-- 본문 -->
+<%# CSS & JS %>
+<link href="/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+<link href="/css/select.dataTables.min.css" rel="stylesheet" />
+<link href="/css/responsive.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedColumns.dataTables.min.css" rel="stylesheet" />
+<link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
+<link href="/css/scroller.dataTables.min.css" rel="stylesheet" />
+<link href="/stylesheets/datatable.css" rel="stylesheet" />
+
+<%# JS %>
+<script src="/js/dataTables.min.js"></script>
+<script src="/js/dataTables.bootstrap5.min.js"></script>
+<script src="/js/dataTables.select.js"></script>
+<script src="/js/select.dataTables.js"></script>
+<script src="/js/dataTables.responsive.js"></script>
+<script src="/js/responsive.dataTables.js"></script>
+<script src="/js/dataTables.fixedColumns.js"></script>
+<script src="/js/fixedColumns.dataTables.js"></script>
+<script src="/js/dataTables.fixedHeader.js"></script>
+<script src="/js/fixedHeader.dataTables.js"></script>
+<script src="/js/dataTables.scroller.min.js"></script>
+<script src="/js/scroller.dataTables.min.js"></script>
+<script src="/javascripts/datatableOption.js"></script>
+
+<%# 본문 %>
 <%- contentFor('body') %>
-사용자 관리
+
+<%# 메뉴명 & 버튼 %>
+<div class="d-flex">
+  <div class="ps-1">
+    <h2>계정 관리</h2>
+  </div>
+  <div class="d-flex ms-auto">
+    <div class="dropdown">
+      <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        사용유무
+      </button>
+      <ul class="dropdown-menu">
+          <li>                
+              <button class="dropdown-item" onclick="useUser(event, 'Y')">
+                  <span class="fa fa-toggle-on"></span>
+                  <span class="etc-menu">활성화</span>                    
+              </button>
+          </li>         
+          <li>                
+            <button type="button" class="dropdown-item" onclick="useUser(event, 'N')">
+                <span class="fa fa-toggle-off"></span>
+                <span class="etc-menu">비활성화</span>                    
+            </button>
+        </li>                                       
+      </ul>
+    </div>
+    <div class="ms-1">
+      <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteUser(event)">계정삭제</button>
+    </div>
+  </div>
+</div>
+
+<%# 그리드 %>
+<table id="tblMain" class="table table-striped">
+</table>
+
+<script>
+  var table = {};
+  let columns = [];
+
+  $(document).ready( function () {
+    //DataTable.js
+    InitializeColumns();
+    InitDataTableJS('tblMain', '/system/user/getUserList');  
+
+    //Click Event
+    $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {
+      var isOn = table.column('CHK:name').visible();
+      const rowData = table.row(this).data();
+      let tripGuid = rowData.TRIP_MST_GUID;
+    });     
+    
+  });
+
+  //컬럼 초기화
+  function InitializeColumns(){
+    columns.push({title: '', data : null, name: 'DTL', defaultContent: '', width: "0px", visible: false });
+    columns.push({title: '', data : null, name: 'CHK', width: "50px", visible: true });
+    columns.push({title: 'No.', data : "NO", name: "NO", width: "50px" });
+    columns.push({title: '이메일', data : "EMAIL", name: 'EMAIL', width: "100%"});
+    columns.push({title: '사용여부', data : "USE_YN", name: 'USE_YN', width: "100px"});
+    columns.push({title: '등록일시', data : "REG_DT", name: 'REG_DT', width: "100px"});
+    columns.push({title: '수정일시', data : "UPDT_DT", name: 'UPDT_DT', width: "100px"});
+  };
+
+  const columnDefs = [
+    { targets: "_all", className: "header" },
+    { targets: 0, orderable: false, searchable: false, className: 'control', render: false, },
+    { targets: 1, orderable: false, render: DataTable.render.select() },    
+    { targets: 'NO:name', className: "row-right-align" },    
+    { targets: 'EMAIL:name', className: "row-left-align" },    
+    { targets: ['USE_YN:name', 'REG_DT:name', 'UPDT_DT:name'] , className: "row-center-align" },
+  ];
+
+  function InitDataTableJS(tblId, url){
+    var gridDate = [];
+
+    $.ajax({
+      url: url,
+      method: 'post',
+      success: function(data){
+        if(isEmpty(data) || (isEmpty(data.value))){
+          gridData = null;
+        }
+        else{          
+          gridData = data.value;
+          gridData = changeColumnData(gridData);
+        }        
+      },
+      beforeSend: function (xhr) {
+        setLoadingBar(true);
+      },
+      complete: function () {
+        setLoadingBar(false);
+
+        table = new DataTable('#' + tblId, {
+          data: gridData,
+          columns: columns,
+          columnDefs: columnDefs, 
+          language : getLanguage(),
+          paging: true,
+          lengthChange: true,
+          searching: false,
+          ordering: true,
+          info: true,         
+          select: {
+            style: 'multi',
+            selector: 'td.dt-select',
+            items: 'row',
+          },         
+          scrollX: true,
+          scrollY: 'calc(100vh - 222px)',
+          scroller: true,    
+          // responsive: true,
+          fixedColumns: {
+            start: 3
+          },
+          order: [['NO', 'asc']],    
+        });
+      }
+    });
+  };
+
+  function changeColumnData(gridData){
+    for(var i = 0; i< gridData.length; i++){
+      //명칭에 확인표시 추가
+      if(gridData[i].USE_YN == 'Y'){
+        var htmlCode = "<span class='badge text-bg-success'>사용중</span>";
+        gridData[i].USE_YN = htmlCode;       
+      }    
+      else{
+        var htmlCode = "<span class='badge text-bg-danger'>사용불가</span>";
+        gridData[i].USE_YN = htmlCode;        
+      }
+    }
+
+    return gridData;
+  };
+
+  function deleteUser(e){
+    e.preventDefault();
+    const rows = table.rows('.selected').data();
+    var userGuidList = getValueList(rows, 'USER_GUID');
+    var data = {
+      'userGuidList': userGuidList
+    };
+
+    if(userGuidList.length == 0){
+      $("#modalAlert .modal-title").html("계정 삭제");
+      $("#modalAlert .modal-body").html('선택한 행이 없습니다.');
+      $("#modalAlert").modal('show');
+      return;
+    }
+
+    let message = '<p>선택한 계정을 삭제하시겠습니까?</p>';
+    message += '<p>선택한 계정으로 등록된 전체 데이터는 삭제되며 복구가 불가능합니다.';
+    message += '<p>다시 한 번 확인해주시기 바랍니다.</p>';
+
+    confirmModal(e, 'modalConfirm', '계정 삭제', message, function () {   
+      $.ajax({
+        url: '/system/user/deleteUserList',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("사용자 관리");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/system/user';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    }); 
+  };
+
+  function useUser(e, useYn){
+    e.preventDefault();
+    const rows = table.rows('.selected').data();
+    var userGuidList = getValueList(rows, 'USER_GUID');
+    var data = {
+      'userGuidList': userGuidList,
+      'useYn': useYn,
+    };
+
+    if(userGuidList.length == 0){
+      $("#modalAlert .modal-title").html("계정 정지");
+      $("#modalAlert .modal-body").html('선택한 행이 없습니다.');
+      $("#modalAlert").modal('show');
+      return;
+    }
+
+    let message = '<p>선택한 계정을 정지하시겠습니까?</p>';
+    message += '<p>정지된 계정으로는 로그인 할 수 없습니다.';
+
+    confirmModal(e, 'modalConfirm', '계정 정지', message, function () {   
+      $.ajax({
+        url: '/system/user/stopUserList',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("계정 관리");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/system/user';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    }); 
+  };
+
+</script>

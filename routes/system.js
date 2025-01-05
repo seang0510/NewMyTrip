@@ -10,6 +10,10 @@ router.get('/commonCode', systemController.indexCommonCode);
 
 //사용자 관리(user)
 router.get('/user', systemController.indexUser);
+router.post('/user/getUserList', systemController.getUserList);
+router.post('/user/deleteUser', systemController.deleteUser);
+router.post('/user/deleteUserList', systemController.deleteUserList);
+router.post('/user/stopUserList', systemController.stopUserList);
 
 //router.get('/user', systemController.getUserList);
 router.post('/user', function(req, res, next){

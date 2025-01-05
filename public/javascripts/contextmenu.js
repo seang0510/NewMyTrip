@@ -13,7 +13,10 @@ $(function () {
           break;
         case "connectKakaoChaneel":
           connectKakaoChaneel(this, e);
-          break;                    
+          break;            
+        case "deleteMyself":
+          deleteMyself(this, e);
+          break;                              
         case "logout":
           logout(this, e);
           break;
@@ -31,6 +34,7 @@ $(function () {
       changePassword: { name: "비밀번호 변경", icon: "fa-key" },
       info: { name: "약관", icon: "fa-info" },
       connectKakaoChaneel: { name: "문의: 카카오채널 연결", icon: "fa-plug" },
+      deleteMyself: { name: "회원탈퇴", icon: "fa-times-circle" },
       sep2: "---------",
       logout: { name: "로그아웃", icon: "fa-sign-out" },
     }
@@ -97,6 +101,43 @@ function connectKakaoChaneel(eThis, e){
   var url = 'https://pf.kakao.com/_QtYRn';
 
   window.open(url, '카카오 채널 연결', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');  
+};
+
+//계정 삭제
+function deleteMyself(eThis, e) {
+  let message = '<p>계정을 삭제하시겠습니까?</p>';
+  message += '<p>등록한 전체 데이터는 삭제되며 복구가 불가능합니다.';
+  message += '<p>다시 한 번 확인해주시기 바랍니다.</p>';
+
+  confirmModal(e, 'modalConfirm', '계정 삭제', message, function () {
+    $.ajax({
+      url: '/system/user/deleteUser',
+      method: 'POST',
+      beforeSend: function (xhr) {
+        setLoadingBar(true);
+      },
+      success: function (data, status, xhr) {
+        if(data.success){
+          e.preventDefault();
+          location.href = '/login';
+        }
+        else{
+          $("#modalAlert .modal-title").html("계정삭제 오류");
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        }
+      },
+      error: function (data, status, err) {
+        $("#modalAlert .modal-title").html("계정삭제 오류");
+        $("#modalAlert .modal-body").html(err);
+        $("#modalAlert").modal('show');
+      },
+      complete: function () {
+        $("#modalConfirm").modal('hide');
+        setLoadingBar(false);
+      }
+    });
+  });
 };
 
 //로그아웃

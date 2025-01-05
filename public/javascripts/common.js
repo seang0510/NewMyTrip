@@ -86,12 +86,12 @@ function confirmModal(e, modalId, title, text, callback, callbackCancel) {
 };
 
 //Confirm 모달
-function modalConfirm(id, title, text, callback) {
+function modalConfirm(id, title, html, callback) {
   if (!(title == null || title == '' || typeof(title) === undefined)) {
     $("#" + id + " .modal-title").text(title);
   }
-  if (!(text == null || text == '' || typeof(text) === undefined)) {
-    $("#" + id + " .modal-body").text(text);
+  if (!(html == null || html == '' || typeof(html) === undefined)) {
+    $("#" + id + " .modal-body").html(html);
   }
   $("#" + id).modal("show");
   $("#" + id + " #btnConfirmY").unbind("click");
