@@ -201,10 +201,10 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
             //존재하는 경우
             if(res[0][0].length > 0){
                 const userJoinType = res[0][0][0];
-                const joinTypeCode = userJoinType.JOIN_TYP_COD;
+                const joinTypeCodeN = userJoinType.JOIN_TYP_COD;
 
                 //일반 로그인이 등록되지 않은 경우
-                if(joinTypeCode.indexOf('N') == -1){
+                if(joinTypeCodeN.indexOf('N') == -1){
                     params = [userGuid, 'N', null];
                     res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', params);   
 
@@ -216,6 +216,22 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
                         console.log("일반 사용자 가입 종류 등록 실패");
                         isSuccess = false;
                     }                      
+                }
+                //소셜 로그인 타입을 등록해야 하는 경우
+                else{
+                    if(res[0][0].find(x => x.JOIN_TYP_COD == joinTypeCode) === undefined){
+                        params = [userGuid, joinTypeCode, null];
+                        res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', params);        
+                        
+                        if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
+                            console.log("소셜 사용자 가입 종류 등록 성공");
+                            isSuccess = true;
+                        }
+                        else{
+                            console.log("소셜 사용자 가입 종류 등록 실패");
+                            isSuccess = false;
+                        }                                
+                    }
                 }
             }
         }
@@ -242,7 +258,7 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
     }
 };
 
-//사용자 로그인 및 회원가입 한 번에(소셜 로그인)
+//사용자 로그인 및 회원가입 한 번에(소셜 로그인) --> 일단 웹에서는 사용하지 않음
 exports.setLoginWithSignUp= async (email, joinTypeCode, joinToken) => {    
     let conn = await pool.getConnection();    
     let params;
