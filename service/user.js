@@ -54,6 +54,8 @@ exports.getUserForLogin = async (email, password, deviceTypeCode, pushToken) => 
     password = helper.createHashPassword(password, "sha512");
 
     try {        
+        await conn.beginTransaction();
+
         //로그인
         res = await pool.query('CALL SYS_USER_MST_LOGIN(?,?,?,?)', [email, 'N', password, 'N']);
         if(res[0][0].length > 0){
@@ -255,98 +257,6 @@ exports.joinUser= async (email, joinTypeCode, authGroupCode, password, joinToken
             userGuid: userGuid,
         };
         return returnModel;
-    }
-};
-
-//사용자 로그인 및 회원가입 한 번에(소셜 로그인) --> 일단 웹에서는 사용하지 않음
-exports.setLoginWithSignUp= async (email, joinTypeCode, joinToken) => {    
-    let conn = await pool.getConnection();    
-    let params;
-    let res;
-    let user;
-    let userGuid;
-    let isSuccess = false;    
-
-    try {
-        await conn.beginTransaction();
-
-        //기존 사용자 조회
-        res = await pool.query('CALL SYS_USER_MST_SELECT(?,?,?,?,?)', [null, email, null, null, 'N']);
-
-        //존재하는 경우
-        if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'N'){
-            user = res[0][0][0];
-            userGuid = user.USER_GUID;
-            isSuccess = true;
-            user.IS_SUCCESS = 0;
-        }
-        //삭제되었거나 등록인 경우
-        else{        
-            //삭제된 경우
-            if(res[0][0].length > 0 && res[0][0][0].DEL_YN == 'Y'){
-                user = res[0][0][0];
-
-                //복구
-                userGuid = user.USER_GUID;
-                params = [userGuid, 'N', userGuid];
-                res = await conn.query('CALL SYS_USER_MST_UPDATE_YN(?,?,?,@RET_VAL); select @RET_VAL;', params);
-            }
-            //등록인 경우
-            else{
-                userGuid = helper.generateUUID();
-                user = {
-                    USER_GUID : userGuid,
-                    EMAIL : email,
-                    PWD : '',
-                    AUTH_GRP_COD : 'N',
-                    DEVICE_TYP_COD : '',
-                    PUSH_TOKEN: '',
-                    JOIN_TYP_COD : joinTypeCode,
-                };
-                params = [userGuid, email, 'N', null, null, null, userGuid];
-                res = await conn.query('CALL SYS_USER_MST_CREATE(?,?,?,?,?,?,?,@RET_VAL); select @RET_VAL;', params);
-            }
-
-            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
-                console.log("사용자 등록 성공");
-                isSuccess = true;
-                user.IS_SUCCESS = 1; //등록/수정 성공  
-            }
-            else{
-                console.log("사용자 등록 실패");
-                isSuccess = false;
-                user.IS_SUCCESS = -1; //등록/수정 실패
-            }   
-        }
-
-        //가입 종류 등록 또는 수정(=토큰 갱신)
-        if(isSuccess == true){
-            res = await conn.query('CALL SYS_USER_JOIN_TYP_CREATE(?,?,?,@RET_VAL); select @RET_VAL;', [userGuid, joinTypeCode, joinToken]);
-            if(res[0][0].affectedRows == 1 && res[0][1][0]["@RET_VAL"] != 'N'){
-                console.log("사용자 가입종류 등록 성공");
-            }
-            else{
-                console.log("사용자 가입종류 등록 실패");
-                isSuccess = false;
-            }          
-        }
-
-        if (isSuccess == false) {
-            conn.rollback();
-            user = null;
-        }
-        else {
-            await conn.commit();
-        }    
-                
-    } catch (err) {
-        conn.rollback();
-        user = null;
-        console.log(err);        
-        throw Error(err);
-    } finally {
-        conn.release();
-        return user;
     }
 };
 
