@@ -77,7 +77,15 @@ async function getTripDataFromExcel(file, userGuid) {
             //가변컬럼인 경우
             else {
               console.log("가변 컬럼 :: " + cell.value);
-              variableColumns.push(cell.value);
+
+              //RichText인 경우(글씨 간의 폰트 크기나 색상 등이 다른 경우를 의미)
+              if(cell.value.richText !== undefined){
+                var convertValue = cell.value.richText.map(({ text }) => text).join('');
+                variableColumns.push(convertValue);
+              }
+              else{
+                variableColumns.push(cell.value);
+              }
             }
           }
           else {
