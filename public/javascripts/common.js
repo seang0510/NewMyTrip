@@ -203,3 +203,15 @@ const searchFunction = function(dictSearch) {
       return false;
   }
 };
+
+//Window Open 화면
+function openWindowPopup(title, url){
+  var width = '1000';
+  var height ='800';
+  
+  //팝업을 가운데 위치시키기 위해 아래와 같이 값 구하기
+  var left = Math.ceil((window.screen.width - width) / 2);
+  var top = Math.ceil((window.screen.height - height) / 2);
+
+  window.open(url, title, 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+};

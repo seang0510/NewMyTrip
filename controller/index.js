@@ -194,6 +194,7 @@ exports.getPasswordByEmail = async (req, res, next) => {
         
         if (password == null) {
             resModel = helper.createResponseModel(false, '존재하지 않는 이메일이거나 소셜 로그인 계정입니다.', '');
+            return res.status(200).json(resModel);
         }
         else{
             const mailOptions = {

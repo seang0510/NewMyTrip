@@ -49,9 +49,9 @@
 <%- contentFor('banner') %>
 <% if(typeof bannerList == 'object' && bannerList){ %>
   <% for(var i = 0; i < bannerList.length; i++) { %>
-    <a href="<%= bannerList[i].URL_LINK %>" class="h-auto bg-dark list-group-item list-group-item-action">              
+    <a href="#" class="h-auto bg-dark list-group-item list-group-item-action" onclick=>              
       <div class="d-flex w-100 h-100 justify-content-start align-items-center">
-        <img class="banner-img" src="<%= bannerList[i].FILE_PATH %>/<%= bannerList[i].FILE_NM %>" onerror=this.src="/images/no_image.png">
+        <img class="banner-img" src="<%= bannerList[i].FILE_PATH %>/<%= bannerList[i].FILE_NM %>" onerror=this.src="/images/no_image.png" onclick="openWindowPopup('<%= bannerList[i].AD_NM %>', '<%= bannerList[i].URL_LINK %>');">
       </div>
     </a>    
   <% } %>

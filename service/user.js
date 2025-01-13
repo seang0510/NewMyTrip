@@ -286,6 +286,9 @@ exports.getPasswordByEmail = async (userEmail) => {
                 isSuccess = true;
             }            
         }
+        else{
+            changePassword = null;
+        }
 
         if (isSuccess == false) {
             conn.rollback();
