@@ -402,7 +402,7 @@
             ],
             createdRow: function(row, data, dataIndex){
               //위도,경도가 0인 경우 또는 주소가 빈칸인 경우
-              if(data.LAT == 0 || data.LNG == 0 || data.ADDR_ORG.trim() == '')
+              if(data.LAT == 0 || data.LNG == 0 || (data.ADDR_ORG != null && data.ADDR_ORG.trim() == ''))
               {                
                 $(row).addClass('text-danger');
               }

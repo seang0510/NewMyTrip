@@ -281,6 +281,12 @@
 
     //핀 목록 데이터 가져오기
     getDetailListForPin();    
+
+    //Modal DOM안에 존재하는 DataTable.js Hidden화 되어 있으므로 Width 계산을 못한다.
+    //위와 같은 이유로 Modal이 Open 되었을 때 다시 그려주어야 한다.
+    $($("#modalDuplicateMarker")).on('shown.bs.modal', function () {
+      tableMarkers.columns.adjust().draw();
+    });
   });
 
   const columnDefs = [
@@ -428,7 +434,7 @@
             ],
             createdRow: function(row, data, dataIndex){
               //위도,경도가 0인 경우 또는 주소가 빈칸인 경우
-              if(data.LAT == 0 || data.LNG == 0 || data.ADDR_ORG.trim() == '')
+              if(data.LAT == 0 || data.LNG == 0 || (data.ADDR_ORG != null && data.ADDR_ORG.trim() == ''))
               {
                 $(row).addClass('text-danger');
               }
