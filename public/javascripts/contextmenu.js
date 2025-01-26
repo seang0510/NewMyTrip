@@ -122,8 +122,8 @@ function deleteMyself(eThis, e) {
           location.href = '/login';
         }
         else{
-          $("#modalAlert .modal-title").html("계정삭제 오류");
-          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert .modal-title").html("계정삭제 실패");
+          $("#modalAlert .modal-body").html(data.message);
           $("#modalAlert").modal('show');
         }
       },

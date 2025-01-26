@@ -44,6 +44,12 @@ router.post('/trip/setCoordinateByAddress', businessController.setCoordinateByAd
 //########### 관광 명소 ########### 
 router.get('/tourLocation', businessController.indexTourLocation);
 router.post('/tourLocation/getTourLocationList', businessController.getTourLocationList);
+router.post('/tourLocation/getTourLocation', businessController.getTourLocation);
+router.post('/tourLocation/setTourLocation', businessController.setTourLocation);
+router.post('/tourLocation/deleteTourLocationList', businessController.deleteTourLocationList);
+router.post('/tourLocation/setTourLocationImages', upload(`public/tour_images`, `latin1`).array("files"), businessController.setTourLocationImages);
+router.post('/tourLocation/deleteTourLocationImages', businessController.deleteTourLocationImages);
+
 
 //관광 명소 이미지 get (샘플 : http://54.252.145.88:3030/tour_images/3.1.jpg)
 router.get('/tour_images/:imageName', function(req, res){

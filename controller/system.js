@@ -70,9 +70,16 @@ exports.deleteUser = async (req, res, next) => {
     const regUserGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
     
     try {
+
+      //사용자 계정이 시스템 관리자인 경우
+      if(req.session.authGroupCode == 'S'){
+        resModel = helper.createResponseModel(false, '시스템 관리자는 삭제할 수 없습니다.', '');
+        return res.status(200).json(resModel);
+      }
+
       //오늘의 출장 삭제
       let retVal = await userService.deleteUserList(userGuidList, 'Y', regUserGuid);
-  
+
       //삭제
       if (retVal == 1) {
         req.session.destroy(function(){ 

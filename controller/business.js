@@ -1254,52 +1254,6 @@ exports.setCoordinateByAddress = async (req, res, next) => {
   }
 };
 
-//관광명소 화면(GET)
-exports.indexTourLocation = async (req, res, next) => {
-  try {
-      //로그인 되지 않은 경우
-      if(!(req.session.valid == true)){
-        var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
-        res.cookie('MSG', msg, { httpOnly: false, secure: false });
-        return res.redirect('/login');
-    }
-      //현재 로그인 되어 있는 경우    
-      else{
-        var email = req.session.email;
-        var authGroupCode = req.session.authGroupCode;
-        let bannerList = await adService.getAdList('', ''); //광고 조회
-        return res.render('business/tourLocation/index', { title: '관광명소', userEmail: email, authCode: authGroupCode, bannerList: bannerList });
-      }        
-  }
-  catch (err) {
-      return res.status(500).json(err);
-  }
-};
-
-//관광명소 조회(POST)
-exports.getTourLocationList = async (req, res, next) => {
-  let resModel;
-  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
-  const tourLocationName = helper.changeUndefiendToNull(req.body.tourLocationName);
-
-  try {
-      //관광명소 조회
-      let rows = await tourLocationService.getTourLocationList(tourLocationGuid, tourLocationName);
-
-      if(rows == null){
-        resModel = helper.createResponseModel(false, '등록된 관광명소가 존재하지 않습니다.', null);        
-      }
-      else{
-        resModel = helper.createResponseModel(true, '', rows);
-      }      
-
-      return res.status(200).json(resModel);
-  }
-  catch (err) {
-      return res.status(500).json(err);
-  }
-};
-
 //오늘의 출장 위도 경도 없는 주소 CRON 으로 위도,경도 가져오기
 exports.setNewAddress = async () => {
   console.log("## setNewAddress");
@@ -1327,4 +1281,196 @@ exports.setNewAddress = async () => {
         resModel = helper.createResponseModel(false, '로그아웃에 실패하였습니다.', err);
         return res.status(500).json(resModel);
     }
+};
+
+//관광명소 화면(GET)
+exports.indexTourLocation = async (req, res, next) => {
+  try {
+      //로그인 되지 않은 경우
+      if(!(req.session.valid == true)){
+        var msg = helper.setMessageForCookie('로그인 오류', '로그인 하시길 바랍니다.');
+        res.cookie('MSG', msg, { httpOnly: false, secure: false });
+        return res.redirect('/login');
+    }
+      //현재 로그인 되어 있는 경우    
+      else{
+        var email = req.session.email;
+        var authGroupCode = req.session.authGroupCode;
+        let bannerList = await adService.getAdList('', ''); //광고 조회
+        let commonCodeList = await commonCodeService.getCommonCodeDetailList('', 'LOC_TYP_COD');
+        return res.render('business/tourLocation/index', { title: '관광명소', userEmail: email, authCode: authGroupCode, bannerList: bannerList, commonCodeList: commonCodeList });
+      }        
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//관광명소 조회(리스트)
+exports.getTourLocationList = async (req, res, next) => {
+  let resModel;
+  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
+  const tourLocationName = helper.changeUndefiendToNull(req.body.tourLocationName);
+
+  try {
+      //관광명소 조회
+      let rows = await tourLocationService.getTourLocationList(tourLocationGuid, tourLocationName);
+
+      if(rows == null){
+        resModel = helper.createResponseModel(false, '등록된 관광명소가 존재하지 않습니다.', null);        
+      }
+      else{
+        resModel = helper.createResponseModel(true, '', rows);
+      }      
+
+      return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//관광명소 조회(개별)
+exports.getTourLocation = async (req, res, next) => {
+  let resModel;
+  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
+
+  try {
+    //관광명소 조회
+    let rows = await tourLocationService.getTourLocation(tourLocationGuid);
+
+    if(rows == null){
+      resModel = helper.createResponseModel(false, '등록된 관광명소가 존재하지 않습니다.', '');        
+    }
+    else{
+      resModel = helper.createResponseModel(true, '', rows);
+    }    
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+      return res.status(500).json(err);
+  }
+};
+
+//관광명소 등록/수정(POST)
+exports.setTourLocation = async (req, res, next) => {
+  let resModel;
+  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
+  const tourLocationTypeCode = helper.changeUndefiendToNull(req.body.tourLocationTypeCode);
+  const tourLocationName = helper.changeUndefiendToNull(req.body.tourLocationName);
+  const address = helper.changeUndefiendToNull(req.body.address);
+  const latitude = helper.changeUndefiendToZero(req.body.latitude);
+  const longitude = helper.changeUndefiendToZero(req.body.longitude);
+  const urlLink = helper.changeUndefiendToNull(req.body.urlLink);
+  const tel = helper.changeUndefiendToNull(req.body.tel);
+  const title = helper.changeUndefiendToNull(req.body.title);
+  const contents = helper.changeUndefiendToNull(req.body.contents);
+  const order = helper.changeUndefiendToZero(req.body.order);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+
+  try {
+    //관광명소 등록,수정
+    let retVal = await tourLocationService.setTourLocation(tourLocationGuid, tourLocationTypeCode, tourLocationName, address, latitude, longitude, urlLink, tel, title, contents, order, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '관광명소를 등록하였습니다.', '');
+    }
+    //수정
+    else if (retVal == 0) {
+      resModel = helper.createResponseModel(true, '관광명소를 수정하였습니다.', '');      
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '관광명소 등록,수정에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//관광명소 삭제 리스트(POST) 
+exports.deleteTourLocationList = async (req, res, next) => {
+  let resModel;
+  const tourLocationGuidList = helper.changeUndefiendToNull(req.body.tourLocationGuidList);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tourLocationService.deleteTourLocationList(tourLocationGuidList, userGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '관광명소를 삭제하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '관광명소 삭제에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//관광명소 이미지 등록(POST)
+exports.setTourLocationImages = async (req, res, next) => {
+  let resModel;
+  const tourLocationGuid = helper.changeUndefiendToNull(req.body.tourLocationGuid);
+  const userGuid = helper.getsessionValueOrRequsetValue(req.session.userGuid, req.body.userGuid);
+  const files = req.files;
+
+  try {
+    //오늘의 출장 등록,수정
+    let retVal = await tourLocationService.setTourLocationImages(tourLocationGuid, files, userGuid);
+
+    //등록
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '관광명소 이미지를 등록하였습니다.', '');
+    }
+    //수정
+    else if (retVal == 0) {
+      resModel = helper.createResponseModel(false, '등록할 관광명소 이미지가 없습니다.', '');      
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '관광명소 이미지 등록에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
+};
+
+//관광명소 이미지 삭제(POST)
+exports.deleteTourLocationImages = async (req, res, next) => {
+  let resModel;
+  const tourLocationImageGuid = helper.changeUndefiendToNull(req.body.tourLocationImageGuid);
+
+  try {
+    //오늘의 출장 삭제
+    let retVal = await tourLocationService.deleteTourLocationImages(tourLocationImageGuid);
+
+    //삭제
+    if (retVal == 1) {
+      resModel = helper.createResponseModel(true, '관광명소 이미지를 삭제하였습니다.', '');
+    }
+    //실패
+    else {
+      resModel = helper.createResponseModel(false, '관광명소 이미지 삭제에 실패하였습니다.', '');
+    }
+
+    return res.status(200).json(resModel);
+  }
+  catch (err) {
+    return res.status(500).json(err);
+  }
 };

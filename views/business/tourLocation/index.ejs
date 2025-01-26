@@ -9,6 +9,7 @@
 <link href="/css/fixedHeader.dataTables.min.css" rel="stylesheet" />
 <link href="/css/scroller.dataTables.min.css" rel="stylesheet" />
 <link href="/stylesheets/datatable.css" rel="stylesheet" />
+<link href="/stylesheets/trip.css" rel="stylesheet" />
 
 <%# JS %>
 <script src="/js/dataTables.min.js"></script>
@@ -24,6 +25,8 @@
 <script src="/js/dataTables.scroller.min.js"></script>
 <script src="/js/scroller.dataTables.min.js"></script>
 <script src="/javascripts/datatableOption.js"></script>
+<script src="/jszip.min.js"></script>
+<script src="/javascripts/datatableOption.js"></script>
 
 <%# 본문 %>
 <%- contentFor('body') %>
@@ -35,10 +38,10 @@
   </div>
   <div class="d-flex ms-auto">
     <div>
-      <button type="button" id="btnCreate" class="btn btn-primary" onclick="createItem()" disabled>등록</button>      
+      <button type="button" id="btnCreate" class="btn btn-primary" onclick="createItem()">등록</button>      
     </div>
     <div class="ms-1">
-      <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteItemList(event)" disabled>삭제</button>
+      <button type="button" id="btnDelete" class="btn btn-danger" onclick="deleteItemList(event)">삭제</button>
     </div>
   </div>
 </div>
@@ -47,9 +50,219 @@
 <table id="tblMain" class="table table-striped">
 </table>
 
+<%# 관광명소 등록,수정 %>
+<div class="modal fade" id="modalTourLocation" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="lblModalTourLocation" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- LoadingBar Modal of modalTourLocation -->
+      <%- include('../../ejs/loadingbar.ejs') %>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lblModalTourLocation">관광명소</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <form id="tourLocationForm" class="needs-validation" style="height: 60vh; overflow-x: hidden; overflow-y: auto;" novalidate>
+            <input type="hidden" id="tourLocationGuid" value="">
+            <button type="submit" id="btnSaveTourLocation" class="visually-hidden" onclick="saveTourLocation(this, event, '/business/tourLocation')"></button>
+
+            <div id="carouselOuter" class="carousel slide">
+              <div class="carousel-inner">           
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#carouselOuter" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#carouselOuter" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+
+            <div class="input-group mb-3 mt-3">
+              <span class="input-group-text"><i class="fa fa-tags"></i></span>
+              <div class="form-floating has-validation">
+                <select class="form-select edit-mode" id="tourLocationTypeCode">
+                  <option value="" selected>종류를 선택하세요</option>
+                  <% if(typeof commonCodeList == 'object' && commonCodeList) { %>
+                    <% for(var i = 0; i < commonCodeList.length; i++) { %>                      
+                      <option value="<%=commonCodeList[i].DTL_COD%>"><%= commonCodeList[i].DTL_COD_NM %></option>
+                    <% } %>
+                  <% } %>
+                </select>
+                <label class="form-control read-label read-mode hide"></label>
+                <label for="tourLocationTypeCode">종류</label>
+              </div>
+              <div class="invalid-feedback">
+                종류를 입력하세요.
+              </div>
+            </div>
+
+            <div class="input-group mb-3 mt-3">
+              <span class="input-group-text"><i class="fa fa-suitcase"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="tourLocationName" class="form-control edit-mode" placeholder="장소명" onkeypress="enterKey(event, 'btnSaveTourLocation')" required>
+                <label class="form-control read-label read-mode hide"></label>
+                <label for="tourLocationName">장소명</label>
+              </div>
+              <div class="invalid-feedback">
+                장소명을 입력하세요.
+              </div>
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-building"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="address" class="form-control edit-mode" placeholder="주소" onkeypress="enterKey(event, 'btnSaveTourLocation')">
+                <label class="form-control read-label read-mode hide"></label>
+                <label for="address">주소</label>
+              </div>
+              <div class="invalid-feedback">
+                주소를 입력하세요.
+              </div>                
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
+              <div class="form-floating has-validation">
+                <input type="number" step="any" id="latitude" class="form-control edit-mode" placeholder="위도" onkeypress="enterKey(event, 'btnSaveTourLocation')" value="0">
+                <label class="form-control read-label read-mode hide"></label>
+                <label for="latitude">위도</label>
+              </div>
+              <div class="invalid-feedback">
+                위도를 입력하세요.
+              </div>                
+            </div>            
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-map-pin"></i></span>
+              <div class="form-floating has-validation">
+                <input type="number" step="any" id="longitude" class="form-control edit-mode" placeholder="경도" onkeypress="enterKey(event, 'btnSaveTourLocation')" value="0">
+                <label class="form-control read-label read-mode hide"></label>
+                <label for="longitude">경도</label>
+              </div>
+              <div class="invalid-feedback">
+                경도를 입력하세요.
+              </div>                
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-external-link"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="urlLink" class="form-control edit-mode" placeholder="URL" onkeypress="enterKey(event, 'btnSaveTourLocation')">
+                <label class="form-control read-label read-mode hide"></label>          
+                <label for="urlLink">URL</label>
+              </div>
+              <div class="invalid-feedback">
+                URL을 입력하세요.
+              </div>                
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-phone"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="tel" class="form-control edit-mode" placeholder="tel" onkeypress="enterKey(event, 'btnSaveTourLocation')">
+                <label class="form-control read-label read-mode hide"></label>          
+                <label for="tel">연락처</label>
+              </div>
+              <div class="invalid-feedback">
+                연락처를 입력하세요.
+              </div>                
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-star"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="title" class="form-control edit-mode" placeholder="title" onkeypress="enterKey(event, 'btnSaveTourLocation')">
+                <label class="form-control read-label read-mode hide"></label>          
+                <label for="title">제목</label>
+              </div>
+              <div class="invalid-feedback">
+                제목을 입력하세요.
+              </div>                
+            </div>
+
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-sticky-note"></i></span>
+              <div class="form-floating has-validation">
+                <input type="text" id="contents" class="form-control edit-mode" placeholder="contents" onkeypress="enterKey(event, 'btnSaveTourLocation')">
+                <label class="form-control read-label read-mode hide"></label>          
+                <label for="contents">내용</label>
+              </div>
+              <div class="invalid-feedback">
+                내용을 입력하세요.
+              </div>                
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">          
+          <button type="button" id="btnSave" class="btn btn-primary visually-hidden" onclick="document.getElementById('btnSaveTourLocation').click();">저장</button>
+          <button type="button" id="btnEdit" class="btn btn-warning" onclick="editModalTourLocation(this, event)">수정</button>          
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<%# 관광명소 이미지 등록 %>
+<div class="modal fade" id="modalTourLocationImage" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+  aria-labelledby="lblModalTourLocationImage" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- LoadingBar Modal of modalTourLocationImage -->
+      <%- include('../../ejs/loadingbar.ejs') %>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lblModalTourLocationImage">관광명소 이미지</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <form class="needs-validation" novalidate>
+            <button type="submit" id="btnImportImage" class="visually-hidden" onclick="importImage(this, event)"></button>
+            <div class="input-group mb-3">
+              <span class="input-group-text"><i class="fa fa-file"></i></span>
+              <div class="has-validation">
+                <input type="file" id="files" class="form-control" required accept="image/*" onchange="addFile(this)" multiple>
+              </div>
+              <div class="invalid-feedback">
+                파일을 업로드하세요.
+              </div>                
+            </div>            
+
+            <div class="file-list"></div>
+          </form>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary"
+          onclick="document.getElementById('btnImportImage').click();">파일 올리기</button>
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">닫기</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
   var table = {};
   let columns = [];
+  var fileNo = 0;
+  var filesArr = [];
+  var isReadStatus = false;
 
   $(document).ready( function () {
     //DataTable.js
@@ -83,6 +296,26 @@
      { targets: ['LOC_TYP_NM:name', 'LAT:name', 'LNG:name', 'TEL:name', 'REG_DT:name', 'UPDT_DT:name'] , className: "row-center-align" },
   ];
 
+  //레코드 선택
+  function clickRecord(eThis){
+    const rowData = table.row(eThis).data();
+    let tourLocationGuid = rowData.TOUR_LOC_MST_GUID;
+    let column = table.column(eThis).dataSrc();
+
+    switch(column){
+      case 'FILE_NM':        
+        $("#tourLocationGuid").val(tourLocationGuid);
+        $("#modalTourLocationImage").modal('show');
+        break;
+      case 'URL_LINK':
+        break;
+      default:
+        getItem(tourLocationGuid);
+        break;
+    }
+  };
+
+  //그리드 바인딩
   function InitDataTableJS(tblId, url){
     var gridDate = [];
 
@@ -121,20 +354,34 @@
           },         
           scrollX: true,
           scrollY: 'calc(100vh - 222px)',
+          destroy: true,               
           scroller: true,    
           // responsive: true,
           fixedColumns: {
             start: 4
           },
           order: [['NO', 'asc']],    
+          createdRow: function(row, data, dataIndex){
+              //위도,경도가 0인 경우 또는 주소가 빈칸인 경우
+              if(data.LAT == 0 || data.LNG == 0 || data.ADDR.trim() == '')
+              {                
+                $(row).addClass('text-danger');
+              }
+          },      
         });
+
+        //Click Event
+        $('#tblMain tbody').on('click', 'tr td:not(.dt-select):not(.dtr-control)', function(e) {
+          clickRecord($(this));
+        });     
       }
     });
   };
 
+  //URL 컬럼에 링크 버튼 추가
   function changeColumnData(gridData){
     for(var i = 0; i< gridData.length; i++){
-      //명칭에 확인표시 추가
+      //URL 컬럼에 링크 버튼 추가
       if(!(isEmpty(gridData[i].URL_LINK))) {
         var htmlCode = "<span class='badge text-bg-success ms-auto' onclick=popupUrlLink('" + gridData[i].URL_LINK + "');>";
         htmlCode += "<i class='fa fa-external-link-square'></i></span>";
@@ -144,6 +391,7 @@
     return gridData;
   };
 
+  //URL 컬럼 클릭 시 팝업 화면 열기
   function popupUrlLink(urlLink){
     var width = '1000';
     var height ='800';
@@ -153,6 +401,472 @@
     var top = Math.ceil((window.screen.height - height) / 2);
 
     window.open(urlLink, '관광명소 링크', 'width='+ width +', height='+ height +', left=' + left + ', top='+ top + ',scrollbars=yes');
+  };
+
+  //상세 등록,수정창 초기화
+  function InitModalTourLocation(){
+    $("#tourLocationGuid").val('');
+    $("#tourLocationTypeCode").val('').prop('selected', true);
+    $("#tourLocationName").val('');
+    $("#address").val('');    
+    $("#latitude").val('');    
+    $("#longitude").val('');          
+    $("#urlLink").val('');      
+    $("#tel").val('');      
+    $("#title").val('');      
+    $("#contents").val('');      
+
+    //편집모드 제거 및 저장버튼 표시
+    isReadStatus = true;
+    editModalTourLocation(null, null);
+    $("#btnEdit").addClass('visually-hidden');
+    $("#btnSave").removeClass('visually-hidden');
+  };
+
+  //수정/보기 화면 변경
+  function editModalTourLocation(eThis, e){
+    isReadStatus = !isReadStatus;
+
+    //읽기 모드
+    if(isReadStatus){
+      $("#btnEdit").text('편집');
+      $("#btnEdit").removeClass('visually-hidden');
+      $("#btnSave").addClass('visually-hidden');
+
+      $('.edit-mode').addClass('hide');
+      $('.read-mode').removeClass('hide');
+
+      //등록,수정의 Input 값을 Label에 넣기
+      $("#tourLocationForm").find('input[type="text"],input[type="number"]').each(function(idx, el){        
+        var value = $(el).val();
+        $(el).siblings('label.form-control').text(value);        
+      });
+
+      //등록,수정의 Select 값을 Label에 넣기
+      $("#tourLocationForm").find('select option:selected').each(function(idx, el){      
+        var text = $(el).text();
+        $(el).closest('select').siblings('label.form-control').text(text);        
+      });
+    }
+    //편집 모드
+    else{
+      $("#btnEdit").text('보기');
+      $("#btnEdit").removeClass('visually-hidden');
+      $("#btnSave").removeClass('visually-hidden');
+
+      $('.edit-mode').removeClass('hide');
+      $('.read-mode').addClass('hide');
+    }
+  };
+
+  //개별 조회
+  function getItem(tourLocationGuid){      
+    $.ajax({
+        url: '/business/tourLocation/getTourLocation',
+        method: 'post',
+        data: {
+          tourLocationGuid: tourLocationGuid,
+        },
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalAlert .modal-title").html("관광명소");
+          InitModalTourLocation();
+        },        
+        success: function(data){           
+          if(data.success){            
+            if(!(isEmpty(data) || isEmpty(data.value))){
+              //이미지 슬라이드 초기화
+              $("#carouselOuter .carousel-inner").empty();
+              //이미지 연결
+              if(!isEmpty(data.value.IMGS)){
+                var tourLocationImages = data.value.IMGS;
+
+                for(var i = 0; i < tourLocationImages.length;i++){
+                  var imgGuid = tourLocationImages[i].TOUR_LOC_MST_IMG_GUID;
+                  var imgUrl = tourLocationImages[i].URL_PATH + tourLocationImages[i].FILE_NM;
+                  if(!isEmpty(imgGuid)){
+                    var imgHtmlCode = createCarouselItemCode(imgGuid, imgUrl);
+                    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
+                    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
+                  }              
+                }
+              }
+              else{
+                var imgHtmlCode = createCarouselItemCode('', '');
+                $("#carouselOuter .carousel-inner").append(imgHtmlCode);     
+                $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');           
+              }
+
+              //입력 항목
+              $("#tourLocationGuid").val(tourLocationGuid);
+              $("#tourLocationTypeCode").val(data.value.LOC_TYP_COD).prop('selected', true);
+              $("#tourLocationName").val(data.value.LOC_NM);
+              $("#address").val(data.value.ADDR);              
+              $("#latitude").val(data.value.LAT);
+              $("#longitude").val(data.value.LNG); 
+              $("#urlLink").val(data.value.URL_LINK); 
+              $("#tel").val(data.value.TEL); 
+              $("#title").val(data.value.TTL); 
+              $("#contents").val(data.value.CNTS);
+
+              //편집모드 및 저장버튼 미표시
+              isReadStatus = false;
+              editModalTourLocation(null, null);        
+
+              $("#modalTourLocation").modal('show');
+            }
+          }  
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+          }  
+        },
+        complete: function(data){
+          setLoadingBar(false);          
+        },        
+      });    
+  };
+
+  //신규 등록
+  function createItem(){
+    InitModalTourLocation();
+
+    //이미지 슬라이드 초기화 및 기본 이미지 추가
+    $("#carouselOuter .carousel-inner").empty();
+
+    var imgHtmlCode = createCarouselItemCode('', '');
+    $("#carouselOuter .carousel-inner").append(imgHtmlCode);
+    $("#carouselOuter .carousel-inner .carousel-item:first").addClass('active');
+
+    $("#modalTourLocation").modal('show');
+  };
+
+  //저장
+  function saveTourLocation(eThis, e, url){
+    //HTML5 기본 Validation
+    if (!((document.getElementById("tourLocationName").validity.valid) &&
+      (document.getElementById("address").validity.valid))) {
+      return false;
+    }
+
+    e.preventDefault();
+
+    var data = {
+      tourLocationGuid: $("#tourLocationGuid").val(),
+      tourLocationTypeCode: $("#tourLocationTypeCode").val(),
+      tourLocationName: $("#tourLocationName").val(),
+      address: $("#address").val(),
+      latitude: $("#address").val().trim() == '' ? '' : $("#latitude").val(),
+      longitude: $("#address").val().trim() == '' ? '' : $("#longitude").val(),
+      urlLink: $("#urlLink").val().trim() == '' ? '' : $("#urlLink").val(),
+      tel: $("#tel").val().trim() == '' ? '' : $("#tel").val(),
+      title: $("#title").val().trim() == '' ? '' : $("#title").val(),
+      contents: $("#contents").val().trim() == '' ? '' : $("#contents").val(),
+    };
+
+    $.ajax({
+        url: '/business/tourLocation/setTourLocation',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true, 'modalTourLocation');
+          $("#modalTourLocation").modal('hide');
+          $("#modalAlert .modal-title").html("관광명소");
+        },
+        success: function (data, status, xhr) {
+          if(data.success){            
+            location.href = url;
+          }
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
+          }
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false, 'modalTourLocation');
+        }
+      }); 
+  };
+  
+  //리스트 삭제
+  function deleteItemList(e){
+    const rows = table.rows('.selected').data();
+    var tourLocationGuidList = getValueList(rows, 'TOUR_LOC_MST_GUID');
+    var data = {
+      'tourLocationGuidList': tourLocationGuidList,
+    };
+
+    if(tourLocationGuidList.length == 0){
+      $("#modalAlert .modal-title").html("관광명소");
+      $("#modalAlert .modal-body").html('선택한 행이 없습니다.');
+      $("#modalAlert").modal('show');
+      return;
+    }
+
+    confirmModal(e, 'modalConfirm', '관광명소', '선택한 관광명소를 삭제 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/business/tourLocation/deleteTourLocationList',
+        method: 'POST',
+        data: JSON.stringify(data),
+        datatype: "JSON",
+        contentType: 'application/json; charset=utf-8',
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("관광명소");
+        },
+        success: function (data, status, xhr) {
+          // var message = data.message;
+          // $("#modalAlert .modal-body").html(message);
+          // $("#modalAlert").modal('show');
+          location.href = '/business/tourLocation/';
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+        }
+      });    
+    });
+  };
+
+  //이미지 업로드
+  function importImage(eThis, e){
+    //HTML5 기본 Validation
+    if (filesArr.length == 0) {
+      $("#modalTourLocationImage").modal('hide');
+      $("#modalAlert .modal-title").html("관광명소 업로드");
+      $("#modalAlert .modal-body").html('bmp,jpg,jpeg,png,gif 파일만 업로드 할수 있습니다.');
+      $("#modalAlert").modal('show');
+      return false;
+    }
+
+    var fileVal = $("#files").val();
+    if(fileVal != "" ){
+        var ext = fileVal.split('.').pop().toLowerCase(); //확장자분리
+        //아래 확장자가 있는지 체크
+        if($.inArray(ext, ['bmp','jpg','jpeg','png','gif']) == -1) {
+          $("#modalTourLocationImage").modal('hide');
+          $("#modalAlert .modal-title").html("관광명소 업로드");
+          $("#modalAlert .modal-body").html('bmp,jpg,jpeg,png,gif 파일만 업로드 할수 있습니다.');
+          $("#modalAlert").modal('show');
+          e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수
+          return false;
+        }
+    }    
+
+    e.preventDefault(); //HTML5 기본 validation 밑에 위치 필수    
+
+    var formData = new FormData();
+    var files = $("#modalTourLocationImage").find("form input[type=file]")[0].files;
+
+    for (var i = 0; i < filesArr.length; i++) {
+        // 삭제되지 않은 파일만 폼데이터에 담기
+        if (!filesArr[i].is_delete) {
+            formData.append("files", filesArr[i]);
+        }
+    }
+
+    formData.append('tourLocationGuid', $("#tourLocationGuid").val());
+
+    $.ajax({
+      url: '/business/tourLocation/setTourLocationImages',
+      method: 'POST',
+      data: formData,
+      cache: false,
+      contentType: false,
+      processData: false,
+      beforeSend: function (xhr) {
+        setLoadingBar(true, 'modalTourLocation');
+        $("#modalAlert .modal-title").html("출장 상세 이미지 업로드");
+      },
+      success: function (data, status, xhr) {
+        if(data.success){
+          $("#modalAlert .modal-body").html('업로드 되었습니다.');
+          location.href = '/business/tourLocation';
+        }
+        else
+        {         
+          $("#modalTourLocation").modal('hide');
+           var message = data.message;
+          $("#modalAlert .modal-body").html(message);
+          $("#modalAlert").modal('show');          
+        }        
+      },
+      error: function (data, status, err) {
+        $("#modalTourLocation").modal('hide');
+        $("#modalAlert .modal-body").html(err);
+        $("#modalAlert").modal('show');
+      },
+      complete: function () {
+        setLoadingBar(false, 'modalTourLocation');
+      }
+    });    
+  };
+
+  //첨부파일 업로드
+  function addFile(obj){
+    var maxFileCnt = 5;   // 첨부파일 최대 개수
+    var attFileCnt = document.querySelectorAll('.filebox').length;    // 기존 추가된 첨부파일 개수
+    var remainFileCnt = maxFileCnt - attFileCnt;    // 추가로 첨부가능한 개수
+    var curFileCnt = obj.files.length;  // 현재 선택된 첨부파일 개수
+
+    // 첨부파일 개수 확인
+    if (curFileCnt > remainFileCnt) {
+        alert("첨부파일은 최대 " + maxFileCnt + "개 까지 첨부 가능합니다.");
+    }
+
+    for (var i = 0; i < Math.min(curFileCnt, remainFileCnt); i++) {
+        const file = obj.files[i];
+
+        // 첨부파일 검증
+        if (validation(file)) {
+            // 파일 배열에 담기
+            var reader = new FileReader();
+            reader.onload = function () {
+                filesArr.push(file);
+            };
+            reader.readAsDataURL(file)
+
+            // 목록 추가
+            let htmlData = '';
+            htmlData += '<div id="file' + fileNo + '" class="filebox d-flex align-items-center">';
+            htmlData += '   <p class="name me-2">' + file.name + '</p>';
+            htmlData += '   <a class="delete" style="cursor:pointer" onclick="deleteFile(' + fileNo + ');"><i class="fa fa-times"></i></a>';
+            htmlData += '</div>';
+            $('.file-list').append(htmlData);
+            fileNo++;
+        } else {
+            continue;
+        }
+    }
+    // 초기화
+    document.querySelector("input[type=file]").value = "";
+}
+
+  //첨부파일 검증
+  function validation(obj){
+      const fileTypes = ['image/gif', 'image/jpg', 'image/jpeg', 'image/png', 'image/bmp'];
+      var isSuccess = false;
+      var msg = '';
+      if (obj.name.length > 100) {
+          msg = "파일명이 100자 이상인 파일은 제외되었습니다.";
+      } else if (obj.size > (100 * 1024 * 1024)) {
+          msg = "최대 파일 용량인 100MB를 초과한 파일은 제외되었습니다.";
+      } else if (obj.name.lastIndexOf('.') == -1) {
+          msg = "확장자가 없는 파일은 제외되었습니다.";
+      } else if (!fileTypes.includes(obj.type)) {
+          msg = "첨부가 불가능한 파일은 제외되었습니다.";
+      } else {
+          isSuccess = true;
+      }
+
+      if(isSuccess){
+        return true;
+      }
+      else {
+        $("#modalTourLocationImage").modal('hide');
+        $("#modalAlert .modal-title").html("모두의 출장 이미지");
+        $("#modalAlert .modal-body").html(msg);
+        $("#modalAlert").modal('show');
+        return false;
+      }
+  }
+
+  //첨부파일 삭제
+  function deleteFile(num) {
+      document.querySelector("#file" + num).remove();
+      filesArr[num].is_delete = true;
+  }
+
+  //이미지 바인딩
+  function createCarouselItemCode(imgGuid, imgUrl){
+    var htmlCode = "";
+
+    if(imgGuid != ''){
+      htmlCode += "<div class='carousel-item'>";
+      htmlCode += "<img data-guid = '" + imgGuid + "' src='" + imgUrl + "' class='d-block w-100' onerror=this.src='/images/no_image.png'>";
+      htmlCode += "<div>";
+      htmlCode += "<button class='btn btn-sm btn-danger' onclick='deleteTourLocationImgae(this, event);'><i class='fa fa-times'></i></button>";
+      htmlCode += "</div>";        
+    }
+    else{
+      htmlCode += "<div class='carousel-item'>";
+      htmlCode += "<img class='no-img' data-guid = '' src='' class='d-block w-100' onerror=this.src='/images/no_image.png'>";
+    }
+
+    htmlCode += "</div>";       
+    return htmlCode;
+  };
+
+  //이미지 개별삭제
+  function deleteTourLocationImgae(eThis, e){
+    e.preventDefault();
+
+    //이전 모달 z-index 변경
+    $("#modalTourLocation").css('z-index', 1050);
+
+    var tourLocationImageGuid = $(eThis).closest('div.carousel-item').find('img').data('guid');
+    var tourLocationGuid = $("#tourLocationGuid").val();
+    var data = {
+      'tourLocationImageGuid': tourLocationImageGuid,
+    };
+
+    confirmModal(e, 'modalConfirm', '관광명소 이미지', '선택한 이미지를 삭제 하시겠습니까?', function () {   
+      $.ajax({
+        url: '/business/tourLocation/deleteTourLocationImages',
+        method: 'POST',
+        data: data,
+        beforeSend: function (xhr) {
+          setLoadingBar(true);
+          $("#modalConfirm").modal('hide');
+          $("#modalAlert .modal-title").html("관광명소 이미지");
+        },
+        success: function (data, status, xhr) {
+          if(data.success){
+            $("#modalAlert .modal-body").html('삭제되었습니다.');
+            $("#modalAlert").modal('show');
+
+            getItem(tourLocationGuid);
+          }  
+          else{
+            var message = data.message;
+            $("#modalAlert .modal-body").html(message);
+            $("#modalAlert").modal('show');
+          }  
+        },
+        error: function (data, status, err) {
+          $("#modalAlert .modal-body").html(err);
+          $("#modalAlert").modal('show');
+        },
+        complete: function () {
+          setLoadingBar(false);
+
+          //이전 모달 z-index 변경
+          $('#modalAlert').on('hidden.bs.modal', function (e) {
+            $("#modalTourLocation").css('z-index', 1055);
+            $("#modalAlert").off('hidden.bs.modal');
+          });       
+
+          InitDataTableJS('tblMain', '/business/tourLocation/getTourLocationList');  
+        }
+      });   
+    }, function(){
+      //이전 모달 z-index 변경
+      $('#modalConfirm').on('hidden.bs.modal', function (e) {
+        $("#modalTourLocation").css('z-index', 1055);
+        $("#modalConfirm").off('hidden.bs.modal');
+      });          
+    });    
   };
 
 </script>

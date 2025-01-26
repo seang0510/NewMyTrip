@@ -10,7 +10,16 @@ exports.upload = (folderName, encodeType) => {
 
       //경로 설정
       destination: function (req, file, cb) {
-        const folerPath = path.join(__dirname, `../uploads/${folderName}/`);
+        let folerPath = '';
+
+        //관광명소인 경우
+        if(folderName == 'public/tour_images'){
+          folerPath = path.join(__dirname, `../public/tour_images/`);
+        }
+        else{
+          folerPath = path.join(__dirname, `../uploads/${folderName}/`);
+        }
+
         fs.mkdirSync(folerPath, { recursive: true });
         cb(null, folerPath);
       },
@@ -33,7 +42,15 @@ exports.upload = (folderName, encodeType) => {
         name = name.replace(/%2B/g, "+");
         console.log("#####1");
 
-        const filename = Date.now() + "_" + name;
+        let filename = '';
+
+        //관광명소인 경우
+        if(folderName == 'public/tour_images'){
+          filename = name;
+        }
+        else{
+          filename = Date.now() + "_" + name;
+        }
 
         //const filename = file.originalname;
         console.log("##### filename " + filename);
