@@ -30,20 +30,22 @@ exports.upload = (folderName, encodeType) => {
         console.log(file.mimetype);
         console.log(decodeURI( file.originalname ));
 
+        let name = '';
+
         //JQuery Ajax 시, encodeType은 latin1이므로 아래 구문이 적용되어야함
         if(encodeType == 'latin1'){
           file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
+          name = file.originalname;
         }
         else{
           file.originalname = decodeURI( file.originalname );
 
-          let name = file.originalname;
+          name = file.originalname;
           console.log("#####");
   
           name = name.replace('+', " ");
           name = name.replace(/%2B/g, "+");
           console.log("#####1");
-
         }
 
         let filename = '';
