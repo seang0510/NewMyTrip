@@ -34,13 +34,17 @@ exports.upload = (folderName, encodeType) => {
         if(encodeType == 'latin1'){
           file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf-8');
         }
+        else{
+          file.originalname = decodeURI( file.originalname );
 
-        let name = decodeURI( file.originalname );
-        console.log("#####");
+          let name = file.originalname;
+          console.log("#####");
+  
+          name = name.replace('+', " ");
+          name = name.replace(/%2B/g, "+");
+          console.log("#####1");
 
-        name = name.replace('+', " ");
-        name = name.replace(/%2B/g, "+");
-        console.log("#####1");
+        }
 
         let filename = '';
 
